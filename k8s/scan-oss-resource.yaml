@@ -1,0 +1,17 @@
+apiVersion: org.zhejianglab.astro/v1
+kind: MetadataOperatorCustomResource
+metadata:
+  name: test1
+spec:
+  path: "oss://adcp/crafts/HI/ZD2021_1_2/Dec-0619_04_05/20211201"
+  timeout: 20
+  scanConfig:
+    tags:
+      - CRAFTS_SPECTRUM_ORIGINAL
+      - FAST
+    pathPatterns:
+      bucket_name: "[^/]*\\/([^/]+)\\/.*"
+    allowedSuffixes:
+      - fits
+  platform: oss
+  extraSecret: munge-oss-credientials

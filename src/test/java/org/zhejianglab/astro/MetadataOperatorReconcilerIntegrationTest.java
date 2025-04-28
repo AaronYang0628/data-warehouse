@@ -1,63 +1,63 @@
-package org.zhejianglab.astro;
+// package org.zhejianglab.astro;
 
-import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
-import static org.zhejianglab.astro.ConfigMapDependentResource.KEY;
+// import static org.assertj.core.api.Assertions.assertThat;
+// import static org.awaitility.Awaitility.await;
+// import static org.zhejianglab.astro.ConfigMapDependentResource.KEY;
 
-import io.fabric8.kubernetes.api.model.ConfigMap;
-import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
-import io.javaoperatorsdk.operator.junit.LocallyRunOperatorExtension;
-import org.junit.jupiter.api.extension.RegisterExtension;
+// import io.fabric8.kubernetes.api.model.ConfigMap;
+// import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+// import io.javaoperatorsdk.operator.junit.LocallyRunOperatorExtension;
+// import org.junit.jupiter.api.extension.RegisterExtension;
 
-class MetadataOperatorReconcilerIntegrationTest {
+// class MetadataOperatorReconcilerIntegrationTest {
 
-  public static final String RESOURCE_NAME = "test1";
-  public static final String INITIAL_VALUE = "initial value";
-  public static final String CHANGED_VALUE = "changed value";
+//   public static final String RESOURCE_NAME = "test1";
+//   public static final String INITIAL_VALUE = "initial value";
+//   public static final String CHANGED_VALUE = "changed value";
 
-  @RegisterExtension
-  LocallyRunOperatorExtension extension =
-      LocallyRunOperatorExtension.builder()
-          .withReconciler(MetadataOperatorReconciler.class)
-          .build();
+//   @RegisterExtension
+//   LocallyRunOperatorExtension extension =
+//       LocallyRunOperatorExtension.builder()
+//           .withReconciler(MetadataOperatorReconciler.class)
+//           .build();
 
-  //   @Test
-  void testCRUDOperations() {
-    var cr = extension.create(testResource());
+//   //   @Test
+//   void testCRUDOperations() {
+//     var cr = extension.create(testResource());
 
-    await()
-        .untilAsserted(
-            () -> {
-              var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
-              assertThat(cm).isNotNull();
-              assertThat(cm.getData()).containsEntry(KEY, INITIAL_VALUE);
-            });
+//     await()
+//         .untilAsserted(
+//             () -> {
+//               var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
+//               assertThat(cm).isNotNull();
+//               assertThat(cm.getData()).containsEntry(KEY, INITIAL_VALUE);
+//             });
 
-    cr.getSpec().setValue(CHANGED_VALUE);
-    cr = extension.replace(cr);
+//     cr.getSpec().setValue(CHANGED_VALUE);
+//     cr = extension.replace(cr);
 
-    await()
-        .untilAsserted(
-            () -> {
-              var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
-              assertThat(cm.getData()).containsEntry(KEY, CHANGED_VALUE);
-            });
+//     await()
+//         .untilAsserted(
+//             () -> {
+//               var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
+//               assertThat(cm.getData()).containsEntry(KEY, CHANGED_VALUE);
+//             });
 
-    extension.delete(cr);
+//     extension.delete(cr);
 
-    await()
-        .untilAsserted(
-            () -> {
-              var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
-              assertThat(cm).isNull();
-            });
-  }
+//     await()
+//         .untilAsserted(
+//             () -> {
+//               var cm = extension.get(ConfigMap.class, RESOURCE_NAME);
+//               assertThat(cm).isNull();
+//             });
+//   }
 
-  MetadataOperatorCustomResource testResource() {
-    var resource = new MetadataOperatorCustomResource();
-    resource.setMetadata(new ObjectMetaBuilder().withName(RESOURCE_NAME).build());
-    resource.setSpec(new MetadataOperatorSpec());
-    resource.getSpec().setValue(INITIAL_VALUE);
-    return resource;
-  }
-}
+//   MetadataOperatorCustomResource testResource() {
+//     var resource = new MetadataOperatorCustomResource();
+//     resource.setMetadata(new ObjectMetaBuilder().withName(RESOURCE_NAME).build());
+//     resource.setSpec(new MetadataOperatorSpec());
+//     resource.getSpec().setValue(INITIAL_VALUE);
+//     return resource;
+//   }
+// }

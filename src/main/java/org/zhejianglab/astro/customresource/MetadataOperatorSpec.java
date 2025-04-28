@@ -1,4 +1,4 @@
-package org.zhejianglab.astro;
+package org.zhejianglab.astro.customresource;
 
 public class MetadataOperatorSpec {
 

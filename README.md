@@ -8,12 +8,12 @@
 
 2. apply CRD
 ```shell
-kubectl apply -f ./metadata-operator/target/classes/META-INF/fabric8/metadataoperatorcustomresources.org.zhejianglab.astro-v1.yml
+kubectl apply -f ./target/classes/META-INF/fabric8/metadataoperatorcustomresources.org.zhejianglab.astro-v1.yml
 ```
 
 3. install CR
 ```shell
-kubectl apply -f ./metadata-operator/k8s/test-resource.yaml
+kubectl apply -f ./k8s/test-resource.yaml
 ```
 
 ### Maven CMD
@@ -24,6 +24,11 @@ mvn io.javaoperatorsdk:bootstrapper:5.0.4:create -DprojectGroupId=org.zhejiangla
 1. format
 ```shell
 mvn spotless:apply
+```
+
+2. check dependence
+```shell
+mvn dependency:tree
 ```
 
 2. package jar

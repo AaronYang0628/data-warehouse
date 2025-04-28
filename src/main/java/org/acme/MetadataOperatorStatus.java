@@ -1,5 +1,3 @@
 package org.acme;
 
-public class MetadataOperatorStatus {
-
-}
+public class MetadataOperatorStatus {}

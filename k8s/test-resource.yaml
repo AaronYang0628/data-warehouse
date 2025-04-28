@@ -1,0 +1,6 @@
+apiVersion: org.acme/v1
+kind: MetadataOperatorCustomResource
+metadata:
+  name: test1
+spec:
+  value: test

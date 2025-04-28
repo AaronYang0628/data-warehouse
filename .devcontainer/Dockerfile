@@ -1,5 +1,5 @@
 # 使用Ubuntu 22.04作为基础镜像
-FROM ubuntu:22.04
+FROM m.daocloud.io/docker.io/ubuntu:22.04
 
 # 避免安装时的交互式提问
 ENV DEBIAN_FRONTEND=noninteractive
@@ -12,14 +12,15 @@ RUN apt-get update && \
     git \
     wget \
     gnupg \
+    lsb-release \
     apt-transport-https \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装OpenJDK 17 (Temurin发行版)
+# 安装OpenJDK 17 (Temurin发行版) - 修正版
 RUN mkdir -p /etc/apt/keyrings && \
-    wget -O - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg && \
-    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg] https://packages.adoptium.net/debian $(lsb_release -sc) main" | tee /etc/apt/sources.list.d/adoptium.list > /dev/null && \
+    wget -qO - https://packages.adoptium.net/artifactory/api/gpg/key/public | gpg --dearmor -o /etc/apt/keyrings/adoptium.gpg && \
+    echo "deb [signed-by=/etc/apt/keyrings/adoptium.gpg arch=amd64] https://packages.adoptium.net/artifactory/deb $(awk -F= '/^VERSION_CODENAME/{print$2}' /etc/os-release) main" | tee /etc/apt/sources.list.d/adoptium.list > /dev/null && \
     apt-get update && \
     apt-get install -y temurin-17-jdk && \
     apt-get clean && \
@@ -49,13 +50,5 @@ ENV GOROOT=/usr/local/go
 ENV GOPATH=/go
 ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
-# 创建非root用户
-ARG USERNAME=vscode
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-RUN groupadd --gid $USER_GID $USERNAME && \
-    useradd --uid $USER_UID --gid $USER_GID -m $USERNAME && \
-    mkdir -p /go && chown -R $USER_UID:$USER_GID /go
-
-USER $USERNAME
+USER root
 WORKDIR /workspace

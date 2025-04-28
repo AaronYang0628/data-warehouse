@@ -8,7 +8,7 @@
 
 2. apply CRD
 ```shell
-kubectl apply -f ./metadata-operator/target/classes/META-INF/fabric8/metadataoperatorcustomresources.org.acme-v1.yml
+kubectl apply -f ./metadata-operator/target/classes/META-INF/fabric8/metadataoperatorcustomresources.org.zhejianglab.astro-v1.yml
 ```
 
 3. install CR
@@ -17,6 +17,10 @@ kubectl apply -f ./metadata-operator/k8s/test-resource.yaml
 ```
 
 ### Maven CMD
+0. init project
+```shell
+mvn io.javaoperatorsdk:bootstrapper:5.0.4:create -DprojectGroupId=org.zhejianglab.astro -DprojectArtifactId=metadata-operator
+```
 1. format
 ```shell
 mvn spotless:apply

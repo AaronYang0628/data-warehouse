@@ -1,8 +1,8 @@
-package org.acme;
+package org.zhejianglab.astro;
 
-import static org.acme.ConfigMapDependentResource.KEY;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
+import static org.zhejianglab.astro.ConfigMapDependentResource.KEY;
 
 import io.fabric8.kubernetes.api.model.ConfigMap;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
@@ -21,7 +21,7 @@ class MetadataOperatorReconcilerIntegrationTest {
           .withReconciler(MetadataOperatorReconciler.class)
           .build();
 
-  // @Test
+  //   @Test
   void testCRUDOperations() {
     var cr = extension.create(testResource());
 
@@ -55,8 +55,7 @@ class MetadataOperatorReconcilerIntegrationTest {
 
   MetadataOperatorCustomResource testResource() {
     var resource = new MetadataOperatorCustomResource();
-    resource.setMetadata(
-        new ObjectMetaBuilder().withNamespace("default").withName(RESOURCE_NAME).build());
+    resource.setMetadata(new ObjectMetaBuilder().withName(RESOURCE_NAME).build());
     resource.setSpec(new MetadataOperatorSpec());
     resource.getSpec().setValue(INITIAL_VALUE);
     return resource;

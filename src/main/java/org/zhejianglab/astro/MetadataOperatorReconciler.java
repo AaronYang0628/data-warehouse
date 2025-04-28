@@ -1,4 +1,4 @@
-package org.acme;
+package org.zhejianglab.astro;
 
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.api.reconciler.Reconciler;

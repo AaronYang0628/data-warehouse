@@ -1,4 +1,4 @@
-apiVersion: org.acme/v1
+apiVersion: org.zhejianglab.astro/v1
 kind: MetadataOperatorCustomResource
 metadata:
   name: test1

@@ -13,6 +13,6 @@
       ]
     }
   },
-  "remoteUser": "vscode",
+  "remoteUser": "root",
   "postCreateCommand": "go version && java -version && mvn -v"
 }

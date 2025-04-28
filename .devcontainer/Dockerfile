@@ -12,6 +12,7 @@ RUN apt-get update && \
     git \
     wget \
     gnupg \
+    vim \
     lsb-release \
     apt-transport-https \
     && apt-get clean \
@@ -49,6 +50,16 @@ RUN wget https://dl.google.com/go/go${GO_VERSION}.linux-amd64.tar.gz -O /tmp/go.
 ENV GOROOT=/usr/local/go
 ENV GOPATH=/go
 ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
+
+# 添加一些其他binary工具
+ARG MIRROR="files.m.daocloud.io/" 
+ARG KUBECTL_VERSION=$(curl -L -s https://${MIRROR}dl.k8s.io/release/stable.txt)
+RUN curl -sSLo kubectl "https://${MIRROR}dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
+    chmod u+x kubectl && \
+    mkdir -p ${HOME}/bin && \
+    mv -f kubectl ${HOME}/bin 
+
+ENV PATH="${HOME}/bin:${PATH}"
 
 USER root
 WORKDIR /workspace

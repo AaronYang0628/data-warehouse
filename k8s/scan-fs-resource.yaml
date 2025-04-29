@@ -1,5 +1,5 @@
 apiVersion: org.zhejianglab.astro/v1
-kind: MetadataOperatorCustomResource
+kind: MetadataIngestTask
 metadata:
   name: test1
 spec:
@@ -9,6 +9,10 @@ spec:
     tags:
       - CRAFTS_SPECTRUM_ORIGINAL
       - FAST
+    userProperties:
+      key1: "value1"
+      key2: 1231
+      key3: true
     pathPatterns:
       bucketName: "[^/]*\\/([^/]+)\\/.*"
     allowedSuffixes:

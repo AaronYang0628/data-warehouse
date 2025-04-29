@@ -1,7 +1,7 @@
 apiVersion: org.zhejianglab.astro/v1
-kind: MetadataOperatorCustomResource
+kind: MetadataIngestTask
 metadata:
-  name: test1
+  name: ingest-table-or-fits-from-s3
 spec:
   path: "s3://adcp/crafts/HI/ZD2021_1_2/Dec-0619_04_05/20211201"
   timeout: 20
@@ -9,9 +9,14 @@ spec:
     tags:
       - CRAFTS_SPECTRUM_ORIGINAL
       - FAST
+    userProperties:
+      key1: "value1"
+      key2: 1231
+      key3: true
     pathPatterns:
       bucket_name: "[^/]*\\/([^/]+)\\/.*"
     allowedSuffixes:
       - fits
+      - parquet
   platform: s3
   extraSecret: minio-credientials

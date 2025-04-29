@@ -7,5 +7,6 @@ import io.fabric8.kubernetes.model.annotation.Version;
 
 @Group("org.zhejianglab.astro")
 @Version("v1")
-public class MetadataOperator extends CustomResource<MetadataOperatorSpec, MetadataOperatorStatus>
+public class MetadataIngestTask
+    extends CustomResource<MetadataIngestTaskSpec, MetadataIngestTaskStatus>
     implements Namespaced {}

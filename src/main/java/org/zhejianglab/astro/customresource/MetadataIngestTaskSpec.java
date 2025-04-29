@@ -1,6 +1,6 @@
 package org.zhejianglab.astro.customresource;
 
-public class MetadataOperatorSpec {
+public class MetadataIngestTaskSpec {
 
   private String value;
 

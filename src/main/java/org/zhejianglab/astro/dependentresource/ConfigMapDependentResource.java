@@ -27,7 +27,7 @@ public class ConfigMapDependentResource
                 .withName(primary.getMetadata().getName())
                 .withNamespace(primary.getMetadata().getNamespace())
                 .build())
-        .withData(Map.of(KEY, primary.getSpec().getValue()))
+        .withData(Map.of("A", "B"))
         .build();
   }
 }

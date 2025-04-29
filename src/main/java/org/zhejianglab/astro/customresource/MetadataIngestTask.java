@@ -8,5 +8,14 @@ import io.fabric8.kubernetes.model.annotation.Version;
 @Group("org.zhejianglab.astro")
 @Version("v1")
 public class MetadataIngestTask
-    extends CustomResource<MetadataIngestTaskSpec, MetadataIngestTaskStatus>
-    implements Namespaced {}
+    extends CustomResource<MetadataIngestTaskSpec, MetadataIngestTaskStatus> implements Namespaced {
+
+  private static final long serialVersionUID = 1L;
+  public static final String KIND = "MetadataIngestTask";
+  public static final String PLURAL = "metadataingesttasks";
+
+  @Override
+  public String toString() {
+    return super.toString();
+  }
+}

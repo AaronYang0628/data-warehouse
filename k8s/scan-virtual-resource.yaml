@@ -1,7 +1,7 @@
 apiVersion: org.zhejianglab.astro/v1
 kind: MetadataIngestTask
 metadata:
-  name: ingest-table-or-fits-from-s3
+  name: ingest-table-or-fits-from-nothing
 spec:
   path: "s3://adcp/crafts/HI/ZD2021_1_2/Dec-0619_04_05/20211201"
   timeout: 20
@@ -11,8 +11,8 @@ spec:
       - FAST
     userProperties:
       key1: "value1"
-      key2: 1231
-      key3: true
+      key2: "1231"
+      key3: "true"
     pathPatterns:
       bucket_name: "[^/]*\\/([^/]+)\\/.*"
     allowedSuffixes:

@@ -11,8 +11,8 @@ spec:
       - FAST
     userProperties:
       key1: "value1"
-      key2: 1231
-      key3: true
+      key2: "1231"
+      key3: "true"
   platform: jdbc
   extraSecret: database-credientials
 

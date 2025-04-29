@@ -22,7 +22,7 @@ public class MetadataOperatorDevReconciler implements Reconciler<MetadataIngestT
 
     MetadataIngestTaskSpec spec = primary.getSpec();
 
-    log.info("current go spec ", spec);
+    log.info("current go spec {}", spec);
     return UpdateControl.noUpdate();
   }
 }

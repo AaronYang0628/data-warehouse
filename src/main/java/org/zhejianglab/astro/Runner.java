@@ -21,6 +21,14 @@ public class Runner {
 
   private static final Logger log = LoggerFactory.getLogger(Runner.class);
 
+  /**
+   * Main entry point for the Metadata Ingest Operator. ## remember to add the following environment
+   * variables: METADATA_OPERATOR_MODE=dev or prod and apply the following command: kubectl apply -f
+   * ./target/classes/META-INF/fabric8/metadataingesttasks.org.zhejianglab.astro-v1.yml
+   *
+   * @param args
+   * @throws IOException
+   */
   public static void main(String[] args) throws IOException {
     log.info("Metadata Ingest Operator starting!");
     Operator operator = new Operator(o -> o.withStopOnInformerErrorDuringStartup(false));
@@ -38,12 +46,14 @@ public class Runner {
       System.exit(1);
     }
     operator.start();
-    log.info("Operator started.");
+    log.info("Metadata Ingest Operator started.");
 
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);
     server.createContext("/startup", new StartupHandler(operator));
     server.createContext("/healthz", new LivenessHandler(operator));
     server.setExecutor(null);
     server.start();
+
+    log.info("Metadata Ingest Operator Healthy Probes started.");
   }
 }

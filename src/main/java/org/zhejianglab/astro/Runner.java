@@ -42,7 +42,6 @@ public class Runner {
       operator.register(new MetadataOperatorDefaultReconciler());
     } else {
       log.error("Invalid METADATA_OPERATOR_MODE: {}", mode);
-      System.out.println("Invalid METADATA_OPERATOR_MODE: " + mode);
       System.exit(1);
     }
     operator.start();

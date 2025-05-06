@@ -5,6 +5,22 @@ metadata:
 spec:
   path: "jdbc:postgresql://<host>:<port>/<database_name>"
   timeout: 20
+  flinkJobConfig:
+    flinkVersion: v1_20
+    flinkConfiguration:
+      taskmanager.numberOfTaskSlots: "2"
+    jobManager:
+      resource:
+        memory: "2048m"
+        cpu: 1
+    taskManager:
+      resource:
+        memory: "2048m"
+        cpu: 1
+    job:
+      jarURI: local:///opt/flink/examples/streaming/StateMachineExample.jar
+      parallelism: 2
+      upgradeMode: stateless
   scanConfig:
     tags:
       - CRAFTS_SPECTRUM_ORIGINAL

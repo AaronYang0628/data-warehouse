@@ -5,11 +5,10 @@ import io.fabric8.kubernetes.api.model.ConfigMapBuilder;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
-import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import java.util.Map;
 import org.zhejianglab.astro.customresource.MetadataIngestTask;
 
-@KubernetesDependent
+// @KubernetesDependent
 public class ConfigMapDependentResource
     extends CRUDKubernetesDependentResource<ConfigMap, MetadataIngestTask> {
 

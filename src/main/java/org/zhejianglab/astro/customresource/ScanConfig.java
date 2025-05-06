@@ -1,20 +1,15 @@
 package org.zhejianglab.astro.customresource;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import java.util.Map;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.extern.jackson.Jacksonized;
+import lombok.*;
 
-@Getter
-@Setter
-@EqualsAndHashCode
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
-@ToString
-@Jacksonized
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class ScanConfig {
 
   private List<String> tags;

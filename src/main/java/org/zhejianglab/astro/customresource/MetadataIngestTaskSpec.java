@@ -1,16 +1,13 @@
 package org.zhejianglab.astro.customresource;
 
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import lombok.*;
 import lombok.extern.jackson.Jacksonized;
 
-@Getter
-@Setter
-@EqualsAndHashCode
-@ToString
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class MetadataIngestTaskSpec {
 
   private String path;
@@ -18,15 +15,22 @@ public class MetadataIngestTaskSpec {
   private Integer timeout;
   private String extraSecret;
   private ScanConfig scanConfig;
+  private FlinkJobConfig flinkJobConfig;
 
   @Builder
   @Jacksonized
   public MetadataIngestTaskSpec(
-      String path, Integer timeout, String platform, String extraSecret, ScanConfig scanConfig) {
+      String path,
+      Integer timeout,
+      String platform,
+      String extraSecret,
+      ScanConfig scanConfig,
+      FlinkJobConfig flinkJobConfig) {
     this.timeout = timeout;
     this.path = path;
     this.platform = platform;
     this.extraSecret = extraSecret;
     this.scanConfig = scanConfig;
+    this.flinkJobConfig = flinkJobConfig;
   }
 }

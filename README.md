@@ -31,12 +31,13 @@ mvn spotless:apply
 mvn dependency:tree
 ```
 
-2. package jar
+3. package jar
 ```shell
 mvn clean package
 ```
 
-2. build docker image
+4. build docker image
 ```shell
-mvn jib:dockerBuild
+docker login -u <username> -p <password>
+mvn compile jib:build
 ```

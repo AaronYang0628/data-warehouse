@@ -22,22 +22,6 @@ public class FlinkDeploymentDependentResource
     super(FlinkDeployment.class);
   }
 
-  //  @Override
-  //  public ErrorStatusHandler<MetadataIngestTask> getErrorStatusHandler() {
-  //    return (retryInfo, exception, context) -> {
-  //      // 记录错误日志
-  //      log.error("Error processing FlinkDeployment", exception);
-  //
-  //      // 标记自定义资源状态为错误
-  //      primary.getStatus().setError(exception.getMessage());
-  //
-  //      // 设置重试策略
-  //      return ErrorStatusUpdateControl.updateStatus(primary)
-  //              .withRetry(true)
-  //              .withRetryAfter(Duration.ofMinutes(5));
-  //    };
-  //  }
-
   @Override
   protected FlinkDeployment desired(
       MetadataIngestTask primary, Context<MetadataIngestTask> context) {

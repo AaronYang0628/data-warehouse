@@ -8,16 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.probes.LivenessHandler;
 import org.zhejianglab.astro.probes.StartupHandler;
-import org.zhejianglab.astro.reconciler.MetadataOperatorDefaultReconciler;
-import org.zhejianglab.astro.reconciler.MetadataOperatorDevReconciler;
+import org.zhejianglab.astro.reconciler.MetadataOperatorFlinkReconciler;
+import org.zhejianglab.astro.reconciler.MetadataOperatorJavaReconciler;
 
 public class Runner {
-
-  private static final String METADATA_OPERATOR_MODE = "METADATA_OPERATOR_MODE";
-
-  private static final String METADATA_OPERATOR_DEV_MODE = "dev";
-
-  private static final String METADATA_OPERATOR_PROD_MODE = "prod";
 
   private static final Logger log = LoggerFactory.getLogger(Runner.class);
 
@@ -32,19 +26,11 @@ public class Runner {
   public static void main(String[] args) throws IOException {
     log.info("Metadata Ingest Operator starting!");
     Operator operator = new Operator(o -> o.withStopOnInformerErrorDuringStartup(false));
-    String mode = System.getenv(METADATA_OPERATOR_MODE);
 
-    if (METADATA_OPERATOR_DEV_MODE.equals(mode)) {
-      log.info("Metadata Ingest Operator running in dev mode.");
-      operator.register(new MetadataOperatorDevReconciler());
-    } else if (METADATA_OPERATOR_PROD_MODE.equals(mode)) {
-      log.info("Metadata Ingest Operator running in prod mode.");
-      operator.register(new MetadataOperatorDefaultReconciler());
-    } else {
-      log.error("Invalid METADATA_OPERATOR_MODE: {}", mode);
-      System.exit(1);
-    }
+    operator.register(new MetadataOperatorFlinkReconciler());
+    operator.register(new MetadataOperatorJavaReconciler());
     operator.start();
+
     log.info("Metadata Ingest Operator started.");
 
     HttpServer server = HttpServer.create(new InetSocketAddress(0), 0);

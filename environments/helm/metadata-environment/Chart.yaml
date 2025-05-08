@@ -1,0 +1,19 @@
+apiVersion: v2
+name: metadata-environment
+description: A Helm chart for Kubernetes
+type: application
+version: 0.0.1
+appVersion: 0.0.1
+dependencies:
+  - name: elasticsearch
+    version: 22.0.2
+    repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
+    condition: elasticsearch.enabled
+  - name: kafka
+    version: 32.2.3
+    repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
+    condition: kafka.enabled
+  - name: flink-kubernetes-operator
+    version: 1.11.0
+    repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
+    condition: flink.enabled

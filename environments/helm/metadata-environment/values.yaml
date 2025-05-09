@@ -1,9 +1,118 @@
 global:
   storageClass: "" 
-  registry: m.lab.zverse.space/docker.io
+  registryPrefix: m.lab.zverse.space
   pullPolicy: IfNotPresent
   security: 
     allowInsecureImages: true
+
+resourcesPreset: "nano"
+
+ingestTaskOperator:
+  name: ingest-operator
+  commonLabels: {}
+  commonAnnotations: {}
+  image:
+    registry: docker-registry.lab.zverse.space
+    repository: ay-dev/metadata-operator
+    tag: test
+    pullPolicy: IfNotPresent
+    pullSecrets: []
+  serviceAccount:
+    automount: true
+    annotations: {}
+    name: "metadata-ingest-operator"
+    role:
+      name: "metadata-ingest-operator"
+    roleBinding:
+      name: "metadata-ingest-operator"
+  automountServiceAccountToken: false
+  podLabels: {}
+  affinity: {}
+  podAnnotations: {}
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  hostNetwork: false
+  dnsPolicy: ""
+  dnsConfig: {}
+  hostIPC: false
+  priorityClassName: ""
+  nodeSelector: {}
+  tolerations: []
+  schedulerName: ""
+  topologySpreadConstraints: []
+  podSecurityContext:
+    enabled: true
+    fsGroupChangePolicy: Always
+    supplementalGroups: []
+    fsGroup: 0
+  terminationGracePeriodSeconds: ""
+  hostAliases: []
+  command: []
+  args: []
+  diagnosticMode:
+    enabled: false
+    command: ["tail", "-f", "/etc/hosts"]
+    args: []
+  extraEnvVars: []
+  extraEnvVarsCM: ""
+  extraEnvVarsSecret: ""
+  revisionHistoryLimit: 10
+  updateStrategy:
+    type: RollingUpdate
+    rollingUpdate: {}
+  lifecycleHooks: {}
+  resources: {}
+  extraVolumes: []
+  extraVolumeMounts: []
+  livenessProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  startupProbe:
+    enabled: false
+    initialDelaySeconds: 30
+    timeoutSeconds: 5
+    periodSeconds: 10
+    failureThreshold: 6
+    successThreshold: 1
+  readinessProbe:
+    enabled: false
+    initialDelaySeconds: 5
+    timeoutSeconds: 3
+    periodSeconds: 5
+    failureThreshold: 3
+    successThreshold: 1
+  service:
+    name: healthz
+    healthz:
+      type: ClusterIP
+      port: 8099
+      targetPort: 8099
+
+certManager:
+  enabled: false
+  installCRDs: true
+  image:
+    repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-controller
+  webhook:
+    image:
+      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-webhook
+  cainjector:
+    image:
+      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-cainjector
+  acmesolver:
+    image:
+      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-acmesolver
+  startupapicheck:
+    image:
+      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-ctl
 
 elasticsearch:
   enabled: true
@@ -22,7 +131,7 @@ elasticsearch:
     annotations:
       cert-manager.io/cluster-issuer: self-signed-ca-issuer
       nginx.ingress.kubernetes.io/rewrite-target: /$1
-    hostname: elastic-search.dev.tech
+    hostname: elastic-search.metadata.dev
     ingressClassName: nginx
     path: /?(.*)
     tls: true

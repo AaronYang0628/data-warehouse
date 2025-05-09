@@ -2,9 +2,19 @@ apiVersion: v2
 name: metadata-environment
 description: A Helm chart for Kubernetes
 type: application
-version: 0.0.1
+version: 0.0.2
 appVersion: 0.0.1
+keywords:
+- metadata
+- flink
 dependencies:
+  - name: common
+    version: 2.22.0
+    repository: https://charts.bitnami.com/bitnami
+  - name: cert-manager
+    version: 1.17.2
+    repo: https://charts.jetstack.io
+    condition: certManager.enabled
   - name: elasticsearch
     version: 22.0.2
     repository: https://aaronyang0628.github.io/helm-chart-mirror/charts

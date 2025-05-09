@@ -54,9 +54,24 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "metadata-environment.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
-{{- default (include "metadata-environment.fullname" .) .Values.serviceAccount.name }}
+{{- if .Values.ingestTaskOperator.serviceAccount.create }}
+{{- default (include "metadata-environment.fullname" .) .Values.ingestTaskOperator.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- default "default" .Values.ingestTaskOperator.serviceAccount.name }}
 {{- end }}
+{{- end }}
+
+{{/*
+Create the name of the role to use
+*/}}
+{{- define "metadata-environment.roleName" -}}
+{{ default (include "common.names.fullname" .) .Values.ingestTaskOperator.serviceAccount.role.name }}
+{{- end }}
+
+
+{{/*
+Create the name of the rolebinding to use
+*/}}
+{{- define "metadata-environment.roleBindingName" -}}
+{{ default (include "common.names.fullname" .) .Values.ingestTaskOperator.serviceAccount.roleBinding.name }}
 {{- end }}

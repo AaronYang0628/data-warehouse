@@ -1,0 +1,139 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ .Values.ingestTaskOperator.name }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.ingestTaskOperator.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.ingestTaskOperator.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.podLabels .Values.ingestTaskOperator.commonLabels ) "context" . ) }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
+      annotations:
+        {{- if .Values.ingestTaskOperator.podAnnotations }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.ingestTaskOperator.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.ingestTaskOperator.serviceAccount.name }}
+      automountServiceAccountToken: false
+      shareProcessNamespace: true
+      {{- if .Values.ingestTaskOperator.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.ingestTaskOperator.podAffinityPreset "customLabels" $podLabels "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.ingestTaskOperator.podAntiAffinityPreset "customLabels" $podLabels "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.ingestTaskOperator.nodeAffinityPreset.type "key" .Values.ingestTaskOperator.nodeAffinityPreset.key "values" .Values.ingestTaskOperator.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      hostNetwork: {{ .Values.ingestTaskOperator.hostNetwork }}
+      {{- if .Values.ingestTaskOperator.dnsPolicy  }}
+      dnsPolicy: {{ .Values.ingestTaskOperator.dnsPolicy }}
+      {{- end }}
+      hostIPC: {{ .Values.ingestTaskOperator.hostIPC }}
+      {{- if .Values.ingestTaskOperator.priorityClassName }}
+      priorityClassName: {{ .Values.ingestTaskOperator.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.ingestTaskOperator.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ingestTaskOperator.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ingestTaskOperator.schedulerName }}
+      schedulerName: {{ .Values.ingestTaskOperator.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.ingestTaskOperator.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.topologySpreadConstraints "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ingestTaskOperator.podSecurityContext.enabled }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.ingestTaskOperator.podSecurityContext "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.ingestTaskOperator.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.ingestTaskOperator.terminationGracePeriodSeconds }}
+      {{- end }}
+      containers:
+        - name: operator
+          image: "{{ .Values.ingestTaskOperator.image.registry }}/{{ .Values.ingestTaskOperator.image.repository }}:{{ .Values.ingestTaskOperator.image.tag }}"
+          imagePullPolicy: {{ .Values.ingestTaskOperator.image.pullPolicy }}
+          {{- if .Values.ingestTaskOperator.containerSecurityContext }}
+          securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.ingestTaskOperator.containerSecurityContext "context" $) | nindent 12 }}
+          {{- else }}
+          securityContext:
+            privileged: true
+          {{- end }}
+          {{- if .Values.ingestTaskOperator.diagnosticMode.enabled }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.diagnosticMode.command "context" $) | nindent 12 }}
+          {{- else if .Values.ingestTaskOperator.command }}
+          command: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.command "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ingestTaskOperator.diagnosticMode.enabled }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.diagnosticMode.args "context" $) | nindent 12 }}
+          {{- else if .Values.ingestTaskOperator.args }}
+          args: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.args "context" $) | nindent 12 }}
+          {{- end }}
+          {{- if .Values.ingestTaskOperator.lifecycleHooks }}
+          lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.lifecycleHooks "context" $) | nindent 12 }}
+          {{- end }}
+          env:
+            {{- if .Values.ingestTaskOperator.extraEnvVars }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraEnvVars "context" $) | nindent 12 }}
+            {{- end }}
+          envFrom:
+            {{- if .Values.ingestTaskOperator.extraEnvVarsCM }}
+            - configMapRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraEnvVarsCM "context" $) }}
+            {{- end }}
+            {{- if .Values.ingestTaskOperator.extraEnvVarsSecret }}
+            - secretRef:
+                name: {{ include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraEnvVarsSecret "context" $) }}
+            {{- end }}
+          ports:
+            - name: healthz
+              containerPort: {{ .Values.ingestTaskOperator.service.healthz.port }}
+            {{- if .Values.ingestTaskOperator.extraContainerPorts }}
+            {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraContainerPorts "context" $) | nindent 12 }}
+            {{- end }}
+          {{- if .Values.ingestTaskOperator.customLivenessProbe }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.customLivenessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.ingestTaskOperator.livenessProbe.enabled }}
+          livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ingestTaskOperator.livenessProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: ssh
+          {{- end }}
+          {{- if .Values.ingestTaskOperator.customReadinessProbe }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.customReadinessProbe "context" $) | nindent 12 }}
+          {{- else if .Values.ingestTaskOperator.readinessProbe.enabled }}
+          readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ingestTaskOperator.readinessProbe "enabled" "path") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: ssh
+          {{- end }}
+          {{- if .Values.ingestTaskOperator.customStartupProbe }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.customStartupProbe "context" $) | nindent 12 }}
+          {{- else if .Values.ingestTaskOperator.startupProbe.enabled }}
+          startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ingestTaskOperator.startupProbe "enabled") "context" $) | nindent 12 }}
+            tcpSocket:
+              port: ssh
+          {{- end }}
+          {{- if .Values.ingestTaskOperator.resources }}
+          resources: {{- toYaml .Values.ingestTaskOperator.resources | nindent 12 }}
+          {{- else if ne .Values.resourcesPreset "none" }}
+          resources: {{- include "common.resources.preset" (dict "type" .Values.resourcesPreset) | nindent 12 }}
+          {{- end }}
+          volumeMounts:
+            - name: munge-socket-file
+              mountPath: /run/munge
+            {{- if .Values.ingestTaskOperator.extraVolumeMounts }}
+            {{- include "common.tplvalues.render" ( dict "value" .Values.ingestTaskOperator.extraVolumeMounts "context" $) | nindent 12 }}
+            {{- end }}
+      volumes:
+        - name: munge-socket-file
+          emptyDir: {}
+        {{- if .Values.ingestTaskOperator.extraVolumes }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.ingestTaskOperator.extraVolumes "context" $) | nindent 8 }}
+        {{- end }}

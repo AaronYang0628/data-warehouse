@@ -20,8 +20,8 @@ data:
     - context:
         cluster: local-kubernetes
         user: local-user
-      name: local-user-name
-    current-context: local-user-context
+      name: local-kubernetes
+    current-context: local-kubernetes
     kind: Config
     preferences: {}
     users:

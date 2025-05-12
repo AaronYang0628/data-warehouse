@@ -10,6 +10,7 @@ import org.zhejianglab.astro.dependentresource.FlinkDeploymentDependentResource;
 import org.zhejianglab.astro.utils.ExceptionUtils;
 
 @Workflow(
+    explicitInvocation = true,
     dependents = {
       @Dependent(
           type = FlinkDeploymentDependentResource.class,
@@ -31,11 +32,17 @@ public class MetadataOperatorFlinkReconciler
       MetadataIngestTask primary, Context<MetadataIngestTask> context) {
 
     log.info("Reconcile flink platform");
+    context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
+    if (context.isNextReconciliationImminent()) {
+      // your logic, maybe return?
+      log.info("Reconcile flink inner logic");
+    }
     return UpdateControl.noUpdate();
   }
 
   public DeleteControl cleanup(MetadataIngestTask primary, Context<MetadataIngestTask> context) {
     log.info("Delete flink platform");
+    context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
     return DeleteControl.defaultDelete();
   }
 }

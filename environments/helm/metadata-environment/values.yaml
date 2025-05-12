@@ -72,7 +72,15 @@ ingestTaskOperator:
     type: RollingUpdate
     rollingUpdate: {}
   lifecycleHooks: {}
-  resources: {}
+  resources: 
+    limits:
+      cpu: 2
+      ephemeral-storage: 8Gi
+      memory: 2Gi
+    requests:
+      cpu: 1
+      ephemeral-storage: 8Gi
+      memory: 1Gi
   extraVolumes: []
   extraVolumeMounts: []
   livenessProbe:
@@ -103,6 +111,9 @@ ingestTaskOperator:
       port: 8099
       targetPort: 8099
 
+flink:
+  enabled: true
+
 certManager:
   enabled: false
   installCRDs: true
@@ -122,7 +133,7 @@ certManager:
       repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-ctl
 
 elasticsearch:
-  enabled: true
+  enabled: false
   global:
     kibanaEnabled: true
   clusterName: elastic
@@ -192,7 +203,7 @@ elasticsearch:
 
 
 kafka:
-  enabled: true
+  enabled: false
   image:
     registry: m.lab.zverse.space/docker.io
   controller:
@@ -243,6 +254,5 @@ kafka:
   zookeeper:
     enabled: false
 
-flink:
-  enabled: true
+
 

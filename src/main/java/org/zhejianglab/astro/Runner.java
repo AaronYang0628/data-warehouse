@@ -56,7 +56,11 @@ public class Runner {
     // String kubeConfigContent = Files.readString(Paths.get(kubeConfigPath));
     // Config config2 = Config.fromKubeconfig(kubeConfigContent);
 
-    Operator operator = new Operator(o -> o.withStopOnInformerErrorDuringStartup(false));
+    Operator operator =
+        new Operator(
+            o ->
+                o.withStopOnInformerErrorDuringStartup(false)
+                    .checkingCRDAndValidateLocalModel(true));
 
     operator.register(new MetadataOperatorFlinkReconciler());
     operator.register(new MetadataOperatorJavaReconciler());

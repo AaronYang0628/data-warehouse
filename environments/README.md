@@ -14,6 +14,6 @@ helm package --destination /tmp/ /root/metadata-operator/environments/helm/metad
 ```shell
 helm upgrade  --create-namespace -n <$namespace> --install -f ./values.yaml metadata-env ay-helm-mirror/ingress-nginx --version=4.11.3
 
-helm upgrade  --create-namespace -n test --install -f ./values.yaml metadata-env /tmp/metadata-environment-0.0.2.tgz
+helm upgrade  --create-namespace -n test --install -f ./environments/helm/metadata-environment/values.yaml metadata-env /tmp/metadata-environment-0.0.4.tgz
 
 ```

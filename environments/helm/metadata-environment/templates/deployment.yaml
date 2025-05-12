@@ -81,6 +81,14 @@ spec:
           lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.lifecycleHooks "context" $) | nindent 12 }}
           {{- end }}
           env:
+          - name: K8S_CLUSTER_SERVER_ADDR
+            value: {{ .Values.ingestTaskOperator.kubeConfig.cluster.server | quote }}
+          - name: K8S_CLUSTER_CERT
+            value: {{ .Values.ingestTaskOperator.kubeConfig.cluster.certData | quote }}
+          - name: K8S_USER_KEY
+            value: {{ .Values.ingestTaskOperator.kubeConfig.user.key | quote }}
+          - name: K8S_USER_CERT
+            value: {{ .Values.ingestTaskOperator.kubeConfig.user.certData | quote }}
             {{- if .Values.ingestTaskOperator.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}
@@ -126,14 +134,16 @@ spec:
           resources: {{- include "common.resources.preset" (dict "type" .Values.resourcesPreset) | nindent 12 }}
           {{- end }}
           volumeMounts:
-            - name: munge-socket-file
-              mountPath: /run/munge
+            - name: kube-config
+              mountPath: /root/.kube/config
+              subPath: config
             {{- if .Values.ingestTaskOperator.extraVolumeMounts }}
             {{- include "common.tplvalues.render" ( dict "value" .Values.ingestTaskOperator.extraVolumeMounts "context" $) | nindent 12 }}
             {{- end }}
       volumes:
-        - name: munge-socket-file
-          emptyDir: {}
+        - name: kube-config
+          configMap:
+            name: {{ include "common.names.fullname" . }}-kube-conf
         {{- if .Values.ingestTaskOperator.extraVolumes }}
         {{- include "common.tplvalues.render" ( dict "value" .Values.ingestTaskOperator.extraVolumes "context" $) | nindent 8 }}
         {{- end }}

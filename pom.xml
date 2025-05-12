@@ -182,13 +182,13 @@
             <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
-                <version>3.4.4</version>
+                <version>3.4.5</version>
                 <configuration>
                     <from>
                         <image>m.daocloud.io/docker.io/library/eclipse-temurin:17-jre</image>
                     </from>
                     <to>
-                        <image>docker-registry.lab.zverse.space/ay-dev/metadata-operator:test</image>
+                        <image>docker-registry.lab.zverse.space/ay-dev/metadata-operator:fix</image>
                     </to>
                 </configuration>
             </plugin>

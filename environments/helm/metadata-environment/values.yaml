@@ -9,6 +9,7 @@ resourcesPreset: "nano"
 
 ingestTaskOperator:
   name: ingest-operator
+  installCRDs: true
   commonLabels: {}
   commonAnnotations: {}
   image:
@@ -111,29 +112,12 @@ ingestTaskOperator:
       port: 8099
       targetPort: 8099
 
+
 flink:
   enabled: true
 
-certManager:
-  enabled: false
-  installCRDs: true
-  image:
-    repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-controller
-  webhook:
-    image:
-      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-webhook
-  cainjector:
-    image:
-      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-cainjector
-  acmesolver:
-    image:
-      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-acmesolver
-  startupapicheck:
-    image:
-      repository: m.lab.zverse.space/quay.io/jetstack/cert-manager-ctl
-
 elasticsearch:
-  enabled: false
+  enabled: true
   global:
     kibanaEnabled: true
   clusterName: elastic
@@ -203,7 +187,7 @@ elasticsearch:
 
 
 kafka:
-  enabled: false
+  enabled: true
   image:
     registry: m.lab.zverse.space/docker.io
   controller:

@@ -19,7 +19,7 @@ kubectl -n test apply -f ./templates/scan-oss-resource.yaml
 ### Maven CMD
 0. init project
 ```shell
-mvn io.javaoperatorsdk:bootstrapper:5.0.4:create -DprojectGroupId=org.zhejianglab.astro -DprojectArtifactId=metadata-operator
+mvn io.javaoperatorsdk:bootstrapper:5.0.4:create -DprojectGroupId=org.zhejianglab.astro -DprojectArtifactId=data-warehouse
 ```
 1. format
 ```shell

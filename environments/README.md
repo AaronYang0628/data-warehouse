@@ -10,10 +10,14 @@ helm package --destination /tmp/ /root/metadata-operator/environments/helm/metad
 
 # install chart
 
+0. install cert-manager [optional]
+```shell
+kubectl create -f https://github.com/jetstack/cert-manager/releases/download/v1.8.2/cert-manager.yaml
+```
 1. install cert 
 ```shell
 helm upgrade  --create-namespace -n <$namespace> --install -f ./values.yaml metadata-env ay-helm-mirror/ingress-nginx --version=4.11.3
 
-helm upgrade  --create-namespace -n test --install -f ./environments/helm/metadata-environment/values.yaml metadata-env /tmp/metadata-environment-0.0.4.tgz
+helm upgrade  --create-namespace -n metadata --install -f ./environments/helm/metadata-environment/values.yaml metadata-env /tmp/metadata-environment-0.0.5.tgz
 
 ```

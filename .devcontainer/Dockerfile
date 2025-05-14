@@ -34,7 +34,7 @@ ENV JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
 ARG MAVEN_VERSION=3.9.6
 RUN wget https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O /tmp/maven.tar.gz && \
     mkdir -p /opt/maven && \
-    tar -xzf /tmp/maven.tar.gz -C /opt/maven --strip-components=1 && \
+    tar -C /opt/maven -xzf /tmp/maven.tar.gz --strip-components=1 && \
     rm /tmp/maven.tar.gz
 
 ENV MAVEN_HOME=/opt/maven
@@ -52,14 +52,19 @@ ENV GOPATH=/go
 ENV PATH="${GOROOT}/bin:${GOPATH}/bin:${PATH}"
 
 # 添加一些其他binary工具
-ARG MIRROR="files.m.daocloud.io/" 
-ARG KUBECTL_VERSION=$(curl -L -s https://${MIRROR}dl.k8s.io/release/stable.txt)
-RUN curl -sSLo kubectl "https://${MIRROR}dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl" && \
-    chmod u+x kubectl && \
-    mkdir -p ${HOME}/bin && \
-    mv -f kubectl ${HOME}/bin 
+ARG KUBECTL_VERSION=v1.33.0
+RUN wget https://files.m.daocloud.io/dl.k8s.io/release/${KUBECTL_VERSION}/bin/linux/amd64/kubectl -O /tmp/kubectl && \
+    chmod u+x /tmp/kubectl && \
+    mv -f /tmp/kubectl /usr/local/bin/kubectl 
 
-ENV PATH="${HOME}/bin:${PATH}"
+ARG HELM_VERSION=v3.13.3
+RUN wget https://files.m.daocloud.io/get.helm.sh/helm-${HELM_VERSION}-linux-amd64.tar.gz -O /tmp/helm-${HELM_VERSION}-linux-amd64.tar.gz && \
+    mkdir -p /opt/helm && \
+    tar -C /opt/helm -xzf /tmp/helm-${HELM_VERSION}-linux-amd64.tar.gz && \
+    rm /tmp/helm-${HELM_VERSION}-linux-amd64.tar.gz
+
+ENV HELM_HOME=/opt/helm/linux-amd64
+ENV PATH="${HELM_HOME}:${PATH}"
 
 USER root
-WORKDIR /workspace
+WORKDIR /workspace`

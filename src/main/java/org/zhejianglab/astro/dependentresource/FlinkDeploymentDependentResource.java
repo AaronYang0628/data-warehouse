@@ -18,6 +18,8 @@ public class FlinkDeploymentDependentResource
 
   private static final Logger log = LoggerFactory.getLogger(FlinkDeploymentDependentResource.class);
 
+  private static final String FLINK_JOB_SUFFIX = "-flink-job";
+
   public FlinkDeploymentDependentResource() {
     super(FlinkDeployment.class);
   }
@@ -31,7 +33,7 @@ public class FlinkDeploymentDependentResource
     } else {
       ObjectMeta metadata =
           new ObjectMetaBuilder()
-              .withName(primary.getMetadata().getName() + "-flink-job")
+              .withName(primary.getMetadata().getName() + FLINK_JOB_SUFFIX)
               .withNamespace(primary.getMetadata().getNamespace())
               .build();
 

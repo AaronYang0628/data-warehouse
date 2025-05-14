@@ -13,7 +13,10 @@ kubectl apply -f ./target/classes/META-INF/fabric8/metadataingesttasks.org.zheji
 
 3. install CR
 ```shell
-kubectl -n test apply -f ./templates/scan-oss-resource.yaml
+kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
+
+kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
+
 ```
 
 ### Maven CMD

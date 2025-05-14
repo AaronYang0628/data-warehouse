@@ -112,21 +112,21 @@ spec:
           {{- else if .Values.ingestTaskOperator.livenessProbe.enabled }}
           livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ingestTaskOperator.livenessProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: ssh
+              port: healthz
           {{- end }}
           {{- if .Values.ingestTaskOperator.customReadinessProbe }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.customReadinessProbe "context" $) | nindent 12 }}
           {{- else if .Values.ingestTaskOperator.readinessProbe.enabled }}
           readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ingestTaskOperator.readinessProbe "enabled" "path") "context" $) | nindent 12 }}
             tcpSocket:
-              port: ssh
+              port: healthz
           {{- end }}
           {{- if .Values.ingestTaskOperator.customStartupProbe }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.customStartupProbe "context" $) | nindent 12 }}
           {{- else if .Values.ingestTaskOperator.startupProbe.enabled }}
           startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.ingestTaskOperator.startupProbe "enabled") "context" $) | nindent 12 }}
             tcpSocket:
-              port: ssh
+              port: healthz
           {{- end }}
           {{- if .Values.ingestTaskOperator.resources }}
           resources: {{- toYaml .Values.ingestTaskOperator.resources | nindent 12 }}

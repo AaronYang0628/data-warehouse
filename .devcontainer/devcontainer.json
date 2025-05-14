@@ -15,7 +15,11 @@
         "golang.go",
         "vscjava.vscode-java-pack",
         "redhat.java",
-        "vscjava.vscode-maven"
+        "vscjava.vscode-maven",
+        "Alibaba-Cloud.tongyi-lingma",
+        "vscjava.vscode-java-debug",
+        "vscjava.vscode-java-dependency",
+        "vscjava.vscode-java-test"
       ]
     }
   },

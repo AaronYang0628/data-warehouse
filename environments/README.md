@@ -5,7 +5,7 @@ helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/c
 
 # package chart
 ```shell
-helm package --destination /tmp/ /root/metadata-operator/environments/helm/metadata-environment/
+helm package --destination /tmp/ /workspaces/data-warehouse/environments/helm/metadata-environment
 ```
 
 # install chart
@@ -18,6 +18,6 @@ kubectl create -f https://github.com/jetstack/cert-manager/releases/download/v1.
 ```shell
 helm upgrade  --create-namespace -n <$namespace> --install -f ./values.yaml metadata-env ay-helm-mirror/ingress-nginx --version=4.11.3
 
-helm upgrade  --create-namespace -n metadata --install -f ./environments/helm/metadata-environment/values.yaml metadata-env /tmp/metadata-environment-0.0.5.tgz
+helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata /tmp/data-warehouse-0.0.5.tgz
 
 ```

@@ -9,16 +9,14 @@ import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.probes.LivenessHandler;
 import org.zhejianglab.astro.probes.StartupHandler;
 import org.zhejianglab.astro.reconciler.MetadataOperatorFlinkReconciler;
-import org.zhejianglab.astro.reconciler.MetadataOperatorJavaReconciler;
 
 public class Runner {
 
   private static final Logger log = LoggerFactory.getLogger(Runner.class);
 
   /**
-   * Main entry point for the Metadata Ingest Operator. ## remember to add the following environment
-   * variables: METADATA_OPERATOR_MODE=dev or prod and apply the following command: kubectl apply -f
-   * ./target/classes/META-INF/fabric8/metadataingesttasks.org.zhejianglab.astro-v1.yml
+   * Main entry point for the Metadata Ingest Operator. apply the following command: kubectl apply
+   * -f ./target/classes/META-INF/fabric8/metadataingesttasks.org.zhejianglab.astro-v1.yml
    *
    * @param args
    * @throws IOException
@@ -32,7 +30,6 @@ public class Runner {
                     .checkingCRDAndValidateLocalModel(true));
 
     operator.register(new MetadataOperatorFlinkReconciler());
-    operator.register(new MetadataOperatorJavaReconciler());
     operator.start();
 
     log.info("Metadata Ingest Operator started.");

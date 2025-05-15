@@ -8,14 +8,15 @@
 
 2. apply CRD
 ```shell
-kubectl apply -f ./target/classes/META-INF/fabric8/metadataingesttasks.org.zhejianglab.astro-v1.yml
+kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/metadataingesttasks.org.zhejianglab.astro-v1.yml
 ```
 
 3. install CR
 ```shell
 kubectl apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
 
-kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
+kubectl apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
+kubectl apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
 
 ```
 

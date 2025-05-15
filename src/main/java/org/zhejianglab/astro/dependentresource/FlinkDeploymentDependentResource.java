@@ -12,11 +12,11 @@ import org.apache.flink.kubernetes.operator.api.FlinkDeployment;
 import org.apache.flink.kubernetes.operator.api.spec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zhejianglab.astro.customresource.MetadataIngestTask;
+import org.zhejianglab.astro.customresource.FlinkIngestTask;
 
 @KubernetesDependent
 public class FlinkDeploymentDependentResource
-    extends CRUDKubernetesDependentResource<FlinkDeployment, MetadataIngestTask> {
+    extends CRUDKubernetesDependentResource<FlinkDeployment, FlinkIngestTask> {
 
   private static final Logger log = LoggerFactory.getLogger(FlinkDeploymentDependentResource.class);
 
@@ -27,8 +27,7 @@ public class FlinkDeploymentDependentResource
   }
 
   @Override
-  protected FlinkDeployment desired(
-      MetadataIngestTask primary, Context<MetadataIngestTask> context) {
+  protected FlinkDeployment desired(FlinkIngestTask primary, Context<FlinkIngestTask> context) {
 
     if (primary.getSpec().getFlinkJobConfig() == null) {
       return null;

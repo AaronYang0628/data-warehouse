@@ -1,4 +1,4 @@
-package org.zhejianglab.astro.customresource;
+package org.zhejianglab.astro.customresource.flink;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
@@ -13,7 +13,7 @@ import org.apache.flink.kubernetes.operator.api.spec.*;
 @AllArgsConstructor
 @Builder
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MetadataIngestTaskManagerSpec {
+public class FlinkIngestTaskManagerSpec {
   private Resource resource;
 
   private Integer replicas;

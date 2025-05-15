@@ -1,5 +1,5 @@
-apiVersion: org.zhejianglab.astro/v1
-kind: MetadataIngestTask
+apiVersion: org.zhejianglab.astro.metadata/v1
+kind: VirtualIngestTask
 metadata:
   name: ingest-table-or-fits-from-nothing
 spec:

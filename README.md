@@ -8,15 +8,21 @@
 
 2. apply CRD
 ```shell
-kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/metadataingesttasks.org.zhejianglab.astro-v1.yml
+### flink job
+kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yml
+
+### java crud
+kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yml
 ```
 
 3. install CR
 ```shell
+### flink job
 kubectl apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
-
-kubectl apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
 kubectl apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
+
+### java crud
+kubectl apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
 
 ```
 

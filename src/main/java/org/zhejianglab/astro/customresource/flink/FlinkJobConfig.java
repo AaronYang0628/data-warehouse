@@ -1,4 +1,4 @@
-package org.zhejianglab.astro.customresource;
+package org.zhejianglab.astro.customresource.flink;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.kubernetes.api.model.ContainerBuilder;
@@ -39,7 +39,7 @@ public class FlinkJobConfig {
 
   private JobManagerSpec jobManager;
 
-  private MetadataIngestTaskManagerSpec taskManager;
+  private FlinkIngestTaskManagerSpec taskManager;
 
   private JobSpec job;
 
@@ -80,9 +80,7 @@ public class FlinkJobConfig {
         .jobManager(
             JobManagerSpec.builder().replicas(1).resource(new Resource(1.0, "2Gi", "1Gi")).build())
         .taskManager(
-            MetadataIngestTaskManagerSpec.builder()
-                .resource(new Resource(1.0, "2Gi", "1Gi"))
-                .build())
+            FlinkIngestTaskManagerSpec.builder().resource(new Resource(1.0, "2Gi", "1Gi")).build())
         .job(
             JobSpec.builder()
                 .jarURI("local:///opt/flink/examples/streaming/StateMachineExample.jar")

@@ -1,4 +1,4 @@
-package org.zhejianglab.astro.customresource;
+package org.zhejianglab.astro.customresource.flink;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
@@ -6,18 +6,14 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import lombok.*;
 import lombok.extern.jackson.Jacksonized;
+import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class MetadataIngestTaskSpec {
+public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
 
-  private String path;
-  private String platform;
-  private Integer timeout;
   private String extraSecret;
-  private List<String> tags;
-  private Map<String, String> userProperties;
   private Map<String, String> pathPatterns;
   private List<String> allowedSuffixes;
 
@@ -34,7 +30,7 @@ public class MetadataIngestTaskSpec {
 
   @Builder
   @Jacksonized
-  public MetadataIngestTaskSpec(
+  public FlinkIngestTaskSpec(
       String path,
       String platform,
       Integer timeout,
@@ -46,12 +42,12 @@ public class MetadataIngestTaskSpec {
       Integer jobParallelism,
       Integer taskSlots,
       FlinkJobConfig flinkJobConfig) {
-    this.path = path;
-    this.platform = platform;
-    this.timeout = timeout;
+    this.setPath(path);
+    this.setPlatform(platform);
+    this.setTimeout(timeout);
+    this.setTags(tags);
+    this.setUserProperties(userProperties);
     this.extraSecret = extraSecret;
-    this.tags = tags;
-    this.userProperties = userProperties;
     this.pathPatterns = pathPatterns;
     this.allowedSuffixes = allowedSuffixes;
     if (null == flinkJobConfig) {

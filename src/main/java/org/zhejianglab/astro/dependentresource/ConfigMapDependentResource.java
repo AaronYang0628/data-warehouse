@@ -7,11 +7,11 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import java.util.Map;
-import org.zhejianglab.astro.customresource.MetadataIngestTask;
+import org.zhejianglab.astro.customresource.VirtualIngestTask;
 
 @KubernetesDependent
 public class ConfigMapDependentResource
-    extends CRUDKubernetesDependentResource<ConfigMap, MetadataIngestTask> {
+    extends CRUDKubernetesDependentResource<ConfigMap, VirtualIngestTask> {
 
   public static final String KEY = "key";
 
@@ -20,7 +20,7 @@ public class ConfigMapDependentResource
   }
 
   @Override
-  protected ConfigMap desired(MetadataIngestTask primary, Context<MetadataIngestTask> context) {
+  protected ConfigMap desired(VirtualIngestTask primary, Context<VirtualIngestTask> context) {
     return new ConfigMapBuilder()
         .withMetadata(
             new ObjectMetaBuilder()

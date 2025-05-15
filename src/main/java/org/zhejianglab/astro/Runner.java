@@ -2,19 +2,13 @@ package org.zhejianglab.astro;
 
 import com.sun.net.httpserver.HttpServer;
 import io.javaoperatorsdk.operator.Operator;
-import io.javaoperatorsdk.operator.api.config.ControllerConfiguration;
-// 新增导入
 import java.io.IOException;
 import java.net.InetSocketAddress;
-import java.util.function.Predicate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zhejianglab.astro.customresource.MetadataIngestTask;
-import org.zhejianglab.astro.customresource.Platform;
 import org.zhejianglab.astro.probes.LivenessHandler;
 import org.zhejianglab.astro.probes.StartupHandler;
 import org.zhejianglab.astro.reconciler.MetadataOperatorFlinkReconciler;
-import org.zhejianglab.astro.reconciler.MetadataOperatorJavaReconciler;
 
 public class Runner {
 
@@ -35,18 +29,7 @@ public class Runner {
                 o.withStopOnInformerErrorDuringStartup(false)
                     .checkingCRDAndValidateLocalModel(true));
 
-    // Define the filter predicate
-    Predicate<MetadataIngestTask> flinkReconcilerFilter = r -> !isVirtualPlatform(r);
-
-    ControllerConfiguration<MetadataIngestTask> flinkConfig =
-        ControllerConfigurationBuilder<MetadataIngestTask>.builder()
-            .withName("flink-reconciler")
-            .withFilter(flinkReconcilerFilter)
-            .build();
-    // Register Flink reconciler with filter
-    operator.register(new MetadataOperatorFlinkReconciler(), flinkConfig);
-
-    operator.register(new MetadataOperatorJavaReconciler());
+    operator.register(new MetadataOperatorFlinkReconciler());
     operator.start();
 
     log.info("Metadata Ingest Operator started.");
@@ -58,9 +41,5 @@ public class Runner {
     server.start();
 
     log.info("Metadata Ingest Operator Healthy Probes started.");
-  }
-
-  private static boolean isVirtualPlatform(MetadataIngestTask ingestTask) {
-    return ingestTask.getSpec().getPlatform().equalsIgnoreCase(Platform.VIRTUAL.getProtocol());
   }
 }

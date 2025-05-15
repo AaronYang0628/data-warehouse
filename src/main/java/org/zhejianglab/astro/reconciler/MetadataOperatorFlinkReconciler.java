@@ -8,8 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.MetadataIngestTask;
 import org.zhejianglab.astro.customresource.Platform;
+import org.zhejianglab.astro.dependentresource.ConfigMapDependentResource;
 import org.zhejianglab.astro.dependentresource.FlinkDeploymentDependentCondition;
 import org.zhejianglab.astro.dependentresource.FlinkDeploymentDependentResource;
+import org.zhejianglab.astro.dependentresource.JavaCRUDDependentCondition;
 import org.zhejianglab.astro.utils.ExceptionUtils;
 
 @Workflow(
@@ -17,8 +19,10 @@ import org.zhejianglab.astro.utils.ExceptionUtils;
     dependents = {
       @Dependent(
           type = FlinkDeploymentDependentResource.class,
-          reconcilePrecondition = FlinkDeploymentDependentCondition.class,
-          activationCondition = FlinkDeploymentDependentCondition.class)
+          activationCondition = FlinkDeploymentDependentCondition.class),
+      @Dependent(
+          type = ConfigMapDependentResource.class,
+          activationCondition = JavaCRUDDependentCondition.class)
     })
 public class MetadataOperatorFlinkReconciler
     implements Reconciler<MetadataIngestTask>, Cleaner<MetadataIngestTask> {
@@ -28,9 +32,6 @@ public class MetadataOperatorFlinkReconciler
   public UpdateControl<MetadataIngestTask> reconcile(
       MetadataIngestTask primary, Context<MetadataIngestTask> context) {
 
-    if (!primary.getSpec().getPlatform().equalsIgnoreCase(Platform.VIRTUAL.getProtocol())) {
-      return UpdateControl.noUpdate();
-    }
     if (primary.getMetadata().getDeletionTimestamp() != null) {
       log.info("Resource is being deleted, skip reconciliation");
       return UpdateControl.noUpdate();
@@ -44,27 +45,37 @@ public class MetadataOperatorFlinkReconciler
     }
 
     context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
+
     if (context.isNextReconciliationImminent()) {
       // your logic, maybe return?
-      log.info("Reconcile flink inner logic");
+      log.info("Reconcile inner logic");
     }
+
+    if (primary.getSpec().getPlatform().equalsIgnoreCase(Platform.VIRTUAL.getProtocol())) {
+      log.info("virtual reconcile");
+    } else {
+      log.info("other reconcile");
+    }
+
     return UpdateControl.noUpdate();
   }
 
   public DeleteControl cleanup(MetadataIngestTask primary, Context<MetadataIngestTask> context) {
-    if (primary.getSpec().getPlatform().equalsIgnoreCase(Platform.VIRTUAL.getProtocol())) {
-      log.info("Delete flink platform");
-      if (primary.getMetadata().getDeletionTimestamp() == null) {
-        context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
-      }
-
-      List<String> finalizers = primary.getMetadata().getFinalizers();
-      finalizers.remove(MetadataIngestTask.FINALIZER_NAME);
-      primary.getMetadata().setFinalizers(finalizers);
-
-      return DeleteControl.defaultDelete();
+    if (primary.getMetadata().getDeletionTimestamp() == null) {
+      context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
     }
-    return DeleteControl.noFinalizerRemoval();
+    List<String> finalizers = primary.getMetadata().getFinalizers();
+    finalizers.remove(MetadataIngestTask.FINALIZER_NAME);
+    primary.getMetadata().setFinalizers(finalizers);
+
+    if (primary.getSpec().getPlatform().equalsIgnoreCase(Platform.VIRTUAL.getProtocol())) {
+      log.info("Delete virtual platform");
+
+    } else {
+      log.info("Delete flink platform");
+    }
+
+    return DeleteControl.defaultDelete();
   }
 
   @Override

@@ -15,7 +15,8 @@ kubectl apply -f ./target/classes/META-INF/fabric8/metadataingesttasks.org.zheji
 ```shell
 kubectl apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
 
-kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
+kubectl apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
+kubectl apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
 
 ```
 

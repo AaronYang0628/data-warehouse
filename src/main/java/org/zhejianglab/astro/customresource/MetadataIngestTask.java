@@ -13,8 +13,14 @@ public class MetadataIngestTask
     extends CustomResource<MetadataIngestTaskSpec, MetadataIngestTaskStatus> implements Namespaced {
 
   private static final long serialVersionUID = 1L;
+
   public static final String KIND = "MetadataIngestTask";
+
   public static final String PLURAL = "metadataingesttasks";
+
+  public static final String OPERATOR_NAME = PLURAL + ".org.zhejianglab.astro";
+
+  public static final String FINALIZER_NAME = OPERATOR_NAME + "/" + "finalizer";
 
   @Override
   public String toString() {

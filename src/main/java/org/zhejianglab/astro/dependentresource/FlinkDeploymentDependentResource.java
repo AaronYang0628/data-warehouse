@@ -2,9 +2,11 @@ package org.zhejianglab.astro.dependentresource;
 
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.ObjectMetaBuilder;
+import io.fabric8.kubernetes.api.model.OwnerReferenceBuilder;
 import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
+import java.util.List;
 import java.util.Optional;
 import org.apache.flink.kubernetes.operator.api.FlinkDeployment;
 import org.apache.flink.kubernetes.operator.api.spec.*;
@@ -36,6 +38,14 @@ public class FlinkDeploymentDependentResource
               .withName(primary.getMetadata().getName() + FLINK_JOB_SUFFIX)
               .withNamespace(primary.getMetadata().getNamespace())
               .build();
+      metadata.setOwnerReferences(
+          List.of(
+              new OwnerReferenceBuilder()
+                  .withApiVersion(primary.getApiVersion())
+                  .withKind(primary.getKind())
+                  .withName(primary.getMetadata().getName())
+                  .withUid(primary.getMetadata().getUid())
+                  .build()));
 
       FlinkDeploymentSpec.FlinkDeploymentSpecBuilder<?, ?> flinkDeploymentSpecBuilder =
           FlinkDeploymentSpec.builder();

@@ -19,5 +19,4 @@ spec:
     - parquet
   platform: virtual
   jobParallelism: 4
-  taskSlots: 4
   extraSecret: munge-oss-credientials

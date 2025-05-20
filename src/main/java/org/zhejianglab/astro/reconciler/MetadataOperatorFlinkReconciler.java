@@ -16,7 +16,7 @@ import org.zhejianglab.astro.dependentresource.conditions.FlinkDeploymentDepende
     dependents = {
       @Dependent(
           type = FlinkDeploymentDependentResource.class,
-          activationCondition = FlinkDeploymentDependentCondition.class),
+          reconcilePrecondition = FlinkDeploymentDependentCondition.class),
     })
 public class MetadataOperatorFlinkReconciler
     implements Reconciler<FlinkIngestTask>, Cleaner<FlinkIngestTask> {

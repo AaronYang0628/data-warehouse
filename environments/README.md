@@ -14,10 +14,11 @@ helm package --destination /tmp/ /workspaces/data-warehouse/environments/helm/me
 ```shell
 kubectl create -f https://github.com/jetstack/cert-manager/releases/download/v1.8.2/cert-manager.yaml
 ```
-1. install cert 
+1. install metadata 
 ```shell
-helm upgrade  --create-namespace -n <$namespace> --install -f ./values.yaml metadata-env ay-helm-mirror/ingress-nginx --version=4.11.3
-
+## install from local
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata /tmp/data-warehouse-0.0.5.tgz
 
+### install from ay-mirror
+helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.5
 ```

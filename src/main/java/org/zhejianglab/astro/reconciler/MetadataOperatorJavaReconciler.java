@@ -15,8 +15,7 @@ import org.zhejianglab.astro.dependentresource.conditions.JavaCRUDDependentCondi
     dependents = {
       @Dependent(
           type = ConfigMapDependentResource.class,
-          reconcilePrecondition = JavaCRUDDependentCondition.class,
-          activationCondition = JavaCRUDDependentCondition.class)
+          reconcilePrecondition = JavaCRUDDependentCondition.class)
     })
 @ControllerConfiguration
 public class MetadataOperatorJavaReconciler

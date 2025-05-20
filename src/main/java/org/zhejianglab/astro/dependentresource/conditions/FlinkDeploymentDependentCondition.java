@@ -16,6 +16,8 @@ public class FlinkDeploymentDependentCondition
       FlinkIngestTask primary,
       Context<FlinkIngestTask> context) {
 
-    return !primary.getSpec().getPlatform().equalsIgnoreCase(Platform.VIRTUAL.getProtocol());
+    return primary.getSpec().getPlatform().equalsIgnoreCase(Platform.OSS.getProtocol())
+        || primary.getSpec().getPlatform().equalsIgnoreCase(Platform.S3.getProtocol())
+        || primary.getSpec().getPlatform().equalsIgnoreCase(Platform.JDBC.getProtocol());
   }
 }

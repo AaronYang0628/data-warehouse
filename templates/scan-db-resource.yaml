@@ -1,5 +1,5 @@
 apiVersion: org.zhejianglab.astro/v1
-kind: MetadataIngestTask
+kind: JDBCIngestTask
 metadata:
   name: ingest-table-from-db
 spec:

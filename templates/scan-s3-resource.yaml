@@ -18,6 +18,6 @@ spec:
     - fits
     - parquet
   platform: s3
-  jobParallelism: 4
-  taskSlots: 4
+  jobParallelism: 2
+  taskSlots: 2
   extraSecret: munge-oss-credientials

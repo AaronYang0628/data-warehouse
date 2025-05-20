@@ -5,6 +5,9 @@
     * download `kubectl` binary [done by dockerfile]
     * create kubeconfig file, normally in `/root/.kube/config`
 
+2. init develop environment
+you can follow the `environments/README.md`  to init develop environment
+
 
 2. apply CRD
 ```shell
@@ -29,7 +32,7 @@ kubectl apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
 ### Maven CMD
 0. init project
 ```shell
-mvn io.javaoperatorsdk:bootstrapper:5.0.4:create -DprojectGroupId=org.zhejianglab.astro -DprojectArtifactId=data-warehouse
+mvn io.javaoperatorsdk:bootstrapper:5.0.4:create -DprojectGroupId=org.zhejianglab.astro.metadata -DprojectArtifactId=data-warehouse
 ```
 1. format
 ```shell

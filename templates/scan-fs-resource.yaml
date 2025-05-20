@@ -1,5 +1,5 @@
 apiVersion: org.zhejianglab.astro/v1
-kind: MetadataIngestTask
+kind: FileSystemIngestTask
 metadata:
   name: test1
 spec:

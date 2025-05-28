@@ -21,11 +21,11 @@ kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/virt
 3. install CR
 ```shell
 ### flink job
-kubectl apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
-kubectl apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
+kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
+kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
 
 ### java crud
-kubectl apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
+kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
 
 ```
 

@@ -22,3 +22,12 @@ helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-wareh
 ### install from ay-mirror
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.8
 ```
+
+
+# todo 
+1. clean job
+```
+[RoleBinding] flink-role-binding
+[Role] flink
+[ServiceAccount] flink
+```

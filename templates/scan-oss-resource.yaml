@@ -20,7 +20,7 @@ spec:
   platform: oss
   extraSecret: munge-oss-credientials
   flinkJobConfig:
-    flinkVersion: v1_20
+    flinkVersion: v1_19
     ingress:
       template: "/{{namespace}}/{{name}}(/|$)(.*)"
       className: "nginx"
@@ -33,7 +33,7 @@ spec:
       state.checkpoints.dir: file:///opt/flink/volume/flink-cp
       state.savepoints.dir: file:///opt/flink/volume/flink-sp
       kubernetes.operator.snapshot.resource.enabled: "false"
-    serviceAccount: flink
+    serviceAccount: flink # should  be the same as the serviceAccountName in the flink-operator no matter the service running in any namespace
     podTemplate:
       spec:
         initContainers:

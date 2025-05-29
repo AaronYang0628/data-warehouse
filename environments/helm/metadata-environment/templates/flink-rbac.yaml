@@ -1,0 +1,38 @@
+# if  flink is disabled, need to create some rbac resource to make ingest-operator work
+{{- if not .Values.flink.enabled }}
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: flink
+  namespace: {{ .Release.Namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
+  {{- end }}
+automountServiceAccountToken: true
+
+---
+
+apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
+kind: RoleBinding
+metadata:
+  name: {{ include "metadata-environment.roleName" . }}-flink-role-binding
+  namespace: {{ .Values.flink.existingNamespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
+  {{- end }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ .Values.flink.existingRole | quote }}
+subjects:
+- kind: ServiceAccount
+  name: flink
+  namespace: {{ .Release.Namespace | quote }}
+
+---
+
+{{- end}}

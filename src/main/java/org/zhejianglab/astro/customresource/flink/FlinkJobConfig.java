@@ -22,7 +22,7 @@ import org.zhejianglab.astro.utils.FlinkUtils;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlinkJobConfig {
 
-  private static final String FLINK = "flink";
+  public static final String FLINK = "flink";
 
   private static final String FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS =
       "taskmanager.numberOfTaskSlots";

@@ -13,6 +13,8 @@ import org.apache.flink.kubernetes.operator.api.spec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
+import org.zhejianglab.astro.customresource.flink.FlinkJobConfig;
+import org.zhejianglab.astro.utils.FlinkUtils;
 
 @KubernetesDependent
 public class FlinkDeploymentDependentResource
@@ -52,10 +54,10 @@ public class FlinkDeploymentDependentResource
       flinkDeploymentSpecBuilder
           .image(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getImage())
-                  .orElse("flink:1.20"))
+                  .orElse(FlinkUtils.getImageVersion(FlinkVersion.v1_20)))
           .serviceAccount(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getServiceAccount())
-                  .orElse("flink"))
+                  .orElse(FlinkJobConfig.FLINK))
           .flinkVersion(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getFlinkVersion())
                   .orElse(FlinkVersion.v1_20))

@@ -54,3 +54,8 @@ mvn clean package
 docker login -u <username> -p <password>
 mvn compile jib:build
 ```
+
+
+### todo
+
+1. check flink sa exist

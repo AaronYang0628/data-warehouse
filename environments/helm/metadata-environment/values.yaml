@@ -20,13 +20,19 @@ ingestTaskOperator:
     pullPolicy: Always
     pullSecrets: []
   serviceAccount:
-    automount: true
     annotations: {}
     name: "metadata-ingest-operator"
     role:
       name: "metadata-ingest-operator"
     roleBinding:
-      name: "metadata-ingest-operator"
+      name: "metadata-ingest-operator-rb"
+  flink:
+    serviceAccount:
+      name: "metadata-ingest-flink-sa"
+    role:
+      name: "metadata-ingest-flink-crole"
+    roleBinding:
+      name: "metadata-ingest-flink-cluster-role"
   automountServiceAccountToken: true
   podLabels: {}
   affinity: {}
@@ -110,10 +116,9 @@ ingestTaskOperator:
 flink:
   enabled: false
   existingNamespace: "flink"
-  existingRole: "flink"
 
 elasticsearch:
-  enabled: true
+  enabled: false
   global:
     kibanaEnabled: true
   clusterName: elastic
@@ -183,7 +188,7 @@ elasticsearch:
 
 
 kafka:
-  enabled: true
+  enabled: false
   image:
     registry: m.lab.zverse.space/docker.io
   controller:

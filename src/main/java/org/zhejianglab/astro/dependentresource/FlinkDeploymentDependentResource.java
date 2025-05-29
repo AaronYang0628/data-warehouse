@@ -52,12 +52,13 @@ public class FlinkDeploymentDependentResource
           FlinkDeploymentSpec.builder();
 
       flinkDeploymentSpecBuilder
+          .flinkConfiguration(primary.getSpec().getFlinkJobConfig().getFlinkConfiguration())
           .image(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getImage())
                   .orElse(FlinkUtils.getImageVersion(FlinkVersion.v1_20)))
           .serviceAccount(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getServiceAccount())
-                  .orElse(FlinkJobConfig.FLINK))
+                  .orElse(FlinkJobConfig.FLINK_SERVICE_ACCOUNT))
           .flinkVersion(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getFlinkVersion())
                   .orElse(FlinkVersion.v1_20))

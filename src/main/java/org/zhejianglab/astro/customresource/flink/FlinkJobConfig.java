@@ -22,7 +22,7 @@ import org.zhejianglab.astro.utils.FlinkUtils;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlinkJobConfig {
 
-  public static final String FLINK = "flink";
+  public static final String FLINK_SERVICE_ACCOUNT = "metadata-ingest-flink-sa";
 
   private static final String FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS =
       "taskmanager.numberOfTaskSlots";
@@ -65,7 +65,7 @@ public class FlinkJobConfig {
                     "2",
                     "kubernetes.operator.snapshot.resource.enabled",
                     "false")))
-        .serviceAccount(FLINK)
+        .serviceAccount(FLINK_SERVICE_ACCOUNT)
         .podTemplate(
             new PodTemplateSpecBuilder()
                 .withSpec(

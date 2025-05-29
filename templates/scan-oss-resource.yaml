@@ -20,7 +20,7 @@ spec:
   platform: oss
   extraSecret: munge-oss-credientials
   flinkJobConfig:
-    flinkVersion: v1_19
+    flinkVersion: v1_20
     ingress:
       template: "/{{namespace}}/{{name}}(/|$)(.*)"
       className: "nginx"
@@ -32,8 +32,9 @@ spec:
       high-availability.storageDir: file:///opt/flink/volume/flink-ha
       state.checkpoints.dir: file:///opt/flink/volume/flink-cp
       state.savepoints.dir: file:///opt/flink/volume/flink-sp
+      jobmanager.rpc.address: ingest-table-or-fits-from-oss-flink-job.flink.svc.cluster.local
       kubernetes.operator.snapshot.resource.enabled: "false"
-    serviceAccount: flink # should  be the same as the serviceAccountName in the flink-operator no matter the service running in any namespace
+    serviceAccount: metadata-ingest-flink-sa # should  be the same as the serviceAccountName in the flink-operator no matter the service running in any namespace
     podTemplate:
       spec:
         initContainers:

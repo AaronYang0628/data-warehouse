@@ -12,40 +12,36 @@ spec:
     spec:
       containers:
       - name: cleanup-container
-        image: bitnami/kubectl:latest
+        {{- if .Values.global.registryPrefix }}
+        image: {{ .Values.global.registryPrefix }}/docker.io/bitnami/kubectl:1.28-debian-11
+        {{- else }}
+        image: docker.io/bitnami/kubectl:1.28-debian-11
+        {{- end }}
         command: ["/bin/sh", "-c"]
         args:
         - |
           # check and delete ServiceAccount `flink`
           if kubectl get sa flink -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            echo "Deleting ServiceAccount: flink"
             kubectl delete sa flink -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting ServiceAccount: flink"
           else
-            echo "ServiceAccount `flink` not found"
+            echo "In Namespace {{ .Release.Namespace }} ServiceAccount `flink` not found"
           fi
           
           # check and delete Role `flink`
           if kubectl get role flink -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            echo "Deleting Role: flink"
             kubectl delete role flink -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting Role: flink"
           else
-            echo "Role `flink` not found"
+            echo "In Namespace {{ .Release.Namespace }}  Role `flink` not found"
           fi
           
           # check and delete RoleBinding `flink-role-binding`
           if kubectl get rolebinding flink-role-binding -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            echo "Deleting RoleBinding: flink-role-binding"
             kubectl delete rolebinding flink-role-binding -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting RoleBinding: flink-role-binding"
           else
-            echo "RoleBinding `flink-role-binding` not found"
-          fi
-
-          # check and delete generated RoleBinding `flink-role-binding`
-          if kubectl get rolebinding {{ include "metadata-environment.roleName" . }}-flink-role-binding -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            echo "Deleting RoleBinding: {{ include "metadata-environment.roleName" . }}-flink-role-binding"
-            kubectl delete rolebinding {{ include "metadata-environment.roleName" . }}-flink-role-binding -n {{ .Release.Namespace }}
-          else
-            echo "RoleBinding `{{ include "metadata-environment.roleName" . }}-flink-role-binding` not found"
+            echo "In Namespace {{ .Release.Namespace }}  RoleBinding `flink-role-binding` not found"
           fi
           
           echo "Cleanup completed successfully"

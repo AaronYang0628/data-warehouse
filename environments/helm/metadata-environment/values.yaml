@@ -10,7 +10,6 @@ resourcesPreset: "nano"
 ingestTaskOperator:
   enabled: true
   name: ingest-operator
-  installCRDs: true
   commonLabels: {}
   commonAnnotations: {}
   image:
@@ -21,9 +20,9 @@ ingestTaskOperator:
     pullSecrets: []
   serviceAccount:
     annotations: {}
-    name: "metadata-ingest-operator"
+    name: "metadata-ingest-operator-sa"
     role:
-      name: "metadata-ingest-operator"
+      name: "metadata-ingest-operator-role"
     roleBinding:
       name: "metadata-ingest-operator-rb"
   flink:
@@ -32,7 +31,7 @@ ingestTaskOperator:
     role:
       name: "metadata-ingest-flink-crole"
     roleBinding:
-      name: "metadata-ingest-flink-cluster-role"
+      name: "metadata-ingest-flink-crole-rb"
   automountServiceAccountToken: true
   podLabels: {}
   affinity: {}
@@ -114,8 +113,8 @@ ingestTaskOperator:
 
 
 flink:
-  enabled: false
-  existingNamespace: "flink"
+  enabled: true
+  # existingNamespace: "flink"
 
 elasticsearch:
   enabled: false

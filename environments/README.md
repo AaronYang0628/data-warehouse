@@ -22,5 +22,6 @@ helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-wareh
 ### install from ay-mirror
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.8
 
+## install to zverse
 helm upgrade  --kubeconfig=/root/.kube/zverse_config --create-namespace -n metadata --install -f /root/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.8
 ```

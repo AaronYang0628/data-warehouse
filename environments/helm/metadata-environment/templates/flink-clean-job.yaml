@@ -43,6 +43,10 @@ spec:
           else
             echo "In Namespace {{ .Release.Namespace }}  RoleBinding `flink-role-binding` not found"
           fi
+
+          # check and delete CRD `flinkingesttasks.org.zhejianglab.astro.metadata`
+
+          # check and delete CRD `virtualingesttasks.org.zhejianglab.astro.metadata`
           
           echo "Cleanup completed successfully"
       restartPolicy: Never

@@ -39,9 +39,9 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       Map<String, String> userProperties,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
-      Integer jobParallelism,
-      Integer taskSlots,
-      FlinkJobConfig flinkJobConfig) {
+      @Nullable Integer jobParallelism,
+      @Nullable Integer taskSlots,
+      @Nullable FlinkJobConfig flinkJobConfig) {
     this.setPath(path);
     this.setPlatform(platform);
     this.setTimeout(timeout);

@@ -75,10 +75,24 @@ Create the name of the role to use
 {{ default (include "common.names.fullname" .) .Values.ingestTaskOperator.serviceAccount.role.name }}
 {{- end }}
 
+{{/*
+Create the name of the role to use
+*/}}
+{{- define "metadata-environment.clusterRoleName" -}}
+{{ default (include "common.names.fullname" .) .Values.ingestTaskOperator.serviceAccount.clusterRole.name }}
+{{- end }}
+
 
 {{/*
 Create the name of the rolebinding to use
 */}}
 {{- define "metadata-environment.roleBindingName" -}}
 {{ default (include "common.names.fullname" .) .Values.ingestTaskOperator.serviceAccount.roleBinding.name }}
+{{- end }}
+
+{{/*
+Create the name of the rolebinding to use
+*/}}
+{{- define "metadata-environment.clusterRoleBindingName" -}}
+{{ default (include "common.names.fullname" .) .Values.ingestTaskOperator.serviceAccount.clusterRoleBinding.name }}
 {{- end }}

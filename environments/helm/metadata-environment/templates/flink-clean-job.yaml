@@ -1,7 +1,7 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "metadata-environment.roleName" . }}-flink-cleanup-job
+  name: {{ .Values.ingestTaskOperator.name }}-flink-cleanup-job
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": post-delete  
@@ -45,9 +45,21 @@ spec:
           fi
 
           # check and delete CRD `flinkingesttasks.org.zhejianglab.astro.metadata`
+          if kubectl get crd flinkingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
+            kubectl delete crd flinkingesttasks.org.zhejianglab.astro.metadata
+            echo "Deleting CRD: flinkingesttasks.org.zhejianglab.astro.metadata"
+          else
+            echo "CRD `flinkingesttasks.org.zhejianglab.astro.metadata` not found"
+          fi
 
           # check and delete CRD `virtualingesttasks.org.zhejianglab.astro.metadata`
-          
+          if kubectl get crd virtualingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
+            kubectl delete crd virtualingesttasks.org.zhejianglab.astro.metadata
+            echo "Deleting CRD: virtualingesttasks.org.zhejianglab.astro.metadata"
+          else
+            echo "CRD `virtualingesttasks.org.zhejianglab.astro.metadata` not found"
+          fi
+
           echo "Cleanup completed successfully"
       restartPolicy: Never
   backoffLimit: 1  

@@ -58,13 +58,7 @@ public class FlinkJobConfig {
                 .className("nginx")
                 .annotations(Map.of("nginx.ingress.kubernetes.io/rewrite-target", "/$2"))
                 .build())
-        .flinkConfiguration(
-            new ConcurrentHashMap<>(
-                Map.of(
-                    FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS,
-                    "2",
-                    "kubernetes.operator.snapshot.resource.enabled",
-                    "false")))
+        .flinkConfiguration(new ConcurrentHashMap<>())
         .serviceAccount(FLINK_SERVICE_ACCOUNT)
         .podTemplate(
             new PodTemplateSpecBuilder()

@@ -59,3 +59,4 @@ mvn compile jib:build
 ### todo
 
 1. check flink sa exist
+2. default flink version retrieve  v1_19  v1_20

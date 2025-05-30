@@ -1,5 +1,5 @@
 global:
-  storageClass: "" 
+  storageClass: "rook-cephfs-01" 
   registryPrefix: m.lab.zverse.space
   pullPolicy: IfNotPresent
   security: 
@@ -121,7 +121,7 @@ flink:
   existingNamespace: "flink"
 
 elasticsearch:
-  enabled: false
+  enabled: true
   global:
     kibanaEnabled: true
   clusterName: elastic
@@ -191,7 +191,7 @@ elasticsearch:
 
 
 kafka:
-  enabled: false
+  enabled: true
   image:
     registry: m.lab.zverse.space/docker.io
   controller:

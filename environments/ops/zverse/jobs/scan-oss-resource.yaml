@@ -1,0 +1,78 @@
+apiVersion: org.zhejianglab.astro.metadata/v1
+kind: FlinkIngestTask
+metadata:
+  name: ingest-table-or-fits-from-oss
+spec:
+  path: "oss://adcp/crafts/HI/ZD2021_1_2/Dec-0619_04_05/20211201"
+  timeout: 20
+  tags:
+    - CRAFTS_SPECTRUM_ORIGINAL
+    - FAST
+  userProperties:
+    key1: "value1"
+    key2: "1231"
+    key3: "true"
+  pathPatterns:
+    bucket_name: "[^/]*\\/([^/]+)\\/.*"
+  allowedSuffixes:
+    - fits
+    - parquet
+  platform: oss
+  extraSecret: munge-oss-credientials
+  flinkJobConfig:
+    flinkVersion: v1_19
+    ingress:
+      template: "/{{namespace}}/{{name}}(/|$)(.*)"
+      className: "nginx"
+      annotations:
+        nginx.ingress.kubernetes.io/rewrite-target: "/$2"
+    flinkConfiguration:
+      taskmanager.numberOfTaskSlots: "2"
+      high-availability.type: kubernetes
+      high-availability.storageDir: file:///opt/flink/volume/flink-ha
+      state.checkpoints.dir: file:///opt/flink/volume/flink-cp
+      state.savepoints.dir: file:///opt/flink/volume/flink-sp
+      kubernetes.operator.snapshot.resource.enabled: "false"
+    serviceAccount: metadata-ingest-flink-sa # should  be the same as the serviceAccountName in the flink-operator no matter the service running in any namespace
+    podTemplate:
+      spec:
+        initContainers:
+          - name: artifacts-fetcher
+            image: busybox:1.35.0
+            imagePullPolicy: IfNotPresent
+            command: [ 'wget', 'STREAMING_EXAMPLES_JAR_URL', '-O', '/flink-artifact/myjob.jar' ]
+            volumeMounts:
+              - mountPath: /flink-artifact
+                name: flink-artifact
+        containers:
+          - name: flink-main-container
+            resources:
+              requests:
+                ephemeral-storage: 2048Mi
+              limits:
+                ephemeral-storage: 2048Mi
+            volumeMounts:
+              - mountPath: /opt/flink/usrlib
+                name: flink-artifact
+              - mountPath: /opt/flink/volume
+                name: flink-volume
+        volumes:
+          - name: flink-artifact
+            emptyDir: { }
+          - name: flink-volume
+            persistentVolumeClaim:
+              claimName: flink-example-statemachine
+    jobManager:
+      resource:
+        memory: "2048m"
+        cpu: 1
+    taskManager:
+      resource:
+        memory: "2048m"
+        cpu: 1
+    job:
+      jarURI: local:///opt/flink/examples/streaming/StateMachineExample.jar
+      entryClass: org.apache.flink.streaming.examples.statemachine.StateMachineExample
+      parallelism: 2
+      upgradeMode: stateless
+    mode: native

@@ -75,7 +75,7 @@ roleRef:
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
-  name: {{ include "metadata-environment.roleName" . }}-crole
+  name: {{ include "metadata-environment.clusterRoleName" . }}
   namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
   {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
@@ -130,7 +130,7 @@ rules:
 apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRoleBinding
 metadata:
-  name: {{ include "metadata-environment.roleName" . }}-cluster-crd-access
+  name: {{ include "metadata-environment.clusterRoleBindingName" . }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
   {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
   {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
@@ -143,4 +143,4 @@ subjects:
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ include "metadata-environment.roleName" . }}-crole
+  name: {{ include "metadata-environment.clusterRoleName" . }}

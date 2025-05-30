@@ -7,6 +7,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import org.apache.flink.kubernetes.operator.api.FlinkDeployment;
 import org.apache.flink.kubernetes.operator.api.spec.*;
@@ -34,6 +35,10 @@ public class FlinkDeploymentDependentResource
     if (primary.getSpec().getFlinkJobConfig() == null) {
       return null;
     } else {
+      FlinkVersion flinkVersion =
+          Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getFlinkVersion())
+              .orElse(FlinkVersion.v1_20);
+
       ObjectMeta metadata =
           new ObjectMetaBuilder()
               .withName(primary.getMetadata().getName() + FLINK_JOB_SUFFIX)
@@ -52,16 +57,16 @@ public class FlinkDeploymentDependentResource
           FlinkDeploymentSpec.builder();
 
       flinkDeploymentSpecBuilder
-          .flinkConfiguration(primary.getSpec().getFlinkJobConfig().getFlinkConfiguration())
+          .flinkConfiguration(
+              Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getFlinkConfiguration())
+                  .orElse(Map.of()))
           .image(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getImage())
-                  .orElse(FlinkUtils.getImageVersion(FlinkVersion.v1_20)))
+                  .orElse(FlinkUtils.getImageVersion(flinkVersion)))
           .serviceAccount(
               Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getServiceAccount())
                   .orElse(FlinkJobConfig.FLINK_SERVICE_ACCOUNT))
-          .flinkVersion(
-              Optional.ofNullable(primary.getSpec().getFlinkJobConfig().getFlinkVersion())
-                  .orElse(FlinkVersion.v1_20))
+          .flinkVersion(flinkVersion)
           .jobManager(primary.getSpec().getFlinkJobConfig().getJobManager())
           .taskManager(
               TaskManagerSpec.builder()

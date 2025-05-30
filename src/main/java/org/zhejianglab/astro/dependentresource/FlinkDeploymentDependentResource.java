@@ -81,6 +81,7 @@ public class FlinkDeploymentDependentResource
       deployment.setMetadata(metadata);
       deployment.setSpec(flinkDeploymentSpecBuilder.build());
 
+      log.info(deployment.toString());
       return deployment;
     }
   }

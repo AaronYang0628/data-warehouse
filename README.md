@@ -2,14 +2,6 @@
 - Deploy Flink + ES + Kafka middleware in one shot
 - Create Operator to manage metadata ingest job
 
-### Local Develop
-1. connect to your k8s or minikube
-    * download `kubectl` binary [done by dockerfile]
-    * create kubeconfig file, normally in `/root/.kube/config`
-
-2. init develop environment
-you can follow the `environments/README.md`  to init develop environment
-
 
 ### Apply CRD
 ```shell
@@ -26,7 +18,7 @@ kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.9
 ```
 
-### Submit CR job
+### Submit Data Ingest job
 ```shell
 ### flink job
 kubectl -n metadata apply -f templates/scan-oss-resource.yaml
@@ -34,8 +26,22 @@ kubectl -n metadata apply -f templates/scan-s3-resource.yaml
 
 ### java crud
 kubectl -n metadata apply -f templates/scan-virtual-resource.yaml
-
 ```
+
+### Check Job Status
+```shell
+kubectl get flinkingest -A
+kubectl get virtualingest -A
+```
+
+
+### Local Develop
+1. connect to your k8s or minikube
+    * download `kubectl` binary [done by dockerfile]
+    * create kubeconfig file, normally in `/root/.kube/config`
+
+2. init develop environment
+you can follow the `environments/README.md`  to init develop environment
 
 ### Maven CMD
 0. init project

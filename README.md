@@ -1,5 +1,6 @@
 # Metadata Operator
-
+- Deploy Flink + ES + Kafka middleware in one shot
+- Create Operator to manage metadata ingest job
 
 ### Local Develop
 1. connect to your k8s or minikube
@@ -10,7 +11,7 @@
 you can follow the `environments/README.md`  to init develop environment
 
 
-2. apply CRD
+### Apply CRD
 ```shell
 ### flink job
 kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
@@ -19,13 +20,13 @@ kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.or
 kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yaml
 ```
 
-3. install metadata operator
+### Install Metadata Operator
 ```shell
 ### install from ay-mirror
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.9
 ```
 
-4. submit CR job
+### Submit CR job
 ```shell
 ### flink job
 kubectl -n metadata apply -f templates/scan-oss-resource.yaml
@@ -62,8 +63,3 @@ docker login -u <username> -p <password>
 mvn compile jib:build
 ```
 
-
-### todo
-
-1. check flink sa exist
-2. default flink version retrieve  v1_19  v1_20

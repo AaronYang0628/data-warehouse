@@ -241,6 +241,3 @@ kafka:
     enabled: true
   zookeeper:
     enabled: false
-
-
-

@@ -1,5 +1,6 @@
 # Metadata Operator
 
+
 ### Local Develop
 1. connect to your k8s or minikube
     * download `kubectl` binary [done by dockerfile]
@@ -12,20 +13,26 @@ you can follow the `environments/README.md`  to init develop environment
 2. apply CRD
 ```shell
 ### flink job
-kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yml
+kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
 
 ### java crud
-kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yml
+kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yaml
 ```
 
-3. install CR
+3. install metadata operator
+```shell
+### install from ay-mirror
+helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.9
+```
+
+4. submit CR job
 ```shell
 ### flink job
-kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-oss-resource.yaml
-kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-s3-resource.yaml
+kubectl -n metadata apply -f templates/scan-oss-resource.yaml
+kubectl -n metadata apply -f templates/scan-s3-resource.yaml
 
 ### java crud
-kubectl -n metadata apply -f /workspaces/data-warehouse/templates/scan-virtual-resource.yaml
+kubectl -n metadata apply -f templates/scan-virtual-resource.yaml
 
 ```
 

@@ -1,5 +1,5 @@
 # Metadata Operator
-- Deploy Flink + ES + Kafka middleware in one shot
+- Deploy Cert Manager + Flink + ES + Kafka middleware in one shot
 - Create Operator to manage metadata ingest job
 
 

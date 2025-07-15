@@ -1,0 +1,79 @@
+# ServiceAccount for the cleanup job
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "common.names.fullname" . }}-crd-cleanup
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": "post-delete"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+
+---
+# ClusterRole to allow deleting CRDs
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: {{ include "common.names.fullname" . }}-crd-cleanup
+  annotations:
+    "helm.sh/hook": "post-delete"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+rules:
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["delete"]
+  resourceNames:
+    # Cert-manager CRDs
+    - "certificaterequests.cert-manager.io"
+    - "certificates.cert-manager.io"
+    - "challenges.acme.cert-manager.io"
+    - "clusterissuers.cert-manager.io"
+    - "issuers.cert-manager.io"
+    - "orders.acme.cert-manager.io"
+    # Custom application CRDs
+    - "flinkingesttasks.org.zhejianglab.astro.metadata-v1"
+    - "virtualingesttasks.org.zhejianglab.astro.metadata-v1"
+
+---
+# ClusterRoleBinding to bind the role to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: {{ include "common.names.fullname" . }}-crd-cleanup
+  annotations:
+    "helm.sh/hook": "post-delete"
+    "helm.sh/hook-delete-policy": "before-hook-creation,hook-succeeded"
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: {{ include "common.names.fullname" . }}-crd-cleanup
+subjects:
+- kind: ServiceAccount
+  name: {{ include "common.names.fullname" . }}-crd-cleanup
+  namespace: {{ .Release.Namespace }}
+
+---
+# Job to delete the CRDs
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "common.names.fullname" . }}-crd-cleanup
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": "post-delete"
+    "helm.sh/hook-delete-policy": "hook-succeeded"
+    "helm.sh/hook-weight": "1" # Ensure RBAC resources are created first
+
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ include "common.names.fullname" . }}-crd-cleanup
+      containers:
+      - name: crd-cleaner
+        image: "m.daocloud.io/docker.io/bitnami/kubectl:latest"
+        command:
+        - "/bin/sh"
+        - "-c"
+        - >
+          kubectl delete crd certificaterequests.cert-manager.io certificates.cert-manager.io challenges.acme.cert-manager.io clusterissuers.cert-manager.io issuers.cert-manager.io orders.acme.cert-manager.io flinkingesttasks.org.zhejianglab.astro.metadata-v1 virtualingesttasks.org.zhejianglab.astro.metadata-v1 --ignore-not-found=true
+      restartPolicy: OnFailure
+  backoffLimit: 1

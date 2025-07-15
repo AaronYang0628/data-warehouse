@@ -51,7 +51,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     this.pathPatterns = pathPatterns;
     this.allowedSuffixes = allowedSuffixes;
     if (null == flinkJobConfig) {
-      this.flinkJobConfig = FlinkJobConfig.getDefaultConfig();
+      this.flinkJobConfig = FlinkJobConfig.builder().build().getDefaultConfig();
     } else {
       this.flinkJobConfig = flinkJobConfig;
     }

@@ -27,11 +27,13 @@ public class FlinkJobConfig {
   private static final String FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS =
       "taskmanager.numberOfTaskSlots";
 
+  @Builder.Default private String repository = "docker.io/library";
+
   private String image;
 
-  private String serviceAccount;
+  @Builder.Default private String serviceAccount = FLINK_SERVICE_ACCOUNT;
 
-  private FlinkVersion flinkVersion;
+  @Builder.Default private FlinkVersion flinkVersion = FlinkVersion.v1_20;
 
   private IngressSpec ingress;
 
@@ -45,13 +47,12 @@ public class FlinkJobConfig {
 
   private Map<String, String> flinkConfiguration;
 
-  private KubernetesDeploymentMode mode;
+  @Builder.Default private KubernetesDeploymentMode mode = KubernetesDeploymentMode.NATIVE;
 
-  public static FlinkJobConfig getDefaultConfig() {
-    FlinkVersion flinkVersion = FlinkVersion.v1_20;
+  public FlinkJobConfig getDefaultConfig() {
     return FlinkJobConfig.builder()
-        .image(FlinkUtils.getImageVersion(flinkVersion))
-        .flinkVersion(flinkVersion)
+        .image(this.getRepository() + "/" + FlinkUtils.getImageVersion(this.getFlinkVersion()))
+        .flinkVersion(this.getFlinkVersion())
         .ingress(
             IngressSpec.builder()
                 .template("/{{namespace}}/{{name}}(/|$)(.*)")
@@ -59,7 +60,7 @@ public class FlinkJobConfig {
                 .annotations(Map.of("nginx.ingress.kubernetes.io/rewrite-target", "/$2"))
                 .build())
         .flinkConfiguration(new ConcurrentHashMap<>())
-        .serviceAccount(FLINK_SERVICE_ACCOUNT)
+        .serviceAccount(this.getServiceAccount())
         .podTemplate(
             new PodTemplateSpecBuilder()
                 .withSpec(
@@ -82,7 +83,7 @@ public class FlinkJobConfig {
                 .parallelism(2)
                 .upgradeMode(UpgradeMode.STATELESS)
                 .build())
-        .mode(KubernetesDeploymentMode.NATIVE)
+        .mode(this.getMode())
         .build();
   }
 

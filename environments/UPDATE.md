@@ -22,7 +22,7 @@ helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kuber
 helm install --create-namespace -n flink flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
 ```
 
-2. install metadata operator
+2. test metadata operator
 ```shell
 ## install from local
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata /tmp/data-warehouse-0.0.9.tgz

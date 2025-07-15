@@ -3,7 +3,7 @@
 - Create Operator to manage metadata ingest job
 
 
-### Apply CRD
+### [[Optional]]() Apply CRD
 ```shell
 ### flink job
 kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
@@ -15,7 +15,7 @@ kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks
 ### Install Metadata Operator
 ```shell
 ### install from ay-mirror
-helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.9
+helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.9
 ```
 
 ### Submit Data Ingest job

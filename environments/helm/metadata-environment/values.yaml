@@ -116,7 +116,7 @@ ingestTaskOperator:
       targetPort: 8099
 
 certManager:
-  enabled: false
+  enabled: true
   installCRDs: false
   image:
     repository: m.daocloud.io/quay.io/jetstack/cert-manager-controller

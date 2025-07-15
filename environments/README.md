@@ -3,25 +3,7 @@
 helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts
 ```
 
-# [[Optional]]() package chart
-```shell
-helm package --destination /tmp/ /workspaces/data-warehouse/environments/helm/metadata-environment
-```
-
-# install chart
-
-0. [[Optional]]() install cert-manager
-```shell
-kubectl create -f https://github.com/jetstack/cert-manager/releases/download/v1.17.2/cert-manager.yaml
-```
-
-1. [[Optional]]() install flink-operator 
-```shell
-helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kubernetes-operator-1.11.0/
-helm install --create-namespace -n flink flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
-```
-
-2. install metadata operator
+1. install metadata operator
 ```shell
 ### install from ay-mirror
 helm upgrade  --create-namespace -n metadata --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.9

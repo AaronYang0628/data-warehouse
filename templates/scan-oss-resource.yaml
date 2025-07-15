@@ -20,7 +20,6 @@ spec:
   platform: oss
   extraSecret: munge-oss-credientials
   flinkJobConfig:
-    repository: m.daocloud.io/docker.io/library
     flinkVersion: v1_20
     ingress:
       template: "/{{namespace}}/{{name}}(/|$)(.*)"

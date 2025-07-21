@@ -109,7 +109,7 @@ spec:
         - name: ES_FITS_INGEST_NAMESPACE
           value: {{ include "common.names.namespace" . | quote }}
         - name: ES_FITS_INGEST_S3_CREDENTIALS_SECRET_NAME
-          value: meta-data-credentials
+          value: metadata-minio-secret
         - name: ES_FITS_INGEST_KAFKA_BOOTSTRAP_SERVER
           value: metadata-kafka.{{ .Release.Namespace }}:9092
         - name: ES_HOST

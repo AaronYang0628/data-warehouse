@@ -145,8 +145,7 @@ minio:
   clientImage:
     registry: m.lab.zverse.space/docker.io
   auth:
-    rootUser: admin
-    rootPassword: "password"
+    existingSecret: metadata-minio-secret
   defaultBuckets: "es-snapshot"
   ingress:
     enabled: true
@@ -217,13 +216,13 @@ elasticsearch:
   - name: S3_ACCESSKEY
     valueFrom:
       secretKeyRef:
-        key: root-user
-        name: metadata-minio
+        key: s3-access-key
+        name: metadata-minio-secret
   - name: S3_SECRETKEY
     valueFrom:
       secretKeyRef:
-        key: root-password
-        name: metadata-minio
+        key: s3-access-secret
+        name: metadata-minio-secret
   ingress:
     enabled: true
     annotations:

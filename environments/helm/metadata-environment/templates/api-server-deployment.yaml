@@ -1,0 +1,163 @@
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ .Values.apiServer.name }}
+  namespace: {{ include "common.names.namespace" . | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.apiServer.commonLabels "context" $ ) | nindent 4 }}
+  {{- if .Values.apiServer.commonAnnotations }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" .Values.apiServer.commonAnnotations "context" $ ) | nindent 4 }}
+  {{- end }}
+spec:
+  replicas: 1
+  {{- $podLabels := include "common.tplvalues.merge" ( dict "values" ( list .Values.apiServer.podLabels .Values.apiServer.commonLabels ) "context" . ) }}
+  selector:
+    matchLabels: {{- include "common.labels.matchLabels" ( dict "customLabels" $podLabels "context" $ ) | nindent 6 }}
+  template:
+    metadata:
+      labels: {{- include "common.labels.standard" ( dict "customLabels" $podLabels "context" $ ) | nindent 8 }}
+      annotations:
+        {{- if .Values.apiServer.podAnnotations }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.apiServer.podAnnotations "context" $) | nindent 8 }}
+        {{- end }}
+    spec:
+      serviceAccountName: {{ .Values.apiServer.serviceAccount.name }}
+      automountServiceAccountToken: {{ .Values.apiServer.automountServiceAccountToken }}
+      {{- if .Values.apiServer.affinity }}
+      affinity: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.apiServer.podAffinityPreset "customLabels" $podLabels "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.apiServer.podAntiAffinityPreset "customLabels" $podLabels "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.apiServer.nodeAffinityPreset.type "key" .Values.apiServer.nodeAffinityPreset.key "values" .Values.apiServer.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      hostNetwork: {{ .Values.apiServer.hostNetwork }}
+      {{- if .Values.apiServer.dnsPolicy  }}
+      dnsPolicy: {{ .Values.apiServer.dnsPolicy }}
+      {{- end }}
+      hostIPC: {{ .Values.apiServer.hostIPC }}
+      {{- if .Values.apiServer.priorityClassName }}
+      priorityClassName: {{ .Values.apiServer.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.apiServer.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.apiServer.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.tolerations "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.apiServer.schedulerName }}
+      schedulerName: {{ .Values.apiServer.schedulerName | quote }}
+      {{- end }}
+      {{- if .Values.apiServer.topologySpreadConstraints }}
+      topologySpreadConstraints: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.topologySpreadConstraints "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.apiServer.podSecurityContext.enabled }}
+      securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.apiServer.podSecurityContext "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.apiServer.terminationGracePeriodSeconds }}
+      terminationGracePeriodSeconds: {{ .Values.apiServer.terminationGracePeriodSeconds }}
+      {{- end }}
+      imagePullSecrets:
+        {{- if .Values.apiServer.image.pullSecrets }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.image.pullSecrets "context" $) | nindent 12 }}
+        {{- end }}
+      containers:
+      - name: api-server
+        image: "{{ .Values.apiServer.image.registry }}/{{ .Values.apiServer.image.repository }}:{{ .Values.apiServer.image.tag }}"
+        imagePullPolicy: {{ .Values.apiServer.image.pullPolicy }}
+        {{- if .Values.apiServer.containerSecurityContext }}
+        securityContext: {{- include "common.compatibility.renderSecurityContext" (dict "secContext" .Values.apiServer.containerSecurityContext "context" $) | nindent 12 }}
+        {{- else }}
+        securityContext:
+          privileged: true
+        {{- end }}
+        {{- if .Values.apiServer.diagnosticMode.enabled }}
+        command: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.diagnosticMode.command "context" $) | nindent 12 }}
+        {{- else if .Values.apiServer.command }}
+        command: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.command "context" $) | nindent 12 }}
+        {{- end }}
+        {{- if .Values.apiServer.diagnosticMode.enabled }}
+        args: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.diagnosticMode.args "context" $) | nindent 12 }}
+        {{- else if .Values.apiServer.args }}
+        args: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.args "context" $) | nindent 12 }}
+        {{- end }}
+        {{- if .Values.apiServer.lifecycleHooks }}
+        lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.lifecycleHooks "context" $) | nindent 12 }}
+        {{- end }}
+        ports:  
+        - containerPort: 8080
+          name: http
+        - containerPort: 8081
+          name: jmx
+        {{- if .Values.apiServer.extraContainerPorts }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.extraContainerPorts "context" $) | nindent 12 }}
+        {{- end }}
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: INITIALIZE_SKIP
+          value: "false"
+        - name: ES_FITS_INGEST_IMAGE_PULL_POLICY
+          value: Always
+        - name: ES_FITS_INGEST_IMAGE_PULL_SECRET_NAME
+          value: registry-zhejianglab-image-pull
+        - name: ES_FITS_INGEST_IMAGE_REGISTRY
+          value: docker-registry.lab.zverse.space
+        - name: ES_FITS_INGEST_IMAGE_REPOSITORY
+          value: data-and-computing-dev/metadata-es-ingress-job
+        - name: ES_FITS_INGEST_IMAGE_TAG
+          value: "1.3.7"
+        - name: ES_FITS_INGEST_NAMESPACE
+          value: {{ include "common.names.namespace" . | quote }}
+        - name: ES_FITS_INGEST_S3_CREDENTIALS_SECRET_NAME
+          value: meta-data-credentials
+        - name: ES_FITS_INGEST_KAFKA_BOOTSTRAP_SERVER
+          value: metadata-kafka.{{ .Release.Namespace }}:9092
+        - name: ES_HOST
+          value: metadata-elasticsearch.{{ .Release.Namespace }}
+        - name: ES_PORT
+          value: "9200"
+        - name: ES_SCHEMA
+          value: "http"
+        - name: ES_STANDALONE_HOST
+          value: metadata-elasticsearch.{{ .Release.Namespace }}
+        - name: ES_STANDALONE_PORT
+          value: "9200"
+        - name: ES_STANDALONE_SCHEMA
+          value: "http"
+        {{- if .Values.apiServer.extraEnvVars }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.extraEnvVars "context" $) | nindent 12 }}
+        {{- end }}
+        {{- if .Values.apiServer.customLivenessProbe }}
+        livenessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.customLivenessProbe "context" $) | nindent 12 }}
+        {{- else if .Values.apiServer.livenessProbe.enabled }}
+        livenessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.apiServer.livenessProbe "enabled") "context" $) | nindent 12 }}
+          tcpSocket:
+            port: http
+        {{- end }}
+        {{- if .Values.apiServer.customReadinessProbe }}
+        readinessProbe: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.customReadinessProbe "context" $) | nindent 12 }}
+        {{- else if .Values.apiServer.readinessProbe.enabled }}
+        readinessProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.apiServer.readinessProbe "enabled" "path") "context" $) | nindent 12 }}
+          tcpSocket:
+            port: http
+        {{- end }}
+        {{- if .Values.apiServer.customStartupProbe }}
+        startupProbe: {{- include "common.tplvalues.render" (dict "value" .Values.apiServer.customStartupProbe "context" $) | nindent 12 }}
+        {{- else if .Values.apiServer.startupProbe.enabled }}
+        startupProbe: {{- include "common.tplvalues.render" (dict "value" (omit .Values.apiServer.startupProbe "enabled") "context" $) | nindent 12 }}
+          tcpSocket:
+            port: http
+        {{- end }}
+        {{- if .Values.apiServer.resources }}
+        resources: {{- toYaml .Values.apiServer.resources | nindent 12 }}
+        {{- else if ne .Values.resourcesPreset "none" }}
+        resources: {{- include "common.resources.preset" (dict "type" .Values.resourcesPreset) | nindent 12 }}
+        {{- end }}
+        volumeMounts:
+          {{- if .Values.apiServer.extraVolumeMounts }}
+          {{- include "common.tplvalues.render" ( dict "value" .Values.apiServer.extraVolumeMounts "context" $) | nindent 12 }}
+          {{- end }}
+      volumes:
+        {{- if .Values.apiServer.extraVolumes }}
+        {{- include "common.tplvalues.render" ( dict "value" .Values.apiServer.extraVolumes "context" $) | nindent 8 }}
+        {{- end }}

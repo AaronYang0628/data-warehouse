@@ -15,15 +15,19 @@ dependencies:
     version: 1.17.2
     repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
     condition: certManager.enabled
+  - name: minio
+    version: 13.8.4
+    repository: https://charts.bitnami.com/bitnami
   - name: elasticsearch
-    version: 22.0.2
-    repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
-    condition: elasticsearch.enabled
+    version: 19.21.2
+    repository: https://charts.bitnami.com/bitnami
   - name: kafka
-    version: 32.2.3
-    repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
-    condition: kafka.enabled
+    version: 29.3.14
+    repository: https://charts.bitnami.com/bitnami
   - name: flink-kubernetes-operator
     version: 1.11.0
     repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
     condition: flink.enabled
+  - name: nginx
+    version: 15.10.4
+    repository: https://charts.bitnami.com/bitnami

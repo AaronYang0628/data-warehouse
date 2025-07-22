@@ -360,6 +360,7 @@ kafka:
     enabled: false
   kraft:
     enabled: true
+    clusterId: "1"
 
 apiServer:
   name: metadata-api-server

@@ -17,8 +17,5 @@ dependencies:
 - name: flink-kubernetes-operator
   repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
   version: 1.11.0
-- name: nginx
-  repository: https://charts.bitnami.com/bitnami
-  version: 15.10.4
-digest: sha256:f1879c7a2820be2f7805387e0444066f928ceb761cc3411488f600b520e298da
-generated: "2025-07-21T15:44:42.486043509+08:00"
+digest: sha256:f032df6bd4fb191730cd97ccd4d3e6e7fd6228fc240c9bdf9be80238cf90436c
+generated: "2025-07-30T09:54:59.346808947+08:00"

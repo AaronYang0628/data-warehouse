@@ -1,5 +1,5 @@
 # Metadata Operator
-- Deploy Cert Manager + Flink + ES + Kafka middleware in one shot
+- Deploy Cert Manager + Flink + ES + Kafka + API server middleware in one shot
 - Create Operator to manage metadata ingest job
 
 
@@ -17,7 +17,7 @@ kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks
 helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts
 wget -O metadata.values.yaml https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/charts/data-and-computing/data.warehouse.values.yaml
 ### install from ay-mirror
-helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.9
+helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.10
 ```
 
 ### Submit Data Ingest job

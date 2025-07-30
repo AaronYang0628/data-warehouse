@@ -1,0 +1,76 @@
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: metadata-flink-session-cluster
+  {{- if .Values.flink.operator.enabled }}
+  namespace: {{ .Release.Namespace | quote }}
+  {{- else }}
+  namespace: {{ .Values.flink.operator.existingNamespace }}
+  {{- end }}
+spec:
+  mode: {{ .Values.flink.session.mode | quote }}
+  serviceAccount: {{ include "metadata-environment.flink.serviceAccountName" . }}
+  flinkVersion: {{ .Values.flink.session.version | quote }}
+  image: "{{ .Values.flink.session.image.registry }}/{{ .Values.flink.session.image.repository }}:{{ .Values.flink.session.image.tag }}"
+  podTemplate:
+    spec:
+      imagePullSecrets:
+      {{- if .Values.flink.session.image.pullSecrets }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.flink.session.image.pullSecrets "context" $) | nindent 12 }}
+      {{- end }}
+      containers:
+      - name: flink-main-container
+        imagePullPolicy: Always
+        env:
+        - name: TZ
+          value: Asia/Shanghai
+        - name: ENABLE_BUILT_IN_PLUGINS
+          value: flink-s3-fs-hadoop-1.19.1.jar
+        - name: S3_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metadata-minio-secret
+              key: s3-access-key
+        - name: S3_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metadata-minio-secret
+              key: s3-access-secret
+        - name: S3_ENDPOINT
+          valueFrom:
+            secretKeyRef:
+              name: metadata-minio-secret
+              key: s3-endpoint
+        ports:
+        {{- if .Values.flink.session.extraContainerPorts }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.flink.session.extraContainerPorts "context" $) | nindent 12 }}
+        {{- end }}
+  flinkConfiguration:
+    env.java.opts: --add-opens java.base/java.util=ALL-UNNAMED
+    s3.access-key: ${S3_ACCESS_KEY}
+    s3.secret-key: ${S3_SECRET_KEY}
+    s3.endpoint: ${S3_ENDPOINT}
+    s3.path.style.access: "true"
+    state.checkpoints.dir: {{ .Values.flink.session.state.checkpoint.path }}
+    state.savepoints.dir: {{ .Values.flink.session.state.savepoint.path }}
+    taskmanager.numberOfTaskSlots: {{ .Values.flink.session.taskManager.taskSlots | quote }}
+  jobManager:
+    replicas: {{ .Values.flink.session.jobManager.replicas }}
+    resource:
+      {{- if .Values.flink.session.jobManager.resource }}
+        cpu: {{ .Values.flink.session.jobManager.resource.cpu }}
+        memory: {{ .Values.flink.session.jobManager.resource.memory }}
+      {{- end }}
+  taskManager:
+    replicas: {{ .Values.flink.session.taskManager.replicas }}
+    resource:
+      {{- if .Values.flink.session.taskManager.resource }}
+        cpu: {{ .Values.flink.session.taskManager.resource.cpu }}
+        memory: {{ .Values.flink.session.taskManager.resource.memory }}
+      {{- end }}
+  {{- if .Values.flink.session.ingress.enabled }}
+  ingress:
+    template: {{ .Values.flink.session.ingress.template }}
+    className: {{ .Values.flink.session.ingress.className }}
+    annotations: {{- toYaml .Values.flink.session.ingress.annotations | nindent 6 }}
+  {{- end }}

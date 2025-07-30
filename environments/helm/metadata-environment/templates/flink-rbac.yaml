@@ -16,8 +16,8 @@ apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
   name: {{ .Values.ingestTaskOperator.flink.clusterRole.name | quote }}
-  {{- if not .Values.flink.enabled }}
-  namespace: {{ .Values.flink.existingNamespace | quote }}
+  {{- if not .Values.flink.operator.enabled }}
+  namespace: {{ .Values.flink.operator.existingNamespace | quote }}
   {{- else }}
   namespace: {{ .Release.Namespace | quote }}
   {{- end }}
@@ -66,8 +66,8 @@ apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRoleBinding
 metadata:
   name: {{ .Values.ingestTaskOperator.flink.clusterRoleBinding.name | quote }}
-  {{- if not .Values.flink.enabled }}
-  namespace: {{ .Values.flink.existingNamespace | quote }}
+  {{- if not .Values.flink.operator.enabled }}
+  namespace: {{ .Values.flink.operator.existingNamespace | quote }}
   {{- else }}
   namespace: {{ .Release.Namespace | quote }}
   {{- end }}

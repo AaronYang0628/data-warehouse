@@ -26,6 +26,8 @@ helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml d
 kubectl -n metadata apply -f templates/scan-oss-resource.yaml
 kubectl -n metadata apply -f templates/scan-s3-resource.yaml
 
+kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-oss-resource.yaml
+
 ### java crud
 kubectl -n metadata apply -f templates/scan-virtual-resource.yaml
 ```

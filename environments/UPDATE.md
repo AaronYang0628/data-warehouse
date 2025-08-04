@@ -6,6 +6,7 @@ helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/c
 # [[Optional]]() package chart
 ```shell
 helm package --dependency-update  --destination /tmp/ /workspaces/data-warehouse/environments/helm/metadata-environment
+# helm lint environments/helm/metadata-environment
 # helm package --dependency-update  --destination /tmp/ environments/helm/metadata-environment
 ```
 

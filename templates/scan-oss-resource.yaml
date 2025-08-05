@@ -20,7 +20,7 @@ spec:
   platform: oss
   extraSecret: munge-oss-credientials
   flinkJobConfig:
-    flinkVersion: v1_19
+    flinkVersion: v1_20
     ingress:
       template: "/{{namespace}}/{{name}}(/|$)(.*)"
       className: "nginx"

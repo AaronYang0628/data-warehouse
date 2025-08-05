@@ -29,21 +29,21 @@ spec:
         {{- end }}
         volumeMounts:
           - name: checkpoint-volume
-            mountPath: /opt/flink/checkpoints
+            mountPath: {{ .Values.flink.session.state.checkpoint.path | trimPrefix "file:///" }}
           - name: savepoint-volume
-            mountPath: /opt/flink/savepoints
+            mountPath: {{ .Values.flink.session.state.savepoint.path | trimPrefix "file:///" }}
       volumes:
         - name: checkpoint-volume
           {{- if .Values.flink.session.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: meta-flink-session-xxpoint-pvc
+            claimName: meta-flink-session-checkpoint-pvc
           {{- else }}
           emptyDir: {}
           {{- end }}
         - name: savepoint-volume
           {{- if .Values.flink.session.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: meta-flink-session-xxpoint-pvc
+            claimName: meta-flink-session-savepoint-pvc
           {{- else }}
           emptyDir: {}
           {{- end }}

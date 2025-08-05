@@ -1,8 +1,8 @@
-{{- if .Values.flink.session.persistence.enabled }}
+{{- if and .Values.flink.session.enabled .Values.flink.session.persistence.enabled }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: meta-flink-session-xxpoint-pvc
+  name: meta-flink-session-checkpoint-pvc
   namespace: {{ .Release.Namespace | quote }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
@@ -23,7 +23,7 @@ spec:
   {{- end }}
   {{- include "common.storage.class" (dict "persistence" .Values.flink.session.persistence "global" .Values.global) | nindent 2 }}
 
-{{- end -}}
+{{- end }}
 
 
 

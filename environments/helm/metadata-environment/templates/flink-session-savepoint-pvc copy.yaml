@@ -1,0 +1,29 @@
+{{- if and .Values.flink.session.enabled .Values.flink.session.persistence.enabled }}
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: meta-flink-session-savepoint-pvc
+  namespace: {{ .Release.Namespace | quote }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+spec:
+  accessModes:
+  {{- range .Values.flink.session.persistence.accessModes }}
+    - {{ . | quote }}
+  {{- end }}
+  resources:
+    requests:
+      storage: {{ .Values.flink.session.persistence.size | quote }}
+  {{- if .Values.flink.session.persistence.selector }}
+  selector: {{- include "common.tplvalues.render" (dict "value" .Values.flink.session.persistence.selector "context" $) | nindent 4 }}
+  {{- end }}
+  {{- if .Values.flink.session.persistence.dataSource }}
+  dataSource: {{- include "common.tplvalues.render" (dict "value" .Values.flink.session.persistence.dataSource "context" $) | nindent 4 }}
+  {{- end }}
+  {{- include "common.storage.class" (dict "persistence" .Values.flink.session.persistence "global" .Values.global) | nindent 2 }}
+
+{{- end }}
+
+
+

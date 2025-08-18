@@ -1,0 +1,79 @@
+{{- if .Values.flink.residenceJobs.consumeKafkaToES.enabled }}
+apiVersion: flink.apache.org/v1beta1
+kind: FlinkDeployment
+metadata:
+  name: metadata-flink-job-ingest-kafka-to-es
+  namespace: {{ .Release.Namespace | quote }}
+spec:
+  mode: {{ .Values.flink.residenceJobs.consumeKafkaToES.mode | quote }}
+  serviceAccount: {{ include "metadata-environment.flink.serviceAccountName" . }}
+  flinkVersion: {{ .Values.flink.residenceJobs.consumeKafkaToES.version | quote }}
+  image: "{{ .Values.flink.residenceJobs.consumeKafkaToES.image.registry }}/{{ .Values.flink.residenceJobs.consumeKafkaToES.image.repository }}:{{ .Values.flink.residenceJobs.consumeKafkaToES.image.tag }}"
+  podTemplate:
+    spec:
+      imagePullSecrets:
+      {{- if .Values.flink.residenceJobs.consumeKafkaToES.image.pullSecrets }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.flink.residenceJobs.consumeKafkaToES.image.pullSecrets "context" $) | nindent 12 }}
+      {{- end }}
+      containers:
+      - name: flink-main-container
+        imagePullPolicy: Always
+        env:
+          - name: TZ
+            value: Asia/Shanghai
+          - name: JOB_JSON
+            value: "{}"
+          - name: KAFKA_HOST
+            value: data-warehouse-kafka.metadata.svc.cluster.local
+          - name: KAFKA_PORT
+            value: "9092"
+          - name: KAFKA_TOPIC
+            value: ingest-to-es
+          - name: ES_HOST
+            value: elasticsearch.metadata
+          - name: ES_PORT
+            value: "9200"
+          - name: ES_SCHEMA
+            value: http
+          - name: ES_DATASET_INDEX
+            value: datasetindex
+          - name: ES_DATASET_GROUP_INDEX
+            value: datasetgroup
+          - name: ES_INGEST_JOB_INFO_INDEX
+            value: ingestjob_info
+          - name: WINDOW_SIZE_MILLIS
+            value: "200"
+        ports:
+        {{- if .Values.flink.residenceJobs.consumeKafkaToES.extraContainerPorts }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.flink.residenceJobs.consumeKafkaToES.extraContainerPorts "context" $) | nindent 12 }}
+        {{- end }}
+  flinkConfiguration:
+    env.java.opts: --add-opens java.base/java.util=ALL-UNNAMED
+    taskmanager.numberOfTaskSlots: {{ .Values.flink.residenceJobs.consumeKafkaToES.taskManager.taskSlots | quote }}
+  jobManager:
+    replicas: {{ .Values.flink.residenceJobs.consumeKafkaToES.jobManager.replicas }}
+    resource:
+      {{- if .Values.flink.residenceJobs.consumeKafkaToES.jobManager.resource }}
+        cpu: {{ .Values.flink.residenceJobs.consumeKafkaToES.jobManager.resource.cpu }}
+        memory: {{ .Values.flink.residenceJobs.consumeKafkaToES.jobManager.resource.memory }}
+      {{- end }}
+  taskManager:
+    replicas: {{ .Values.flink.residenceJobs.consumeKafkaToES.taskManager.replicas }}
+    resource:
+      {{- if .Values.flink.residenceJobs.consumeKafkaToES.taskManager.resource }}
+        cpu: {{ .Values.flink.residenceJobs.consumeKafkaToES.taskManager.resource.cpu }}
+        memory: {{ .Values.flink.residenceJobs.consumeKafkaToES.taskManager.resource.memory }}
+      {{- end }}
+  {{- if .Values.flink.residenceJobs.consumeKafkaToES.ingress.enabled }}
+  ingress:
+    template: {{ .Values.flink.residenceJobs.consumeKafkaToES.ingress.template }}
+    className: {{ .Values.flink.residenceJobs.consumeKafkaToES.ingress.className }}
+    annotations: {{- toYaml .Values.flink.residenceJobs.consumeKafkaToES.ingress.annotations | nindent 6 }}
+  {{- end }}
+  job:
+    jarURI: {{ .Values.flink.residenceJobs.consumeKafkaToES.job.jarURI }}
+    parallelism: {{ .Values.flink.residenceJobs.consumeKafkaToES.job.parallelism }}
+    entryClass: {{ .Values.flink.residenceJobs.consumeKafkaToES.job.entryClass }}
+    args: {{ .Values.flink.residenceJobs.consumeKafkaToES.job.args }}
+
+  {{- end }}

@@ -1,4 +1,4 @@
-{{- if and .Values.flink.session.enabled .Values.flink.session.persistence.enabled }}
+{{- if .Values.flink.session.persistence.enabled }}
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:

@@ -1,4 +1,3 @@
-{{- if .Values.flink.session.enabled }}
 apiVersion: flink.apache.org/v1beta1
 kind: FlinkDeployment
 metadata:
@@ -71,6 +70,4 @@ spec:
     template: {{ .Values.flink.session.ingress.template }}
     className: {{ .Values.flink.session.ingress.className }}
     annotations: {{- toYaml .Values.flink.session.ingress.annotations | nindent 6 }}
-  {{- end }}
-
   {{- end }}

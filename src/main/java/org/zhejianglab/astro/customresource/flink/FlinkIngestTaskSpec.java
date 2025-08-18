@@ -6,6 +6,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import lombok.*;
 import lombok.extern.jackson.Jacksonized;
+import org.apache.commons.lang3.StringUtils;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
 
 @Data
@@ -20,48 +21,43 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   /** job parallelism which will be used to override the flinkJobConfig.JobSpc.parallelism */
   @Nullable private Integer jobParallelism;
 
-  /**
-   * task slots which will be used to override the
-   * flinkJobConfig.FlinkConfiguration.taskmanager.numberofTaskSlots
-   */
-  @Nullable private Integer taskSlots;
-
   @Nullable private FlinkJobConfig flinkJobConfig;
+
+  @Nullable private String s3TableName;
 
   @Builder
   @Jacksonized
   public FlinkIngestTaskSpec(
       String path,
       String platform,
-      Integer timeout,
       String extraSecret,
       List<String> tags,
       Map<String, String> userProperties,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
+      @Nullable Integer timeout,
       @Nullable Integer jobParallelism,
-      @Nullable Integer taskSlots,
+      @Nullable String s3TableName,
       @Nullable FlinkJobConfig flinkJobConfig) {
     this.setPath(path);
     this.setPlatform(platform);
-    this.setTimeout(timeout);
+    this.setTimeout(null != timeout ? timeout : 20);
     this.setTags(tags);
     this.setUserProperties(userProperties);
     this.extraSecret = extraSecret;
     this.pathPatterns = pathPatterns;
     this.allowedSuffixes = allowedSuffixes;
+
+    this.jobParallelism = null != jobParallelism ? jobParallelism : 5;
+
     if (null == flinkJobConfig) {
-      this.flinkJobConfig = FlinkJobConfig.builder().build().getDefaultConfig();
+      this.flinkJobConfig = FlinkJobConfig.builder().build().getSessionJobDefaultConfig(this);
     } else {
       this.flinkJobConfig = flinkJobConfig;
     }
-    this.jobParallelism = jobParallelism;
-    if (null != this.jobParallelism) {
-      this.flinkJobConfig.updateJobParallelism(this.jobParallelism);
-    }
-    this.taskSlots = taskSlots;
-    if (null != this.taskSlots) {
-      this.flinkJobConfig.updateTaskSlots(this.taskSlots);
-    }
+
+    this.s3TableName = null != s3TableName ? s3TableName : StringUtils.EMPTY;
+
+    this.flinkJobConfig.updateJobParallelism(this.jobParallelism);
   }
 }

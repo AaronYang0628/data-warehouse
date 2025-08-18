@@ -8,15 +8,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
 import org.zhejianglab.astro.customresource.Platform;
-import org.zhejianglab.astro.dependentresource.FlinkDeploymentDependentResource;
-import org.zhejianglab.astro.dependentresource.conditions.FlinkDeploymentDependentCondition;
+import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
+import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
 
 @Workflow(
     explicitInvocation = true,
     dependents = {
       @Dependent(
-          type = FlinkDeploymentDependentResource.class,
-          reconcilePrecondition = FlinkDeploymentDependentCondition.class),
+          type = FlinkSessionJobDependentResource.class,
+          reconcilePrecondition = FlinkSessionJobDependentCondition.class),
     })
 public class MetadataOperatorFlinkReconciler
     implements Reconciler<FlinkIngestTask>, Cleaner<FlinkIngestTask> {
@@ -25,6 +25,13 @@ public class MetadataOperatorFlinkReconciler
 
   public UpdateControl<FlinkIngestTask> reconcile(
       FlinkIngestTask primary, Context<FlinkIngestTask> context) {
+
+    String namespace = primary.getMetadata().getNamespace();
+    log.info("FlinkIngestTask is applied in namespace: {}", namespace);
+    if (!primary.getSpec().getExtraSecret().contentEquals(".")) {
+      String extraSecretName = primary.getSpec().getExtraSecret();
+      primary.getSpec().setExtraSecret(namespace + "." + extraSecretName);
+    }
 
     if (primary.getMetadata().getDeletionTimestamp() != null) {
       log.info("Resource is being deleted, skip reconciliation");
@@ -41,7 +48,6 @@ public class MetadataOperatorFlinkReconciler
     context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
 
     if (context.isNextReconciliationImminent()) {
-      // your logic, maybe return?
       log.info("Reconcile inner logic");
     }
 

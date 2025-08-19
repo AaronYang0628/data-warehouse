@@ -1,0 +1,43 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: metadata-minio-bucket-init-job
+  namespace: {{ .Release.Namespace }}
+  annotations: {}
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 1
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-minio
+        {{- if .Values.global.registryPrefix }}
+        image: {{ .Values.global.registryPrefix }}/docker.io/library/busybox:1.35.0
+        {{- else }}
+        image: docker.io/library/busybox:1.35.0
+        {{- end }}
+        command: ['sh', '-c', '
+          until nc -z -w 2 {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local 9000;
+          do
+            echo "Waiting for MinIO to be ready...";
+            sleep 2;
+          done;
+          ']
+      containers:
+      - name: minio-client
+        {{- if .Values.global.registryPrefix }}
+        image: {{ .Values.global.registryPrefix }}/docker.io/minio/mc:latest
+        {{- else }}
+        image: docker.io/minio/mc:latest
+        {{- end }}
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -e
+          echo "starting..."
+          mc alias set myminio http://{{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local:9000 admin password
+          mc mb myminio/flink
+          mc anonymous set public myminio/flink
+          echo "make the bucket 'myminio/flink' public successfully"

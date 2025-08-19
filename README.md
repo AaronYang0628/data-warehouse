@@ -17,7 +17,7 @@ kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks
 helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts
 wget -O metadata.values.yaml https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/charts/data-and-computing/data.warehouse.values.yaml
 ### install from ay-mirror
-helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.10
+helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.11
 ```
 
 ### Submit Data Ingest job
@@ -26,10 +26,13 @@ helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml d
 kubectl -n metadata apply -f templates/scan-oss-resource.yaml
 kubectl -n metadata apply -f templates/scan-s3-resource.yaml
 
-kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-oss-resource.yaml
+# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-oss-resource.yaml
+# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.yaml
 
 ### java crud
 kubectl -n metadata apply -f templates/scan-virtual-resource.yaml
+
+# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-virtual-resource.yaml
 ```
 
 ### Check Job Status
@@ -69,7 +72,8 @@ mvn clean package
 
 4. build docker image
 ```shell
-docker login -u <username> -p <password>
+export DOCKER_CR_PAT=dckr_pat_bBN_Xkgz-TRdxirM2B6EDYCjjrg
+echo $DOCKER_CR_PAT | podman login docker.io -u aaron666 --password-stdin
 mvn compile jib:build
 ```
 

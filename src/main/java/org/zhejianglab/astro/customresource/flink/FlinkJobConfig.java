@@ -113,14 +113,12 @@ public class FlinkJobConfig {
 
   public FlinkJobConfig getSessionJobDefaultConfig(FlinkIngestTaskSpec primarSpec) {
 
-    // 从secret中读取S3_ACCESS_KEY的值
     String s3AccessKey = "";
     String s3AccessSecret = "";
     String s3Endpoint = "";
 
     if (kubernetesClient != null && primarSpec.getExtraSecret() != null) {
       try {
-        // 读取secret
         io.fabric8.kubernetes.api.model.Secret secret =
             kubernetesClient
                 .secrets()

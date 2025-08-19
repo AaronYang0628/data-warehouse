@@ -19,30 +19,9 @@ spec:
       - name: flink-main-container
         imagePullPolicy: Always
         env:
-          - name: TZ
-            value: Asia/Shanghai
-          - name: JOB_JSON
-            value: "{}"
-          - name: KAFKA_HOST
-            value: data-warehouse-kafka.metadata.svc.cluster.local
-          - name: KAFKA_PORT
-            value: "9092"
-          - name: KAFKA_TOPIC
-            value: ingest-to-es
-          - name: ES_HOST
-            value: elasticsearch.metadata
-          - name: ES_PORT
-            value: "9200"
-          - name: ES_SCHEMA
-            value: http
-          - name: ES_DATASET_INDEX
-            value: datasetindex
-          - name: ES_DATASET_GROUP_INDEX
-            value: datasetgroup
-          - name: ES_INGEST_JOB_INFO_INDEX
-            value: ingestjob_info
-          - name: WINDOW_SIZE_MILLIS
-            value: "200"
+        {{- if .Values.flink.residenceJobs.consumeKafkaToES.extraEnvVars }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.flink.residenceJobs.consumeKafkaToES.extraEnvVars "context" $) | nindent 12 }}
+        {{- end }}
         ports:
         {{- if .Values.flink.residenceJobs.consumeKafkaToES.extraContainerPorts }}
         {{- include "common.tplvalues.render" (dict "value" .Values.flink.residenceJobs.consumeKafkaToES.extraContainerPorts "context" $) | nindent 12 }}

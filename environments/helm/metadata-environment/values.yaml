@@ -15,7 +15,7 @@ ingestTaskOperator:
   image:
     registry: docker-registry.lab.zverse.space
     repository: ay-dev/metadata-operator
-    tag: latest
+    tag: test
     pullPolicy: Always
     pullSecrets: []
   serviceAccount:
@@ -133,14 +133,18 @@ certManager:
     image:
       repository: m.daocloud.io/quay.io/jetstack/cert-manager-startupapicheck
 
+flinkK8sOperator:
+  enabled: true
+  image:
+    registry: m.daocloud.io/ghcr.io
+    repository: apache/flink-kubernetes-operator
+    tag: 1.11.0
+  defaultConfiguration:
+    flink-conf.yaml: |+
+      kubernetes.operator.flink.client.timeout: 120 s
+  existingNamespace: flink
+
 flink:
-  operator:
-    enabled: true
-    image:
-      registry: m.daocloud.io/ghcr.io
-      repository: apache/flink-kubernetes-operator
-      tag: 1.11.0
-    existingNamespace: flink
   session:
     version: v1_19
     mode: native
@@ -197,17 +201,42 @@ flink:
       - name: flink-metric
         containerPort: 9249
         protocol: TCP
+      extraEnvVars:
+      - name: TZ
+        value: Asia/Shanghai
+      - name: JOB_JSON
+        value: "{}"
+      - name: KAFKA_HOST
+        value: metadata-kafka.metadata.svc.cluster.local
+      - name: KAFKA_PORT
+        value: "9092"
+      - name: KAFKA_TOPIC
+        value: ingest-to-es
+      - name: ES_HOST
+        value: elasticsearch.metadata
+      - name: ES_PORT
+        value: "9200"
+      - name: ES_SCHEMA
+        value: http
+      - name: ES_DATASET_INDEX
+        value: datasetindex
+      - name: ES_DATASET_GROUP_INDEX
+        value: datasetgroup
+      - name: ES_INGEST_JOB_INFO_INDEX
+        value: ingestjob_info
+      - name: WINDOW_SIZE_MILLIS
+        value: "200"
       jobManager:
         replicas: 1
         resource:
-          cpu: 2
+          cpu: 1
           memory: 2Gi
       taskManager:
         replicas: 1
         taskSlots: 2
         resource:
-          cpu: 2
-          memory: 4Gi
+          cpu: 1
+          memory: 2Gi
       ingress:
         enabled: true
         annotations:

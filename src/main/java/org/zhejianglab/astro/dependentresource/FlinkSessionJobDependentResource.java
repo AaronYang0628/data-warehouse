@@ -35,7 +35,7 @@ public class FlinkSessionJobDependentResource
     } else {
       ObjectMeta metadata =
           new ObjectMetaBuilder()
-              .withName(primary.getMetadata().getName() + FLINK_SESSION_JOB_SUFFIX)
+              .withName(primary.getMetadata().getName())
               .withNamespace(primary.getMetadata().getNamespace())
               .build();
       metadata.setOwnerReferences(

@@ -28,7 +28,7 @@ public class MetadataOperatorFlinkReconciler
 
     String namespace = primary.getMetadata().getNamespace();
     log.info("FlinkIngestTask is applied in namespace: {}", namespace);
-    if (!primary.getSpec().getExtraSecret().contentEquals(".")) {
+    if (!primary.getSpec().getExtraSecret().contains(".")) {
       String extraSecretName = primary.getSpec().getExtraSecret();
       primary.getSpec().setExtraSecret(namespace + "." + extraSecretName);
     }

@@ -50,14 +50,12 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
 
     this.jobParallelism = null != jobParallelism ? jobParallelism : 5;
 
+    this.s3TableName = null != s3TableName ? s3TableName : StringUtils.EMPTY;
     if (null == flinkJobConfig) {
       this.flinkJobConfig = FlinkJobConfig.builder().build().getSessionJobDefaultConfig(this);
+      this.flinkJobConfig.updateJobParallelism(this.jobParallelism);
     } else {
       this.flinkJobConfig = flinkJobConfig;
     }
-
-    this.s3TableName = null != s3TableName ? s3TableName : StringUtils.EMPTY;
-
-    this.flinkJobConfig.updateJobParallelism(this.jobParallelism);
   }
 }

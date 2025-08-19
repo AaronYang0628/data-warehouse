@@ -23,11 +23,11 @@ helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml d
 ### Submit Data Ingest job
 ```shell
 ### flink job
-kubectl -n metadata apply -f templates/scan-oss-resource.yaml
-kubectl -n metadata apply -f templates/scan-s3-resource.yaml
+kubectl -n metadata apply -f templates/scan-s3-resource.long.yaml
+kubectl -n metadata apply -f templates/scan-s3-resource.short.yaml
 
-# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-oss-resource.yaml
-# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.yaml
+# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.long.yaml
+# kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.short.yaml
 
 ### java crud
 kubectl -n metadata apply -f templates/scan-virtual-resource.yaml
@@ -65,8 +65,9 @@ mvn spotless:apply
 mvn dependency:tree
 ```
 
-3. package jar
+3. package jar (also generate new CRD)
 ```shell
+#/workspaces/data-warehouse/target/classes/META-INF/fabric8
 mvn clean package
 ```
 

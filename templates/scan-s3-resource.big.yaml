@@ -1,7 +1,7 @@
 apiVersion: org.zhejianglab.astro.metadata/v1
 kind: FlinkIngestTask
 metadata:
-  name: ingest-table-or-fits-from-s3-long
+  name: ingest-table-or-fits-from-s3-big
 spec:
   path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
   tags:
@@ -18,7 +18,12 @@ spec:
   platform: s3
   jobParallelism: 2
   s3TableName: ""
-  extraSecret: metadata-minio-secret
+  extraSecret: 
+    name: metadata-minio-secret
+    namespace: aaaaa
+    accessKeyName: s3-access-key
+    secretKeyName: secretKeyName
+    endpointKeyName: endpointKeyName
   flinkJobConfig:
     job:
       jarURI: https://repo1.maven.org/maven2/org/apache/flink/flink-examples-streaming_2.12/1.16.1/flink-examples-streaming_2.12-1.16.1-TopSpeedWindowing.jar

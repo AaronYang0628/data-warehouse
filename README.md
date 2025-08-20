@@ -23,8 +23,9 @@ helm upgrade  --create-namespace -n metadata --install -f metadata.values.yaml d
 ### Submit Data Ingest job
 ```shell
 ### flink job
-kubectl -n metadata apply -f templates/scan-s3-resource.long.yaml
-kubectl -n metadata apply -f templates/scan-s3-resource.short.yaml
+kubectl -n metadata apply -f templates/scan-s3-resource.big.yaml
+kubectl -n metadata apply -f templates/scan-s3-resource.medium.yaml
+kubectl -n metadata apply -f templates/scan-s3-resource.small.yaml
 
 # kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.long.yaml
 # kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.short.yaml

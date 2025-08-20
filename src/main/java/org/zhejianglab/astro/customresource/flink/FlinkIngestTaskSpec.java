@@ -14,7 +14,7 @@ import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
 
-  private String extraSecret;
+  private ExtraSecret extraSecret;
   private Map<String, String> pathPatterns;
   private List<String> allowedSuffixes;
 
@@ -30,7 +30,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   public FlinkIngestTaskSpec(
       String path,
       String platform,
-      String extraSecret,
+      ExtraSecret extraSecret,
       List<String> tags,
       Map<String, String> userProperties,
       Map<String, String> pathPatterns,

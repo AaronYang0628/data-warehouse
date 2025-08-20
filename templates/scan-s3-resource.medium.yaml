@@ -1,7 +1,7 @@
 apiVersion: org.zhejianglab.astro.metadata/v1
 kind: FlinkIngestTask
 metadata:
-  name: ingest-table-or-fits-from-s3-short
+  name: ingest-table-or-fits-from-s3-medium
 spec:
   path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
   tags:
@@ -18,4 +18,5 @@ spec:
   platform: s3
   jobParallelism: 2
   s3TableName: ""
-  extraSecret: metadata-minio-secret
+  extraSecret: 
+    name: metadata-minio-secret

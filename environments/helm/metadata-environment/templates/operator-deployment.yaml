@@ -82,6 +82,14 @@ spec:
           lifecycle: {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.lifecycleHooks "context" $) | nindent 12 }}
           {{- end }}
           env:
+            - name: HELM_RELEASE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['app.kubernetes.io/instance']
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
             {{- if .Values.ingestTaskOperator.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}

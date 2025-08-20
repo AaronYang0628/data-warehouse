@@ -5,7 +5,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
   annotations:
     "helm.sh/hook": pre-delete  
-    "helm.sh/hook-weight": "5"   
+    "helm.sh/hook-weight": "0"   
     # "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 spec:
   backoffLimit: 1  
@@ -23,22 +23,22 @@ spec:
         args:
         - |
           # check and delete FlinkDeployment 'metadata-flink-job-ingest-kafka-to-es'
-          if kubectl get flinkdep metadata-flink-job-ingest-kafka-to-es -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete flinkdep metadata-flink-job-ingest-kafka-to-es -n {{ .Release.Namespace }}
+          if kubectl get flinkdeployment metadata-flink-job-ingest-kafka-to-es -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete flinkdeployment metadata-flink-job-ingest-kafka-to-es -n {{ .Release.Namespace }}
             echo "In Namespace {{ .Release.Namespace }} Deleting Flinkdeployment: metadata-flink-job-ingest-kafka-to-es"
           else
             echo "In Namespace {{ .Release.Namespace }} Flinkdeployment 'metadata-flink-job-ingest-kafka-to-es' not found"
           fi
           # check and delete sesssion job using 'metadata-flink-session-cluster'
-          if kubectl get sessionjob -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete sessionjob -n {{ .Release.Namespace }} --all
+          if kubectl get flinksessionjob -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete flinksessionjob -n {{ .Release.Namespace }} --all
             echo "In Namespace {{ .Release.Namespace }} Deleting All SessionJobs which hosted by metadata-flink-session-cluster"
           else
             echo "In Namespace {{ .Release.Namespace }}, there is no SessionJob hosted by metadata-flink-session-cluster"
           fi
           # check and delete FlinkDeployment 'metadata-flink-session-cluster'
-          if kubectl get flinkdep metadata-flink-session-cluster -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete flinkdep metadata-flink-session-cluster -n {{ .Release.Namespace }}
+          if kubectl get flinkdeployment metadata-flink-session-cluster -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete flinkdeployment metadata-flink-session-cluster -n {{ .Release.Namespace }}
             echo "In Namespace {{ .Release.Namespace }} Deleting Flinkdeployment: metadata-flink-session-cluster"
           else
             echo "In Namespace {{ .Release.Namespace }} Flinkdeployment 'metadata-flink-session-cluster' not found"

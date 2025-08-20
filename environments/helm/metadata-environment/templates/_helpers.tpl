@@ -65,7 +65,7 @@ Create the name of the service account to use
 Create the name of the flink service account to use
 */}}
 {{- define "metadata-environment.flink.serviceAccountName" -}}
-{{- default "default" .Values.ingestTaskOperator.flink.serviceAccount.name }}
+{{- "metadata-ingest-flink-sa" }}
 {{- end }}
 
 {{/*

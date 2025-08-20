@@ -56,7 +56,7 @@ public class FlinkJobConfig {
   @Builder.Default private KubernetesDeploymentMode mode = KubernetesDeploymentMode.NATIVE;
 
   public FlinkJobConfig getSessionJobDefaultConfig(FlinkIngestTaskSpec primarSpec) {
-
+    log.info("Generating default Flink job config for session job with spec: {}", primarSpec);
     return FlinkJobConfig.builder()
         .job(
             JobSpec.builder()
@@ -76,7 +76,7 @@ public class FlinkJobConfig {
                               primarSpec.getAllowedSuffixes()),
                       "PLATFORM=" + primarSpec.getPlatform(),
                       "SCAN_PATH=" + primarSpec.getPath(),
-                      "KAFKA_BOOTSTRAP_SERVER=metadata-kafka.metadata.sve.cluster.local:9092",
+                      "KAFKA_BOOTSTRAP_SERVER=metadata-kafka.metadata.sve.cluster.local:9092", // wrong addr
                       "S3_ENDPOINT=" + "http://oss-cn-hangzhou-zjy-d01-a.ops.cloud.zhejianglab.com",
                       "S3_ACCESS_KEY=" + "dHhEJoLjXS7BI7tG",
                       "S3_ACCESS_SECRET=" + "OIGQCkaQiLNymxXdhDb1v7kU7O6kfT",

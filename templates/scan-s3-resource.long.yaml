@@ -1,7 +1,7 @@
 apiVersion: org.zhejianglab.astro.metadata/v1
 kind: FlinkIngestTask
 metadata:
-  name: ingest-table-or-fits-from-s3
+  name: ingest-table-or-fits-from-s3-long
 spec:
   path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
   tags:
@@ -17,4 +17,21 @@ spec:
     - fits
   platform: s3
   jobParallelism: 2
+  s3TableName: ""
   extraSecret: metadata-minio-secret
+  flinkJobConfig:
+    job:
+      jarURI: https://repo1.maven.org/maven2/org/apache/flink/flink-examples-streaming_2.12/1.16.1/flink-examples-streaming_2.12-1.16.1-TopSpeedWindowing.jar
+      parallelism: 2
+      upgradeMode: stateless
+    flinkConfiguration:
+      taskmanager.numberOfTaskSlots: "2"
+      kubernetes.operator.flink.client.timeout: 120 s
+    jobManager:
+      resource:
+        cpu: 1
+        memory: 1Gi
+    taskManager:
+      resource:
+        cpu: 1
+        memory: 1Gi

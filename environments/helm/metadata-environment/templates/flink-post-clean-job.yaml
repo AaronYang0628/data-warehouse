@@ -1,0 +1,75 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.ingestTaskOperator.name }}-flink-post-cleanup-job
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": post-delete  
+    "helm.sh/hook-weight": "5"   
+    # "helm.sh/hook-delete-policy": hook-succeeded 
+spec:
+  backoffLimit: 1  
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+      - name: cleanup-container
+        {{- if .Values.global.registryPrefix }}
+        image: {{ .Values.global.registryPrefix }}/docker.io/bitnami/kubectl:1.28-debian-11
+        {{- else }}
+        image: docker.io/bitnami/kubectl:1.28-debian-11
+        {{- end }}
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+
+          # check and delete CRD 'flinkingesttasks.org.zhejianglab.astro.metadata'
+          if kubectl get crd flinkingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
+            kubectl delete crd flinkingesttasks.org.zhejianglab.astro.metadata
+            echo "Deleting CRD: flinkingesttasks.org.zhejianglab.astro.metadata"
+          else
+            echo "CRD 'flinkingesttasks.org.zhejianglab.astro.metadata' not found"
+          fi
+
+          # check and delete CRD 'virtualingesttasks.org.zhejianglab.astro.metadata'
+          if kubectl get crd virtualingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
+            kubectl delete crd virtualingesttasks.org.zhejianglab.astro.metadata
+            echo "Deleting CRD: virtualingesttasks.org.zhejianglab.astro.metadata"
+          else
+            echo "CRD 'virtualingesttasks.org.zhejianglab.astro.metadata' not found"
+          fi
+
+          # check and delete secret 'metadata-minio-secret'
+          if kubectl get secret metadata-minio-secret -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete secret metadata-minio-secret -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting Secret: metadata-minio-secret"
+          else
+            echo "In Namespace {{ .Release.Namespace }} Secret 'metadata-minio-secret' not found"
+          fi
+
+          # check and delete ServiceAccount 'flink'
+          if kubectl get sa flink -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete sa flink -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting ServiceAccount: flink"
+          else
+            echo "In Namespace {{ .Release.Namespace }} ServiceAccount 'flink' not found"
+          fi
+          
+          # check and delete Role 'flink'
+          if kubectl get role flink -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete role flink -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting Role: flink"
+          else
+            echo "In Namespace {{ .Release.Namespace }}  Role 'flink' not found"
+          fi
+          
+          # check and delete RoleBinding 'flink-role-binding'
+          if kubectl get rolebinding flink-role-binding -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete rolebinding flink-role-binding -n {{ .Release.Namespace }}
+            echo "In Namespace {{ .Release.Namespace }} Deleting RoleBinding: flink-role-binding"
+          else
+            echo "In Namespace {{ .Release.Namespace }}  RoleBinding 'flink-role-binding' not found"
+          fi
+
+          echo "Cleanup completed successfully"
+      

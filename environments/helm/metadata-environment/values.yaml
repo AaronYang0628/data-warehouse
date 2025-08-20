@@ -30,8 +30,6 @@ ingestTaskOperator:
     clusterRoleBinding:
       name: "metadata-ingest-operator-crb"
   flink:
-    serviceAccount:
-      name: "metadata-ingest-flink-sa"
     clusterRole:
       name: "metadata-ingest-flink-crole"
     clusterRoleBinding:
@@ -133,13 +131,14 @@ certManager:
     image:
       repository: m.daocloud.io/quay.io/jetstack/cert-manager-startupapicheck
 
-flinkK8sOperator:
+flinkk8soperator:
   enabled: true
   image:
-    registry: m.daocloud.io/ghcr.io
-    repository: apache/flink-kubernetes-operator
+    repository: m.daocloud.io/ghcr.io/apache/flink-kubernetes-operator
     tag: 1.11.0
   defaultConfiguration:
+    create: true
+    append: true
     flink-conf.yaml: |+
       kubernetes.operator.flink.client.timeout: 120 s
   existingNamespace: flink
@@ -201,31 +200,7 @@ flink:
       - name: flink-metric
         containerPort: 9249
         protocol: TCP
-      extraEnvVars:
-      - name: TZ
-        value: Asia/Shanghai
-      - name: JOB_JSON
-        value: "{}"
-      - name: KAFKA_HOST
-        value: metadata-kafka.metadata.svc.cluster.local
-      - name: KAFKA_PORT
-        value: "9092"
-      - name: KAFKA_TOPIC
-        value: ingest-to-es
-      - name: ES_HOST
-        value: elasticsearch.metadata
-      - name: ES_PORT
-        value: "9200"
-      - name: ES_SCHEMA
-        value: http
-      - name: ES_DATASET_INDEX
-        value: datasetindex
-      - name: ES_DATASET_GROUP_INDEX
-        value: datasetgroup
-      - name: ES_INGEST_JOB_INFO_INDEX
-        value: ingestjob_info
-      - name: WINDOW_SIZE_MILLIS
-        value: "200"
+      extraEnvVars: []
       jobManager:
         replicas: 1
         resource:
@@ -250,7 +225,6 @@ flink:
         entryClass: com.zhejianglab.astronomy.es.IngestToEs
         args: []  
     
-
 minio:
   image:
     registry: m.lab.zverse.space/docker.io

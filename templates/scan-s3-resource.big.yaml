@@ -20,7 +20,7 @@ spec:
   s3TableName: ""
   extraSecret: 
     name: metadata-minio-secret
-    namespace: aaaaa
+    namespace: bbbbbbbb
     accessKeyName: s3-access-key
     secretKeyName: secretKeyName
     endpointKeyName: endpointKeyName

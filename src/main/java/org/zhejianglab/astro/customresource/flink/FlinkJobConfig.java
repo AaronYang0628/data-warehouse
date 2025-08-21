@@ -1,5 +1,6 @@
 package org.zhejianglab.astro.customresource.flink;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import lombok.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -33,8 +35,6 @@ public class FlinkJobConfig {
   private static final String FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS =
       "taskmanager.numberOfTaskSlots";
 
-  @Builder.Default private String repository = "docker.io/library";
-
   private String image;
 
   @Builder.Default private String serviceAccount = FLINK_SERVICE_ACCOUNT;
@@ -51,12 +51,27 @@ public class FlinkJobConfig {
 
   private JobSpec job;
 
+  @Builder.Default @JsonIgnore private Map<String, Object> jobArgsMap = new ConcurrentHashMap<>();
+
   private Map<String, String> flinkConfiguration;
 
   @Builder.Default private KubernetesDeploymentMode mode = KubernetesDeploymentMode.NATIVE;
 
-  public FlinkJobConfig getSessionJobDefaultConfig(FlinkIngestTaskSpec primarSpec) {
+  public FlinkJobConfig initSessionJobDefaultConfig(FlinkIngestTaskSpec primarSpec) {
     log.info("Generating default Flink job config for session job with spec: {}", primarSpec);
+    this.jobArgsMap.put("BATCH_ID", UuidUtil.getTimeBasedUuid().toString());
+    this.jobArgsMap.put(
+        "SCAN_CONFIG",
+        generateScanConfig(
+            primarSpec.getUserProperties(),
+            primarSpec.getPathPatterns(),
+            primarSpec.getTags(),
+            primarSpec.getAllowedSuffixes()));
+
+    this.jobArgsMap.put("PLATFORM", primarSpec.getPlatform());
+    this.jobArgsMap.put("SCAN_PATH", primarSpec.getPath());
+    this.jobArgsMap.put("S3_TABLE_NAME", primarSpec.getS3TableName());
+    this.jobArgsMap.putAll(primarSpec.getExtraSecret().getSecretData());
     return FlinkJobConfig.builder()
         .job(
             JobSpec.builder()
@@ -65,38 +80,13 @@ public class FlinkJobConfig {
                 .parallelism(primarSpec.getJobParallelism())
                 .upgradeMode(UpgradeMode.STATELESS)
                 .entryClass("com.zhejianglab.astronomy.metadata.Main")
-                .args(
-                    new String[] {
-                      "BATCH_ID=" + UuidUtil.getTimeBasedUuid().toString(),
-                      "SCAN_CONFIG="
-                          + generateScanConfig(
-                              primarSpec.getUserProperties(),
-                              primarSpec.getPathPatterns(),
-                              primarSpec.getTags(),
-                              primarSpec.getAllowedSuffixes()),
-                      "PLATFORM=" + primarSpec.getPlatform(),
-                      "SCAN_PATH=" + primarSpec.getPath(),
-                      "KAFKA_BOOTSTRAP_SERVER=metadata-kafka.metadata.sve.cluster.local:9092", // wrong addr
-                      "S3_ENDPOINT=" + "http://oss-cn-hangzhou-zjy-d01-a.ops.cloud.zhejianglab.com",
-                      "S3_ACCESS_KEY=" + "dHhEJoLjXS7BI7tG",
-                      "S3_ACCESS_SECRET=" + "OIGQCkaQiLNymxXdhDb1v7kU7O6kfT",
-                      "S3_TABLE_NAME=" + primarSpec.getS3TableName()
-                    })
+                .args(mapToStringArray(this.getJobArgsMap()))
                 .build())
         .build();
   }
 
-  public void updateJobParallelism(Integer jobParallelism) {
-    JobSpec jobSpec = this.getJob();
-    if (jobSpec == null) {
-      throw new IllegalStateException("JobSpec is null, cannot update parallelism.");
-    }
-    jobSpec.setParallelism(jobParallelism);
-    this.setJob(jobSpec);
-  }
-
-  public void updateTaskSlots(Integer taskSlots) {
-    this.getFlinkConfiguration().put(FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS, taskSlots.toString());
+  public void updateJobArgsMap(Map<String, ?> updatedMap) {
+    this.jobArgsMap.putAll(updatedMap);
   }
 
   private String generateScanConfig(
@@ -116,5 +106,14 @@ public class FlinkJobConfig {
     ArrayNode suffixesNode = scanConfig.putArray("allowedSuffixes");
     allowedSuffixes.forEach(suffixesNode::add);
     return scanConfig.toString();
+  }
+
+  private static String[] mapToStringArray(Map<String, Object> map) {
+    if (map == null || map.isEmpty()) {
+      return new String[0];
+    }
+    return map.entrySet().stream()
+        .map(entry -> entry.getKey() + "=" + entry.getValue().toString())
+        .toArray(String[]::new);
   }
 }

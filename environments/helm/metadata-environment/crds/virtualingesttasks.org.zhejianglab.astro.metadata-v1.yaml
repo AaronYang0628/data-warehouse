@@ -24,7 +24,18 @@ spec:
                   type: "string"
                 type: "array"
               extraSecret:
-                type: "string"
+                properties:
+                  accessKeyName:
+                    type: "string"
+                  endpointKeyName:
+                    type: "string"
+                  name:
+                    type: "string"
+                  namespace:
+                    type: "string"
+                  secretKeyName:
+                    type: "string"
+                type: "object"
               flinkJobConfig:
                 properties:
                   flinkConfiguration:
@@ -6568,8 +6579,6 @@ spec:
                             type: "array"
                         type: "object"
                     type: "object"
-                  repository:
-                    type: "string"
                   serviceAccount:
                     type: "string"
                   taskManager:

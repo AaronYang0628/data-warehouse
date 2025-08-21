@@ -12,6 +12,7 @@ import org.apache.flink.kubernetes.operator.api.spec.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
+import org.zhejianglab.astro.customresource.flink.FlinkJobConfig;
 
 @KubernetesDependent
 public class FlinkSessionJobDependentResource
@@ -51,13 +52,15 @@ public class FlinkSessionJobDependentResource
           FlinkSessionJobSpec.builder();
 
       flinkSessionJobSpecBuilder.deploymentName(FLINK_SESSION_CLUSTER_NAME);
-      flinkSessionJobSpecBuilder.job(primary.getSpec().getFlinkJobConfig().getJob());
+      FlinkJobConfig updatedJobConfig =
+          primary.getSpec().getFlinkJobConfig().initSessionJobDefaultConfig(primary.getSpec());
+      flinkSessionJobSpecBuilder.job(updatedJobConfig.getJob());
 
       FlinkSessionJob sessionJob = new FlinkSessionJob();
       sessionJob.setMetadata(metadata);
       sessionJob.setSpec(flinkSessionJobSpecBuilder.build());
 
-      log.info(sessionJob.toString());
+      log.info(" current FlinkSessionJobDependentResource -> {}", sessionJob.toString());
       return sessionJob;
     }
   }

@@ -15,6 +15,7 @@ import org.zhejianglab.astro.customresource.FlinkIngestTask;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
 import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
+import org.zhejianglab.astro.utils.SecretConstant;
 
 @Workflow(
     explicitInvocation = true,
@@ -31,20 +32,29 @@ public class MetadataOperatorFlinkReconciler
   public UpdateControl<FlinkIngestTask> reconcile(
       FlinkIngestTask primary, Context<FlinkIngestTask> context) {
 
+    boolean needsUpdate = false;
+
     String namespace = primary.getMetadata().getNamespace();
     log.info("A FlinkIngestTask is applied in namespace: {}", namespace);
 
     if (null == primary.getSpec().getExtraSecret()) {
       primary.getSpec().setExtraSecret(ExtraSecret.builder().namespace(namespace).build());
+      needsUpdate = true;
     } else {
       ExtraSecret existingSecret = primary.getSpec().getExtraSecret();
       existingSecret = existingSecret.patchInfo(namespace);
       primary.getSpec().setExtraSecret(existingSecret);
+      needsUpdate = true;
     }
 
-    Map<String, String> result =
+    ExtraSecret extraSecretWithData =
         retrieveExtraSecretInfo(context.getClient(), primary.getSpec().getExtraSecret());
-    log.info("retrieveExtraSecretInfo -> {}", result);
+
+    if (!extraSecretWithData.getSecretData().isEmpty()) {
+      log.info("Updating FlinkIngestTask with new secret data");
+      primary.getSpec().setExtraSecret(extraSecretWithData);
+      needsUpdate = true;
+    }
 
     if (primary.getMetadata().getDeletionTimestamp() != null) {
       log.info("This FlinkIngestTask is being deleted, skip reconciliation");
@@ -55,11 +65,17 @@ public class MetadataOperatorFlinkReconciler
     if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
       finalizers.add(FlinkIngestTask.FINALIZER_NAME);
       primary.getMetadata().setFinalizers(finalizers);
-      return UpdateControl.patchResource(primary);
+      needsUpdate = true;
+    }
+
+    if (needsUpdate) {
+      primary.getMetadata().setManagedFields(null);
+      log.info("Updating FlinkIngestTask Status: {}", primary.getSpec());
     }
 
     context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
-    return UpdateControl.noUpdate();
+
+    return needsUpdate ? UpdateControl.patchResource(primary) : UpdateControl.noUpdate();
   }
 
   public DeleteControl cleanup(FlinkIngestTask primary, Context<FlinkIngestTask> context) {
@@ -88,8 +104,7 @@ public class MetadataOperatorFlinkReconciler
     return ErrorStatusUpdateControl.noStatusUpdate();
   }
 
-  private Map<String, String> retrieveExtraSecretInfo(
-      KubernetesClient k8sClient, ExtraSecret extraSecret) {
+  private ExtraSecret retrieveExtraSecretInfo(KubernetesClient k8sClient, ExtraSecret extraSecret) {
     Map<String, String> result = new ConcurrentHashMap<>();
     Secret secret =
         k8sClient
@@ -100,44 +115,45 @@ public class MetadataOperatorFlinkReconciler
 
     if (secret != null && secret.getData() != null) {
       Map<String, String> secretData = secret.getData();
-      log.info(
+      log.debug(
           "Successfully read secret '{}' in namespace '{}'",
           extraSecret.getName(),
           extraSecret.getNamespace());
 
-      // 打印 access key
       String accessKey = secretData.get(extraSecret.getAccessKeyName());
       if (accessKey != null) {
         String decodedAccessKey = new String(Base64.getDecoder().decode(accessKey));
-        log.info("Access Key from secret: {}", decodedAccessKey);
+        log.debug("Access Key from secret: {}", decodedAccessKey);
+        result.put(SecretConstant.ACCESS_KEY_UP_NAME, decodedAccessKey);
       } else {
         log.warn("Access key '{}' not found in secret", extraSecret.getAccessKeyName());
       }
-
-      // 打印 secret key
       String secretKey = secretData.get(extraSecret.getSecretKeyName());
       if (secretKey != null) {
         String decodedSecretKey = new String(Base64.getDecoder().decode(secretKey));
-        log.info("Secret Key from secret: {}", decodedSecretKey);
+        log.debug("Secret Key from secret: {}", decodedSecretKey);
+        result.put(SecretConstant.SECRET_KEY_UP_NAME, decodedSecretKey);
       } else {
         log.warn("Secret key '{}' not found in secret", extraSecret.getSecretKeyName());
       }
-
-      // 打印 endpoint
       String endpointKey = secretData.get(extraSecret.getEndpointKeyName());
       if (endpointKey != null) {
         String decodedEndpoint = new String(Base64.getDecoder().decode(endpointKey));
-        log.info("Endpoint from secret: {}", decodedEndpoint);
+        log.debug("Endpoint from secret: {}", decodedEndpoint);
+        result.put(SecretConstant.ENDPOINT_KEY_UP_NAME, decodedEndpoint);
       } else {
         log.warn("Endpoint key '{}' not found in secret", extraSecret.getEndpointKeyName());
       }
-
     } else {
       log.warn(
           "Secret '{}' not found in namespace '{}'",
           extraSecret.getName(),
           extraSecret.getNamespace());
     }
-    return result;
+
+    extraSecret.setSecretData(result);
+    log.info("Extra secret information retrieved: {}", extraSecret.getSecretData());
+
+    return extraSecret;
   }
 }

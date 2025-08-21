@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -22,7 +23,7 @@ import org.slf4j.LoggerFactory;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-@Builder
+@Builder(toBuilder = true)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlinkJobConfig {
 
@@ -32,8 +33,8 @@ public class FlinkJobConfig {
 
   public static final String FLINK_SERVICE_ACCOUNT = "metadata-ingest-flink-sa";
 
-  private static final String FLINK_TASKMANAGER_NUMBER_OF_TASK_SLOTS =
-      "taskmanager.numberOfTaskSlots";
+  private static final String DEFAULT_KAFKA_BOOTSTRAP_SERVER =
+      "metadata-kafka.metadata.svc.cluster.local:9092";
 
   private String image;
 
@@ -71,7 +72,14 @@ public class FlinkJobConfig {
     this.jobArgsMap.put("PLATFORM", primarSpec.getPlatform());
     this.jobArgsMap.put("SCAN_PATH", primarSpec.getPath());
     this.jobArgsMap.put("S3_TABLE_NAME", primarSpec.getS3TableName());
-    this.jobArgsMap.putAll(primarSpec.getExtraSecret().getSecretData());
+    if (null != primarSpec.getExtraSecret()) {
+      this.jobArgsMap.putAll(primarSpec.getExtraSecret().getSecretData());
+    }
+
+    this.jobArgsMap.put(
+        "KAFKA_BOOTSTRAP_SERVER",
+        System.getenv().getOrDefault("KAFKA_BOOTSTRAP_SERVER", DEFAULT_KAFKA_BOOTSTRAP_SERVER));
+
     return FlinkJobConfig.builder()
         .job(
             JobSpec.builder()
@@ -85,8 +93,38 @@ public class FlinkJobConfig {
         .build();
   }
 
-  public void updateJobArgsMap(Map<String, ?> updatedMap) {
-    this.jobArgsMap.putAll(updatedMap);
+  public FlinkJobConfig updateJobArgsMap(FlinkIngestTaskSpec primarSpec) {
+    log.info("Updateing Flink job config for session job with spec: {}", primarSpec);
+    this.jobArgsMap.put("BATCH_ID", UuidUtil.getTimeBasedUuid().toString());
+    this.jobArgsMap.put(
+        "SCAN_CONFIG",
+        generateScanConfig(
+            primarSpec.getUserProperties(),
+            primarSpec.getPathPatterns(),
+            primarSpec.getTags(),
+            primarSpec.getAllowedSuffixes()));
+
+    this.jobArgsMap.put("PLATFORM", primarSpec.getPlatform());
+    this.jobArgsMap.put("SCAN_PATH", primarSpec.getPath());
+    this.jobArgsMap.put("S3_TABLE_NAME", primarSpec.getS3TableName());
+    if (null != primarSpec.getExtraSecret()) {
+      this.jobArgsMap.putAll(primarSpec.getExtraSecret().getSecretData());
+    }
+
+    this.jobArgsMap.put(
+        "KAFKA_BOOTSTRAP_SERVER",
+        System.getenv().getOrDefault("KAFKA_BOOTSTRAP_SERVER", DEFAULT_KAFKA_BOOTSTRAP_SERVER));
+
+    return this.toBuilder()
+        .job(
+            JobSpec.builder()
+                .jarURI(this.getJob().getJarURI())
+                .parallelism(this.getJob().getParallelism())
+                .upgradeMode(this.getJob().getUpgradeMode())
+                .entryClass(this.getJob().getEntryClass())
+                .args(mapToStringArray(this.getJobArgsMap()))
+                .build())
+        .build();
   }
 
   private String generateScanConfig(
@@ -96,15 +134,23 @@ public class FlinkJobConfig {
       List<String> allowedSuffixes) {
     ObjectNode scanConfig = objectMapper.createObjectNode();
 
-    scanConfig.set("userProperties", objectMapper.valueToTree(userProperties));
+    scanConfig.set(
+        "userProperties",
+        objectMapper.valueToTree(userProperties != null ? userProperties : new HashMap<>()));
 
-    scanConfig.set("pathPatterns", objectMapper.valueToTree(pathPatterns));
+    scanConfig.set(
+        "pathPatterns",
+        objectMapper.valueToTree(pathPatterns != null ? pathPatterns : new HashMap<>()));
 
     ArrayNode tagsNode = scanConfig.putArray("tags");
-    tags.forEach(tagsNode::add);
+    if (tags != null) {
+      tags.forEach(tagsNode::add);
+    }
 
     ArrayNode suffixesNode = scanConfig.putArray("allowedSuffixes");
-    allowedSuffixes.forEach(suffixesNode::add);
+    if (allowedSuffixes != null) {
+      allowedSuffixes.forEach(suffixesNode::add);
+    }
     return scanConfig.toString();
   }
 

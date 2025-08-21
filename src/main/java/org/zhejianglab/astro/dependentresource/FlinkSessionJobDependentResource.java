@@ -53,7 +53,7 @@ public class FlinkSessionJobDependentResource
 
       flinkSessionJobSpecBuilder.deploymentName(FLINK_SESSION_CLUSTER_NAME);
       FlinkJobConfig updatedJobConfig =
-          primary.getSpec().getFlinkJobConfig().initSessionJobDefaultConfig(primary.getSpec());
+          primary.getSpec().getFlinkJobConfig().updateJobArgsMap(primary.getSpec());
       flinkSessionJobSpecBuilder.job(updatedJobConfig.getJob());
 
       FlinkSessionJob sessionJob = new FlinkSessionJob();

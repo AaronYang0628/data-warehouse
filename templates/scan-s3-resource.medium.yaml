@@ -17,6 +17,5 @@ spec:
     - fits
   platform: s3
   jobParallelism: 2
-  s3TableName: "gggg"
   extraSecret: 
-    name: metadata-minio-secret
+    name: munge-oss-crediential

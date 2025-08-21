@@ -87,6 +87,8 @@ rules:
     - "flink.apache.org"
     resources:
     - flinkdeployments
+    - flinksessionjobs
+    - flinkstatesnapshots
     verbs:
     - get
     - list

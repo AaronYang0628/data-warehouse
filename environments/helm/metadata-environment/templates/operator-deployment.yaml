@@ -83,7 +83,7 @@ spec:
           {{- end }}
           env:
           - name: KAFKA_BOOTSTRAP_SERVER
-            value: {{ .Release.Name }}-kafka.{{ .Release.Namespace }}.svc.cluster.local
+            value: {{ .Release.Name }}-kafka.{{ .Release.Namespace }}.svc.cluster.local:9092
             {{- if .Values.ingestTaskOperator.extraEnvVars }}
             {{- include "common.tplvalues.render" (dict "value" .Values.ingestTaskOperator.extraEnvVars "context" $) | nindent 12 }}
             {{- end }}

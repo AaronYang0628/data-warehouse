@@ -51,7 +51,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setPath(path);
     this.setPlatform(platform);
     this.setTimeout(null != timeout ? timeout : 20);
-    this.setBatchId(null != batchId ? batchId : generateMD5(this));
+    this.setBatchId(null != batchId ? batchId : generateMD5());
     this.setTags(tags);
     this.setUserProperties(userProperties);
     this.extraSecret = extraSecret;
@@ -71,9 +71,9 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     }
   }
 
-  private String generateMD5(FlinkIngestTaskSpec spec) {
+  private String generateMD5() {
     try {
-      String jsonSpec = objectMapper.writeValueAsString(spec);
+      String jsonSpec = objectMapper.writeValueAsString(this);
 
       MessageDigest md = MessageDigest.getInstance("MD5");
       byte[] messageDigest = md.digest(jsonSpec.getBytes());

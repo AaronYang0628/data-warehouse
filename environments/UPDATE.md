@@ -17,6 +17,15 @@ helm package --dependency-update  --destination /tmp/ /workspaces/data-warehouse
 # helm package  --destination /tmp/ environments/helm/metadata-environment
 ```
 
+### [[Optional]]() Apply CRD
+```shell
+### flink job
+kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
+
+### java crud
+kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yaml
+```
+
 # install chart
 
 0. [[Optional]]() install cert-manager

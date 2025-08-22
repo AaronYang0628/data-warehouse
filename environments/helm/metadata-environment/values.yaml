@@ -8,7 +8,7 @@ global:
 resourcesPreset: "nano"
 
 ingestTaskOperator:
-  enabled: true
+  enabled: false
   name: ingest-operator
   commonLabels: {}
   commonAnnotations: {}

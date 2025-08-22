@@ -8,14 +8,14 @@ global:
 resourcesPreset: "nano"
 
 ingestTaskOperator:
-  enabled: false
+  enabled: true
   name: ingest-operator
   commonLabels: {}
   commonAnnotations: {}
   image:
     registry: docker-registry.lab.zverse.space
     repository: ay-dev/metadata-operator
-    tag: v20250822r0
+    tag: v20250822r2
     pullPolicy: Always
     pullSecrets: []
   serviceAccount:

@@ -1,0 +1,40 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: metadata-elastic-search-index-init-job
+  namespace: {{ .Release.Namespace }}
+  annotations: {}
+spec:
+  completions: 1
+  parallelism: 1
+  backoffLimit: 1
+  ttlSecondsAfterFinished: 1800
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - name: wait-for-elastic
+        {{- if .Values.global.registryPrefix }}
+        image: {{ .Values.global.registryPrefix }}/docker.io/library/busybox:1.35.0
+        {{- else }}
+        image: docker.io/library/busybox:1.35.0
+        {{- end }}
+        command: ['sh', '-c', '
+          until nc -z -w 2 {{ .Release.Name }}-elasticsearch.{{ .Release.Namespace }}.svc.cluster.local 9200;
+          do
+            echo "Waiting for Elasticsearch to be ready...";
+            sleep 2;
+          done;
+          ']
+      containers:
+      - name: es-index-init
+        image: docker-registry.lab.zverse.space/cnconti/meta-data-es-init:v250107-r1
+        env:
+        - name: ES_ADDR
+          value: {{ .Release.Name }}-elasticsearch.{{ .Release.Namespace }}
+        command: ["/bin/sh", "-c"]
+        args:
+        - |
+          set -e
+          sed -i "s/elasticsearch.data-and-computing/$ES_ADDR/g" /app/es-init.sh
+          sh /app/es-init.sh

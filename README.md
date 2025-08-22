@@ -17,7 +17,7 @@ kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks
 helm repo add ay-helm-mirror https://aaronyang0628.github.io/helm-chart-mirror/charts
 wget -O metadata.values.yaml https://raw.githubusercontent.com/AaronYang0628/helm-chart-mirror/refs/heads/main/charts/data-and-computing/data.warehouse.values.yaml
 ### install from ay-mirror
-helm upgrade  --create-namespace -n warehouse --install -f metadata.values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.12
+helm upgrade  --create-namespace -n warehouse --install -f metadata.values.yaml data-warehouse ay-helm-mirror/data-warehouse  --version=0.0.14
 ```
 
 ### Submit Data Ingest job

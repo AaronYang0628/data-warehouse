@@ -377,6 +377,7 @@ elasticsearch:
       tls: false
 
 kafka:
+  replicationFactor: 1
   image:
     registry: m.lab.zverse.space/docker.io
   listeners:

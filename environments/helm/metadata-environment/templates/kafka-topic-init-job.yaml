@@ -44,7 +44,7 @@ spec:
           - name: RETENTION_MS
             value: "21600000"
           - name: REPLICATION_FACTOR
-            value: "1"
+            value: {{ .Values.kafka.replicationFactor | quote }}
         command: ["/bin/bash", "-c"]
         args:
           - |

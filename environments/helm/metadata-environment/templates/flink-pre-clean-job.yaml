@@ -25,7 +25,7 @@ spec:
           # check and delete FlinkIngest
           if kubectl get flinkingest -n {{ .Release.Namespace }} >/dev/null 2>&1; then
             kubectl delete flinkingest -n {{ .Release.Namespace }} --all
-            echo "In Namespace {{ .Release.Namespace }} Deleting All FlinkIngestTasks
+            echo "In Namespace {{ .Release.Namespace }} Deleting All FlinkIngestTasks"
           else
             echo "In Namespace {{ .Release.Namespace }} There is no FlinkIngestTask found"
           fi
@@ -40,8 +40,6 @@ spec:
             echo "In Namespace {{ .Release.Namespace }} Flinkdeployment 'metadata-flink-job-ingest-kafka-to-es' not found"
           fi
 
-          kubectl -n {{ .Release.Namespace }} patch sessionjob --all -p '{"metadata":{"finalizers":[]}}' --type=merge
-
           # check and delete sesssion job using 'metadata-flink-session-cluster'
           if kubectl get flinksessionjob -n {{ .Release.Namespace }} >/dev/null 2>&1; then
             kubectl delete flinksessionjob -n {{ .Release.Namespace }} --all
@@ -50,7 +48,7 @@ spec:
             echo "In Namespace {{ .Release.Namespace }}, there is no SessionJob hosted by metadata-flink-session-cluster"
           fi
 
-          kubectl -n {{ .Release.Namespace }}  patch flinkdep metadata-flink-session-cluster -p '{"metadata":{"finalizers":[]}}' --type=merge
+          kubectl -n {{ .Release.Namespace }}  patch flinkdeployment metadata-flink-session-cluster -p '{"metadata":{"finalizers":[]}}' --type=merge
 
           # check and delete FlinkDeployment 'metadata-flink-session-cluster'
           if kubectl get flinkdeployment metadata-flink-session-cluster -n {{ .Release.Namespace }} >/dev/null 2>&1; then

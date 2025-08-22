@@ -23,6 +23,8 @@ spec:
                 items:
                   type: "string"
                 type: "array"
+              batchId:
+                type: "string"
               extraSecret:
                 properties:
                   accessKeyName:

@@ -1,6 +1,11 @@
 package org.zhejianglab.astro.customresource.flink;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.math.BigInteger;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -14,9 +19,12 @@ import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
 
+  private static final ObjectMapper objectMapper = new ObjectMapper();
+
   private ExtraSecret extraSecret;
   private Map<String, String> pathPatterns;
   private List<String> allowedSuffixes;
+  @Nullable private String batchId;
 
   /** job parallelism which will be used to override the flinkJobConfig.JobSpc.parallelism */
   @Nullable private Integer jobParallelism;
@@ -35,6 +43,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       Map<String, String> userProperties,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
+      @Nullable String batchId,
       @Nullable Integer timeout,
       @Nullable Integer jobParallelism,
       @Nullable String s3TableName,
@@ -42,6 +51,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setPath(path);
     this.setPlatform(platform);
     this.setTimeout(null != timeout ? timeout : 20);
+    this.setBatchId(null != batchId ? batchId : generateMD5(this));
     this.setTags(tags);
     this.setUserProperties(userProperties);
     this.extraSecret = extraSecret;
@@ -58,6 +68,26 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       this.flinkJobConfig.getJobArgsMap().put("S3_TABLE_NAME", this.s3TableName);
     } else {
       this.flinkJobConfig = flinkJobConfig;
+    }
+  }
+
+  private String generateMD5(FlinkIngestTaskSpec spec) {
+    try {
+      String jsonSpec = objectMapper.writeValueAsString(spec);
+
+      MessageDigest md = MessageDigest.getInstance("MD5");
+      byte[] messageDigest = md.digest(jsonSpec.getBytes());
+
+      BigInteger no = new BigInteger(1, messageDigest);
+      String hashtext = no.toString(16);
+
+      while (hashtext.length() < 32) {
+        hashtext = "0" + hashtext;
+      }
+
+      return hashtext.substring(0, 20);
+    } catch (JsonProcessingException | NoSuchAlgorithmException e) {
+      return "00000000000000000000";
     }
   }
 }

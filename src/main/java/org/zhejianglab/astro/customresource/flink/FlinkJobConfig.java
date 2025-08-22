@@ -2,14 +2,10 @@ package org.zhejianglab.astro.customresource.flink;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import io.fabric8.kubernetes.api.model.PodTemplateSpec;
-import java.math.BigInteger;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,7 +59,7 @@ public class FlinkJobConfig {
 
   public FlinkJobConfig initSessionJobDefaultConfig(FlinkIngestTaskSpec primarSpec) {
     log.info("Generating default Flink job config for session job with spec: {}", primarSpec);
-    this.jobArgsMap.put("BATCH_ID", generateMD5(primarSpec));
+    this.jobArgsMap.put("BATCH_ID", primarSpec.getBatchId());
     this.jobArgsMap.put(
         "SCAN_CONFIG",
         generateScanConfig(
@@ -98,7 +94,7 @@ public class FlinkJobConfig {
 
   public FlinkJobConfig updateJobArgsMap(FlinkIngestTaskSpec primarSpec) {
     log.info("Updateing Flink job config for session job with spec: {}", primarSpec);
-    this.jobArgsMap.put("BATCH_ID", generateMD5(primarSpec));
+    this.jobArgsMap.put("BATCH_ID", primarSpec.getBatchId());
     this.jobArgsMap.put(
         "SCAN_CONFIG",
         generateScanConfig(
@@ -164,26 +160,5 @@ public class FlinkJobConfig {
     return map.entrySet().stream()
         .map(entry -> entry.getKey() + "=" + entry.getValue().toString())
         .toArray(String[]::new);
-  }
-
-  private String generateMD5(FlinkIngestTaskSpec spec) {
-    try {
-      String jsonSpec = objectMapper.writeValueAsString(spec);
-
-      MessageDigest md = MessageDigest.getInstance("MD5");
-      byte[] messageDigest = md.digest(jsonSpec.getBytes());
-
-      BigInteger no = new BigInteger(1, messageDigest);
-      String hashtext = no.toString(16);
-
-      while (hashtext.length() < 32) {
-        hashtext = "0" + hashtext;
-      }
-
-      return hashtext.substring(0, 20);
-    } catch (JsonProcessingException | NoSuchAlgorithmException e) {
-      log.error("Error generating MD5 hash for spec", e);
-      return "00000000000000000000";
-    }
   }
 }

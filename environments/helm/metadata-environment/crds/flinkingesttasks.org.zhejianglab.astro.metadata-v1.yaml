@@ -9572,6 +9572,13 @@ spec:
                 type: "object"
             type: "object"
           status:
+            properties:
+              batchId:
+                type: "string"
+              exception:
+                type: "string"
+              status:
+                type: "string"
             type: "object"
         type: "object"
     served: true

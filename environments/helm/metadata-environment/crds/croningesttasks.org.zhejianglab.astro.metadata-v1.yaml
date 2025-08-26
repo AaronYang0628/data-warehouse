@@ -23,7 +23,7 @@ spec:
                 items:
                   type: "string"
                 type: "array"
-              cronExpression:
+              cron:
                 type: "string"
               extraSecret:
                 properties:
@@ -9574,6 +9574,11 @@ spec:
                 type: "object"
             type: "object"
           status:
+            properties:
+              exception:
+                type: "string"
+              status:
+                type: "string"
             type: "object"
         type: "object"
     served: true

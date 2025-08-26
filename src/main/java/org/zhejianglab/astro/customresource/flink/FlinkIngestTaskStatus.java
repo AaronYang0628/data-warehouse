@@ -17,7 +17,11 @@ public class FlinkIngestTaskStatus extends AbstractIngestTaskStatus {
   @Jacksonized
   public FlinkIngestTaskStatus(String batchId, Exception exception, JobStatus status) {
     this.setBatchId(batchId);
-    this.setException(exception.getLocalizedMessage());
+    if (null != exception) {
+      this.setException(exception.getLocalizedMessage());
+    } else {
+      this.setException("");
+    }
     this.setStatus(status.name());
   }
 }

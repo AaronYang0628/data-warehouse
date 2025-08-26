@@ -8,8 +8,9 @@
 ### flink job
 kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
 
-### java crud
-kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yaml
+### flink job
+kubectl apply -f environments/helm/metadata-environment/crds/croningesttasks.org.zhejianglab.astro.metadata-v1.yml
+
 ```
 
 ### Install Metadata Operator

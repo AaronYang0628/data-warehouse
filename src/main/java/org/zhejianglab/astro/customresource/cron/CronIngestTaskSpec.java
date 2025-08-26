@@ -22,7 +22,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
 
   private List<String> allowedSuffixes;
 
-  private String cronExpression;
+  private String cron;
 
   @Nullable private Integer jobParallelism;
 
@@ -34,6 +34,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
 
   public CronIngestTaskSpec(
       String path,
+      String cron,
       String platform,
       ExtraSecret extraSecret,
       List<String> tags,
@@ -46,6 +47,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
       @Nullable Integer jobParallelism,
       @Nullable FlinkJobConfig flinkJobConfig) {
 
+    this.setCron(cron);
     this.setPath(path);
     this.setPlatform(platform);
     this.setTimeout(null != timeout ? timeout : 20);

@@ -154,6 +154,7 @@ flink:
       repository: astro-base-images/flink-oss-updated
       tag: 1.19-java17
       pullSecrets: []
+    clusterNamespaces: []
     state:
       checkpoint:
         path: file:///opt/flink/checkpoints

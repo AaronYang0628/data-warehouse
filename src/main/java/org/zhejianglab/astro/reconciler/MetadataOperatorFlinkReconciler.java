@@ -9,11 +9,13 @@ import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.flink.api.common.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskSpec;
+import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskStatus;
 import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
 import org.zhejianglab.astro.utils.SecretConstant;
@@ -39,6 +41,16 @@ public class MetadataOperatorFlinkReconciler
       String namespace = primary.getMetadata().getNamespace();
       log.info("A FlinkIngestTask is applied in namespace: {}", namespace);
 
+      if (primary.getStatus() == null) {
+        primary.setStatus(FlinkIngestTaskStatus.builder().status(JobStatus.INITIALIZING).build());
+        needsUpdate = true;
+      }
+
+      if (primary.getSpec().getBatchId() != null) {
+        primary.getStatus().setBatchId(primary.getSpec().getBatchId());
+        needsUpdate = true;
+      }
+
       if (!validateResource(primary)) {
         updateErrorStatus(
             primary, context, new IllegalArgumentException("Invalid FlinkIngestTask resource"));
@@ -61,6 +73,7 @@ public class MetadataOperatorFlinkReconciler
       if (!extraSecretWithData.getSecretData().isEmpty()) {
         log.info("Updating FlinkIngestTask with new secret data");
         primary.getSpec().setExtraSecret(extraSecretWithData);
+        primary.getStatus().setStatus(JobStatus.RUNNING.name());
         needsUpdate = true;
       }
 
@@ -78,7 +91,7 @@ public class MetadataOperatorFlinkReconciler
 
       if (needsUpdate) {
         primary.getMetadata().setManagedFields(null);
-        log.info("Updating FlinkIngestTask Status: {}", primary.getSpec());
+        log.info("Updating FlinkIngestTask Spec: {}", primary.getSpec());
       }
 
       context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
@@ -91,6 +104,7 @@ public class MetadataOperatorFlinkReconciler
           e.getMessage(),
           e);
 
+      primary.getStatus().setStatus(JobStatus.SUSPENDED.name());
       updateErrorStatus(primary, context, e);
       return UpdateControl.patchResource(primary);
     }
@@ -118,17 +132,23 @@ public class MetadataOperatorFlinkReconciler
   private boolean validateResource(FlinkIngestTask resource) {
     FlinkIngestTaskSpec spec = resource.getSpec();
     if (spec == null) {
+
       log.error("Spec is null for resource {}", resource.getMetadata().getName());
+      resource
+          .getStatus()
+          .setException("Spec is null for resource %s".format(resource.getMetadata().getName()));
       return false;
     }
 
     if (spec.getPath() == null || spec.getPath().isEmpty()) {
       log.error("Path is required but not specified");
+      resource.getStatus().setException("Path is required but not specified");
       return false;
     }
 
     if (spec.getPlatform() == null || spec.getPlatform().isEmpty()) {
       log.error("Platform is required but not specified");
+      resource.getStatus().setException("Platform is required but not specified");
       return false;
     }
 
@@ -138,7 +158,10 @@ public class MetadataOperatorFlinkReconciler
   private static ErrorStatusUpdateControl<FlinkIngestTask> handleError(
       FlinkIngestTask primary, Exception e) {
     log.error("Error occurred while reconciling task: {}", primary.getMetadata().getName(), e);
-
+    primary
+        .getStatus()
+        .setException(
+            "Error occurred while reconciling task, since %s".format(e.getLocalizedMessage()));
     return ErrorStatusUpdateControl.noStatusUpdate();
   }
 

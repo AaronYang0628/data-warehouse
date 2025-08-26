@@ -2,10 +2,22 @@ package org.zhejianglab.astro.customresource.flink;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
+import lombok.extern.jackson.Jacksonized;
+import org.apache.flink.api.common.JobStatus;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskStatus;
 
 @Data
 @AllArgsConstructor
-@Builder
+@NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FlinkIngestTaskStatus extends AbstractIngestTaskStatus {}
+public class FlinkIngestTaskStatus extends AbstractIngestTaskStatus {
+  private String batchId;
+
+  @Builder
+  @Jacksonized
+  public FlinkIngestTaskStatus(String batchId, Exception exception, JobStatus status) {
+    this.setBatchId(batchId);
+    this.setException(exception.getLocalizedMessage());
+    this.setStatus(status.name());
+  }
+}

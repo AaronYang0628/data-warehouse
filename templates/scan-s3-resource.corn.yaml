@@ -1,0 +1,25 @@
+apiVersion: org.zhejianglab.astro.metadata/v1
+kind: CronIngestTask
+metadata:
+  name: ingest-table-or-fits-from-s3-corn
+spec:
+  cron: "*/5 * * * *"
+  path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
+  tags:
+    - CRAFTS_SPECTRUM_ORIGINAL
+    - FAST
+  userProperties:
+    key1: "value1"
+    key2: "1231"
+    key3: "true"
+  pathPatterns:
+    bucket_name: "[^/]*\\/([^/]+)\\/.*"
+  allowedSuffixes:
+    - fits
+  platform: s3
+  jobParallelism: 2
+  extraSecret: 
+    name: munge-oss-crediential
+    accessKeyName: access-key
+    secretKeyName: secret-key
+    endpointKeyName: s3-endpoint

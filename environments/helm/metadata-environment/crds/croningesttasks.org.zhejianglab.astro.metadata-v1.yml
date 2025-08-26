@@ -2,16 +2,16 @@
 apiVersion: "apiextensions.k8s.io/v1"
 kind: "CustomResourceDefinition"
 metadata:
-  name: "virtualingesttasks.org.zhejianglab.astro.metadata"
+  name: "croningesttasks.org.zhejianglab.astro.metadata"
 spec:
   group: "org.zhejianglab.astro.metadata"
   names:
-    kind: "VirtualIngestTask"
-    plural: "virtualingesttasks"
+    kind: "CronIngestTask"
+    plural: "croningesttasks"
     shortNames:
-    - "virtualingest"
-    singular: "virtualingesttask"
-  scope: "Namespaced"
+    - "croningest"
+    singular: "croningesttask"
+  scope: "Cluster"
   versions:
   - name: "v1"
     schema:
@@ -23,6 +23,8 @@ spec:
                 items:
                   type: "string"
                 type: "array"
+              cronExpression:
+                type: "string"
               extraSecret:
                 properties:
                   accessKeyName:
@@ -9546,6 +9548,8 @@ spec:
                         type: "object"
                     type: "object"
                 type: "object"
+              imageMirror:
+                type: "string"
               jobParallelism:
                 type: "integer"
               path:

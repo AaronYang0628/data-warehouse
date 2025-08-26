@@ -39,6 +39,7 @@ rules:
     - create
     - watch
     - patch
+    - update
   - apiGroups:
     - ""
     resources:

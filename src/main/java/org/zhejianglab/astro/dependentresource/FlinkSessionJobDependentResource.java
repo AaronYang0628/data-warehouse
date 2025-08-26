@@ -20,8 +20,6 @@ public class FlinkSessionJobDependentResource
 
   private static final Logger log = LoggerFactory.getLogger(FlinkSessionJobDependentResource.class);
 
-  private static final String FLINK_SESSION_JOB_SUFFIX = "-flink-session-job";
-
   private static final String FLINK_SESSION_CLUSTER_NAME = "metadata-flink-session-cluster";
 
   public FlinkSessionJobDependentResource() {
@@ -53,7 +51,20 @@ public class FlinkSessionJobDependentResource
 
       flinkSessionJobSpecBuilder.deploymentName(FLINK_SESSION_CLUSTER_NAME);
       FlinkJobConfig updatedJobConfig =
-          primary.getSpec().getFlinkJobConfig().updateJobArgsMap(primary.getSpec());
+          primary
+              .getSpec()
+              .getFlinkJobConfig()
+              .updateJobArgsMap(
+                  primary.getSpec().getJobParallelism(),
+                  primary.getSpec().getBatchId(),
+                  primary.getSpec().getPlatform(),
+                  primary.getSpec().getPath(),
+                  primary.getSpec().getS3TableName(),
+                  primary.getSpec().getUserProperties(),
+                  primary.getSpec().getTags(),
+                  primary.getSpec().getPathPatterns(),
+                  primary.getSpec().getAllowedSuffixes(),
+                  primary.getSpec().getExtraSecret());
       flinkSessionJobSpecBuilder.job(updatedJobConfig.getJob());
 
       FlinkSessionJob sessionJob = new FlinkSessionJob();

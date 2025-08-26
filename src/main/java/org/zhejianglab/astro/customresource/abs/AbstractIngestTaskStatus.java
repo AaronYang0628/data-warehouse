@@ -5,6 +5,10 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class AbstractIngestTaskStatus {
 
+  private String batchId;
+  private String exception;
+  private JobStatus status;
+
   private Map<String, Object> conditions = new ConcurrentHashMap<>();
 
   public void updateConditions(String key, Object value) {

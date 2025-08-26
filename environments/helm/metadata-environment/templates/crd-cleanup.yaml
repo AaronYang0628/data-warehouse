@@ -71,7 +71,7 @@ spec:
       serviceAccountName: {{ include "common.names.fullname" . }}-crd-cleanup
       containers:
       - name: crd-cleaner
-        image: "m.daocloud.io/docker.io/bitnami/kubectl:latest"
+        image: "m.daocloud.io/docker.io/bitnami/kubectl:1.28-debian-11"
         command:
         - "/bin/sh"
         - "-c"

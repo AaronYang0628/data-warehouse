@@ -1,38 +1,38 @@
-package org.zhejianglab.astro.customresource.flink;
+package org.zhejianglab.astro.customresource.cron;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import lombok.*;
-import lombok.extern.jackson.Jacksonized;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
-import org.zhejianglab.astro.utils.StringUtils;
+import org.zhejianglab.astro.customresource.flink.ExtraSecret;
+import org.zhejianglab.astro.customresource.flink.FlinkJobConfig;
 
 @Data
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
-
-  private static final ObjectMapper objectMapper = new ObjectMapper();
+public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
 
   private ExtraSecret extraSecret;
-  private Map<String, String> pathPatterns;
-  private List<String> allowedSuffixes;
-  @Nullable private String batchId;
 
-  /** job parallelism which will be used to override the flinkJobConfig.JobSpc.parallelism */
+  private Map<String, String> pathPatterns;
+
+  private List<String> allowedSuffixes;
+
+  private String cronExpression;
+
   @Nullable private Integer jobParallelism;
 
   @Nullable private FlinkJobConfig flinkJobConfig;
 
   @Nullable private String s3TableName;
 
-  @Builder
-  @Jacksonized
-  public FlinkIngestTaskSpec(
+  @Nullable private String imageMirror;
+
+  public CronIngestTaskSpec(
       String path,
       String platform,
       ExtraSecret extraSecret,
@@ -41,31 +41,25 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
       @Nullable String batchId,
+      @Nullable String imageMirror,
       @Nullable Integer timeout,
       @Nullable Integer jobParallelism,
-      @Nullable String s3TableName,
       @Nullable FlinkJobConfig flinkJobConfig) {
+
     this.setPath(path);
     this.setPlatform(platform);
     this.setTimeout(null != timeout ? timeout : 20);
     this.setTags(tags);
     this.setUserProperties(userProperties);
-    this.extraSecret = extraSecret;
-    this.pathPatterns = pathPatterns;
-    this.allowedSuffixes = allowedSuffixes;
+    this.setExtraSecret(extraSecret);
+    this.setPathPatterns(pathPatterns);
+    this.setAllowedSuffixes(allowedSuffixes);
 
     this.jobParallelism = null != jobParallelism ? jobParallelism : 1;
 
     this.s3TableName = null != s3TableName ? s3TableName : StringUtils.EMPTY;
 
-    try {
-      this.setBatchId(
-          null != batchId
-              ? batchId
-              : StringUtils.generateMD5(objectMapper.writeValueAsString(this)));
-    } catch (JsonProcessingException e) {
-      this.setBatchId("");
-    }
+    this.imageMirror = null != imageMirror ? imageMirror : StringUtils.EMPTY;
 
     if (null == flinkJobConfig) {
       this.flinkJobConfig =
@@ -73,7 +67,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
               .build()
               .initSessionJobDefaultConfig(
                   this.getJobParallelism(),
-                  this.getBatchId(),
+                  StringUtils.EMPTY,
                   this.getPlatform(),
                   this.getPath(),
                   this.getS3TableName(),

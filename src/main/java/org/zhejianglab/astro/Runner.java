@@ -8,8 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.probes.LivenessHandler;
 import org.zhejianglab.astro.probes.StartupHandler;
+import org.zhejianglab.astro.reconciler.MetadataOperatorCornReconciler;
 import org.zhejianglab.astro.reconciler.MetadataOperatorFlinkReconciler;
-import org.zhejianglab.astro.reconciler.MetadataOperatorJavaReconciler;
 
 public class Runner {
 
@@ -31,7 +31,8 @@ public class Runner {
                     .checkingCRDAndValidateLocalModel(true));
 
     operator.register(new MetadataOperatorFlinkReconciler());
-    operator.register(new MetadataOperatorJavaReconciler());
+    operator.register(new MetadataOperatorCornReconciler());
+    // operator.register(new MetadataOperatorJavaReconciler());
     operator.start();
 
     log.info("Metadata Ingest Operator started.");

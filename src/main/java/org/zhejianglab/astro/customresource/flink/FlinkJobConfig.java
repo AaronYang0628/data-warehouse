@@ -57,22 +57,29 @@ public class FlinkJobConfig {
 
   @Builder.Default private KubernetesDeploymentMode mode = KubernetesDeploymentMode.NATIVE;
 
-  public FlinkJobConfig initSessionJobDefaultConfig(FlinkIngestTaskSpec primarSpec) {
-    log.info("Generating default Flink job config for session job with spec: {}", primarSpec);
-    this.jobArgsMap.put("BATCH_ID", primarSpec.getBatchId());
-    this.jobArgsMap.put(
-        "SCAN_CONFIG",
-        generateScanConfig(
-            primarSpec.getUserProperties(),
-            primarSpec.getPathPatterns(),
-            primarSpec.getTags(),
-            primarSpec.getAllowedSuffixes()));
+  public FlinkJobConfig initSessionJobDefaultConfig(
+      Integer parallelism,
+      String bacthId,
+      String platform,
+      String scanPath,
+      String s3TableName,
+      Map<String, String> userProperties,
+      List<String> tags,
+      Map<String, String> pathPatterns,
+      List<String> allowedSuffixes,
+      ExtraSecret extraSecret) {
+    if (null != bacthId && !bacthId.isEmpty()) {
+      this.jobArgsMap.put("BATCH_ID", bacthId);
+    }
 
-    this.jobArgsMap.put("PLATFORM", primarSpec.getPlatform());
-    this.jobArgsMap.put("SCAN_PATH", primarSpec.getPath());
-    this.jobArgsMap.put("S3_TABLE_NAME", primarSpec.getS3TableName());
-    if (null != primarSpec.getExtraSecret()) {
-      this.jobArgsMap.putAll(primarSpec.getExtraSecret().getSecretData());
+    this.jobArgsMap.put(
+        "SCAN_CONFIG", generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes));
+
+    this.jobArgsMap.put("PLATFORM", platform);
+    this.jobArgsMap.put("SCAN_PATH", scanPath);
+    this.jobArgsMap.put("S3_TABLE_NAME", s3TableName);
+    if (null != extraSecret) {
+      this.jobArgsMap.putAll(extraSecret.getSecretData());
     }
 
     this.jobArgsMap.put(
@@ -84,7 +91,7 @@ public class FlinkJobConfig {
             JobSpec.builder()
                 .jarURI(
                     "http://data-and-computing.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects/slurm-on-k8s/intel-mpi-libs/flink-es-ingest-job-1.0.0-all.jar")
-                .parallelism(primarSpec.getJobParallelism())
+                .parallelism(parallelism)
                 .upgradeMode(UpgradeMode.STATELESS)
                 .entryClass("com.zhejianglab.astronomy.metadata.Main")
                 .args(mapToStringArray(this.getJobArgsMap()))
@@ -92,22 +99,28 @@ public class FlinkJobConfig {
         .build();
   }
 
-  public FlinkJobConfig updateJobArgsMap(FlinkIngestTaskSpec primarSpec) {
-    log.info("Updateing Flink job config for session job with spec: {}", primarSpec);
-    this.jobArgsMap.put("BATCH_ID", primarSpec.getBatchId());
+  public FlinkJobConfig updateJobArgsMap(
+      Integer parallelism,
+      String bacthId,
+      String platform,
+      String scanPath,
+      String s3TableName,
+      Map<String, String> userProperties,
+      List<String> tags,
+      Map<String, String> pathPatterns,
+      List<String> allowedSuffixes,
+      ExtraSecret extraSecret) {
+    if (null != bacthId && !bacthId.isEmpty()) {
+      this.jobArgsMap.put("BATCH_ID", bacthId);
+    }
     this.jobArgsMap.put(
-        "SCAN_CONFIG",
-        generateScanConfig(
-            primarSpec.getUserProperties(),
-            primarSpec.getPathPatterns(),
-            primarSpec.getTags(),
-            primarSpec.getAllowedSuffixes()));
+        "SCAN_CONFIG", generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes));
 
-    this.jobArgsMap.put("PLATFORM", primarSpec.getPlatform());
-    this.jobArgsMap.put("SCAN_PATH", primarSpec.getPath());
-    this.jobArgsMap.put("S3_TABLE_NAME", primarSpec.getS3TableName());
-    if (null != primarSpec.getExtraSecret()) {
-      this.jobArgsMap.putAll(primarSpec.getExtraSecret().getSecretData());
+    this.jobArgsMap.put("PLATFORM", platform);
+    this.jobArgsMap.put("SCAN_PATH", scanPath);
+    this.jobArgsMap.put("S3_TABLE_NAME", s3TableName);
+    if (null != extraSecret) {
+      this.jobArgsMap.putAll(extraSecret.getSecretData());
     }
 
     this.jobArgsMap.put(

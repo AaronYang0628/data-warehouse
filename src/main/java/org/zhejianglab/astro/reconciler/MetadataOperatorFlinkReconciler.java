@@ -41,6 +41,12 @@ public class MetadataOperatorFlinkReconciler
       String namespace = primary.getMetadata().getNamespace();
       log.info("A FlinkIngestTask is applied in namespace: {}", namespace);
 
+      if (!validateResource(primary)) {
+        updateErrorStatus(
+            primary, context, new IllegalArgumentException("Invalid FlinkIngestTask resource"));
+        return UpdateControl.patchStatus(primary);
+      }
+
       if (primary.getStatus() == null) {
         primary.setStatus(FlinkIngestTaskStatus.builder().status(JobStatus.INITIALIZING).build());
         needsUpdate = true;
@@ -48,22 +54,19 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getSpec().getBatchId() != null) {
         primary.getStatus().setBatchId(primary.getSpec().getBatchId());
+        primary.getStatus().setStatus(JobStatus.INITIALIZING.name());
         needsUpdate = true;
-      }
-
-      if (!validateResource(primary)) {
-        updateErrorStatus(
-            primary, context, new IllegalArgumentException("Invalid FlinkIngestTask resource"));
-        return UpdateControl.patchResource(primary);
       }
 
       if (null == primary.getSpec().getExtraSecret()) {
         primary.getSpec().setExtraSecret(ExtraSecret.builder().namespace(namespace).build());
+        primary.getStatus().setStatus(JobStatus.RUNNING.name());
         needsUpdate = true;
       } else {
         ExtraSecret existingSecret = primary.getSpec().getExtraSecret();
         existingSecret = existingSecret.patchInfo(namespace);
         primary.getSpec().setExtraSecret(existingSecret);
+        primary.getStatus().setStatus(JobStatus.INITIALIZING.name());
         needsUpdate = true;
       }
 
@@ -79,13 +82,15 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
-        return UpdateControl.noUpdate();
+        primary.getStatus().setStatus(JobStatus.FAILING.name());
+        return UpdateControl.patchStatus(primary);
       }
 
       List<String> finalizers = primary.getMetadata().getFinalizers();
       if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
         finalizers.add(FlinkIngestTask.FINALIZER_NAME);
         primary.getMetadata().setFinalizers(finalizers);
+        primary.getStatus().setStatus(JobStatus.RUNNING.name());
         needsUpdate = true;
       }
 
@@ -96,7 +101,8 @@ public class MetadataOperatorFlinkReconciler
 
       context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
 
-      return needsUpdate ? UpdateControl.patchResource(primary) : UpdateControl.noUpdate();
+      return needsUpdate ? UpdateControl.patchResourceAndStatus(primary) : UpdateControl.noUpdate();
+
     } catch (Exception e) {
       log.error(
           "Error during reconciliation of resource {}: {}",
@@ -106,7 +112,7 @@ public class MetadataOperatorFlinkReconciler
 
       primary.getStatus().setStatus(JobStatus.SUSPENDED.name());
       updateErrorStatus(primary, context, e);
-      return UpdateControl.patchResource(primary);
+      return UpdateControl.patchStatus(primary);
     }
   }
 
@@ -132,7 +138,6 @@ public class MetadataOperatorFlinkReconciler
   private boolean validateResource(FlinkIngestTask resource) {
     FlinkIngestTaskSpec spec = resource.getSpec();
     if (spec == null) {
-
       log.error("Spec is null for resource {}", resource.getMetadata().getName());
       resource
           .getStatus()
@@ -158,11 +163,12 @@ public class MetadataOperatorFlinkReconciler
   private static ErrorStatusUpdateControl<FlinkIngestTask> handleError(
       FlinkIngestTask primary, Exception e) {
     log.error("Error occurred while reconciling task: {}", primary.getMetadata().getName(), e);
+    primary.getStatus().setStatus(JobStatus.FAILED.name());
     primary
         .getStatus()
         .setException(
             "Error occurred while reconciling task, since %s".format(e.getLocalizedMessage()));
-    return ErrorStatusUpdateControl.noStatusUpdate();
+    return ErrorStatusUpdateControl.patchStatus(primary);
   }
 
   private ExtraSecret retrieveExtraSecretInfo(KubernetesClient k8sClient, ExtraSecret extraSecret) {

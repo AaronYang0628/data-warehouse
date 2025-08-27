@@ -13,7 +13,16 @@ spec:
     singular: "croningesttask"
   scope: "Cluster"
   versions:
-  - name: "v1"
+  - additionalPrinterColumns:
+    - jsonPath: ".status.exception"
+      name: "Exception"
+      priority: 4
+      type: "string"
+    - jsonPath: ".status.status"
+      name: "Status"
+      priority: 3
+      type: "string"
+    name: "v1"
     schema:
       openAPIV3Schema:
         properties:

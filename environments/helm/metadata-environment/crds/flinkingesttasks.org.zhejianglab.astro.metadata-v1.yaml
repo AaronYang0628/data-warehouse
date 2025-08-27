@@ -13,7 +13,20 @@ spec:
     singular: "flinkingesttask"
   scope: "Namespaced"
   versions:
-  - name: "v1"
+  - additionalPrinterColumns:
+    - jsonPath: ".status.batchId"
+      name: "BATCHID"
+      priority: 5
+      type: "string"
+    - jsonPath: ".status.exception"
+      name: "EXCEPTION"
+      priority: 4
+      type: "string"
+    - jsonPath: ".status.status"
+      name: "STATUS"
+      priority: 3
+      type: "string"
+    name: "v1"
     schema:
       openAPIV3Schema:
         properties:

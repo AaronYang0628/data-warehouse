@@ -33,8 +33,8 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   @Builder
   @Jacksonized
   public FlinkIngestTaskSpec(
-      String path,
-      String platform,
+      @NonNull String path,
+      @NonNull String platform,
       ExtraSecret extraSecret,
       List<String> tags,
       Map<String, String> userProperties,

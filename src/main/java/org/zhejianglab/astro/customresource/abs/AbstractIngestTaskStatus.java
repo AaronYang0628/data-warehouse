@@ -10,8 +10,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class AbstractIngestTaskStatus {
 
-  @PrinterColumn(name = "STATUS", priority = 3)
-  private String status;
+  @PrinterColumn(name = "JOB STATUS", priority = 3)
+  private String jobStatus;
 
   @PrinterColumn(name = "EXCEPTION", priority = 4)
   private String exception;

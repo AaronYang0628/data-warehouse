@@ -20,6 +20,7 @@ spec:
   jobParallelism: 2
   extraSecret: 
     name: munge-oss-crediential
+    namespace: astro-workbench
     accessKeyName: access-key
     secretKeyName: secret-key
     endpointKeyName: s3-endpoint

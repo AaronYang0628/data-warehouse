@@ -7,4 +7,3 @@ spec:
   allowedSuffixes:
     - fits
   platform: s3
-  jobParallelism: 2

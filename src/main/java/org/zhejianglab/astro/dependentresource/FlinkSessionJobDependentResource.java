@@ -71,7 +71,7 @@ public class FlinkSessionJobDependentResource
       sessionJob.setMetadata(metadata);
       sessionJob.setSpec(flinkSessionJobSpecBuilder.build());
 
-      log.info(" current FlinkSessionJobDependentResource -> {}", sessionJob.toString());
+      log.debug(" current FlinkSessionJobDependentResource -> {}", sessionJob.toString());
       return sessionJob;
     }
   }

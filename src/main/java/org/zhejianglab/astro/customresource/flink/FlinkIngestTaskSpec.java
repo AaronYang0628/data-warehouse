@@ -18,9 +18,10 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
 
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
-  private ExtraSecret extraSecret;
-  private Map<String, String> pathPatterns;
-  private List<String> allowedSuffixes;
+  @Nullable private ExtraSecret extraSecret;
+  @Nullable private Map<String, String> pathPatterns;
+  @Nullable private List<String> allowedSuffixes;
+
   @Nullable private String batchId;
 
   /** job parallelism which will be used to override the flinkJobConfig.JobSpc.parallelism */
@@ -33,38 +34,39 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   @Builder
   @Jacksonized
   public FlinkIngestTaskSpec(
-      @NonNull String path,
-      @NonNull String platform,
-      ExtraSecret extraSecret,
-      List<String> tags,
-      Map<String, String> userProperties,
-      Map<String, String> pathPatterns,
-      List<String> allowedSuffixes,
-      @Nullable String batchId,
-      @Nullable Integer timeout,
-      @Nullable Integer jobParallelism,
+      String path,
+      String platform,
       @Nullable String s3TableName,
+      @Nullable Integer jobParallelism,
+      @Nullable List<String> allowedSuffixes,
+      @Nullable Integer timeout,
+      @Nullable List<String> tags,
+      @Nullable ExtraSecret extraSecret,
+      @Nullable Map<String, String> userProperties,
+      @Nullable Map<String, String> pathPatterns,
+      @Nullable String batchId,
       @Nullable FlinkJobConfig flinkJobConfig) {
     this.setPath(path);
     this.setPlatform(platform);
+
+    this.setS3TableName(null != s3TableName ? s3TableName : StringUtils.EMPTY);
+    this.setJobParallelism(null != jobParallelism ? jobParallelism : 1);
+    this.setAllowedSuffixes(null != allowedSuffixes ? allowedSuffixes : List.of("*"));
+
     this.setTimeout(null != timeout ? timeout : 20);
-    this.setTags(tags);
-    this.setUserProperties(userProperties);
-    this.extraSecret = extraSecret;
-    this.pathPatterns = pathPatterns;
-    this.allowedSuffixes = allowedSuffixes;
+    this.setTags(null != tags ? tags : List.of());
+    this.setUserProperties(null != userProperties ? userProperties : Map.of());
 
-    this.jobParallelism = null != jobParallelism ? jobParallelism : 1;
-
-    this.s3TableName = null != s3TableName ? s3TableName : StringUtils.EMPTY;
+    this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
+    this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());
 
     try {
-      this.setBatchId(
+      this.batchId =
           null != batchId
               ? batchId
-              : StringUtils.generateMD5(objectMapper.writeValueAsString(this)));
+              : StringUtils.generateMD5(objectMapper.writeValueAsString(this));
     } catch (JsonProcessingException e) {
-      this.setBatchId("");
+      this.setBatchId(StringUtils.EMPTY);
     }
 
     if (null == flinkJobConfig) {
@@ -85,7 +87,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       this.flinkJobConfig.getJob().setParallelism(this.jobParallelism);
       this.flinkJobConfig.getJobArgsMap().put("S3_TABLE_NAME", this.s3TableName);
     } else {
-      this.flinkJobConfig = flinkJobConfig;
+      this.setFlinkJobConfig(flinkJobConfig);
     }
   }
 }

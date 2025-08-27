@@ -22,8 +22,8 @@ spec:
       name: "EXCEPTION"
       priority: 4
       type: "string"
-    - jsonPath: ".status.status"
-      name: "STATUS"
+    - jsonPath: ".status.jobStatus"
+      name: "JOB STATUS"
       priority: 3
       type: "string"
     name: "v1"
@@ -9583,6 +9583,9 @@ spec:
                 additionalProperties:
                   type: "string"
                 type: "object"
+            required:
+            - "path"
+            - "platform"
             type: "object"
           status:
             properties:
@@ -9590,7 +9593,7 @@ spec:
                 type: "string"
               exception:
                 type: "string"
-              status:
+              jobStatus:
                 type: "string"
             type: "object"
         type: "object"

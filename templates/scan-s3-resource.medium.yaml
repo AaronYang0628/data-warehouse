@@ -4,7 +4,7 @@ metadata:
   name: ingest-table-or-fits-from-s3-medium
 spec:
   batchId: "test"
-  path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
+  path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000005/MS"
   tags:
     - CRAFTS_SPECTRUM_ORIGINAL
     - FAST

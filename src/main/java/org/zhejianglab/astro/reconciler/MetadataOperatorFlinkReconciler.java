@@ -18,12 +18,10 @@ import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskSpec;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskStatus;
 import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
-import org.zhejianglab.astro.exception.BugException;
 import org.zhejianglab.astro.utils.SecretConstant;
 
 @Workflow(
     explicitInvocation = true,
-    handleExceptionsInReconciler = true,
     dependents = {
       @Dependent(
           type = FlinkSessionJobDependentResource.class,
@@ -34,25 +32,12 @@ public class MetadataOperatorFlinkReconciler
 
   private static final Logger log = LoggerFactory.getLogger(MetadataOperatorFlinkReconciler.class);
 
-  private volatile boolean errorsFoundInReconcilerResult = false;
-
-  private volatile boolean primaryResourceNeedUpdate = false;
-
   public UpdateControl<FlinkIngestTask> reconcile(
       FlinkIngestTask primary, Context<FlinkIngestTask> context) {
 
-    context
-        .managedWorkflowAndDependentResourceContext()
-        .getWorkflowReconcileResult()
-        .ifPresent(
-            result -> {
-              log.info(
-                  result.erroredDependentsExist()
-                      ? "Error found in dependent resource"
-                      : "No error found in dependent resource");
-            });
-
     try {
+      boolean primarySpecNeedUpdate = false;
+      boolean primaryStatusNeedUpdate = false;
 
       String namespace = primary.getMetadata().getNamespace();
       log.info("A FlinkIngestTask is applied in namespace: {}", namespace);
@@ -60,7 +45,8 @@ public class MetadataOperatorFlinkReconciler
       if (primary.getStatus() == null) {
         primary.setStatus(
             FlinkIngestTaskStatus.builder().jobStatus(JobStatus.INITIALIZING).build());
-        primaryResourceNeedUpdate = true;
+        primaryStatusNeedUpdate = true;
+        // return UpdateControl.patchResourceAndStatus(primary);
       }
 
       if (!validateAppliedResource(primary)) {
@@ -68,25 +54,17 @@ public class MetadataOperatorFlinkReconciler
             primary,
             context,
             new IllegalArgumentException("An Invalid FlinkIngestTask resource applied."));
-        // return UpdateControl.patchStatus(primary);
-      }
-
-      if (primary.getSpec().getBatchId() != null) {
-        primary.getStatus().setBatchId(primary.getSpec().getBatchId());
-        primary.getStatus().setJobStatus(JobStatus.RECONCILING.name());
-        primaryResourceNeedUpdate = true;
+        return UpdateControl.patchStatus(primary);
       }
 
       if (null == primary.getSpec().getExtraSecret()) {
         primary.getSpec().setExtraSecret(ExtraSecret.builder().namespace(namespace).build());
-        primary.getStatus().setJobStatus(JobStatus.RUNNING.name());
-        primaryResourceNeedUpdate = true;
+        primarySpecNeedUpdate = true;
       } else {
         ExtraSecret existingSecret = primary.getSpec().getExtraSecret();
         existingSecret = existingSecret.patchInfo(namespace);
         primary.getSpec().setExtraSecret(existingSecret);
-        primary.getStatus().setJobStatus(JobStatus.RECONCILING.name());
-        primaryResourceNeedUpdate = true;
+        primarySpecNeedUpdate = true;
       }
 
       ExtraSecret extraSecretWithData =
@@ -95,19 +73,11 @@ public class MetadataOperatorFlinkReconciler
       if (!extraSecretWithData.getSecretData().isEmpty()) {
         log.info("Updating FlinkIngestTask with new secret data");
         primary.getSpec().setExtraSecret(extraSecretWithData);
-        primary.getStatus().setJobStatus(JobStatus.RUNNING.name());
-        primaryResourceNeedUpdate = true;
-      } else {
-        updateErrorStatus(
-            primary,
-            context,
-            new IllegalAccessException(
-                "cannot access to the object storage, due to bad crediential."));
+        primarySpecNeedUpdate = true;
       }
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
-        primary.getStatus().setJobStatus(JobStatus.FAILING.name());
         return UpdateControl.patchStatus(primary);
       }
 
@@ -115,31 +85,37 @@ public class MetadataOperatorFlinkReconciler
       if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
         finalizers.add(FlinkIngestTask.FINALIZER_NAME);
         primary.getMetadata().setFinalizers(finalizers);
-        primary.getStatus().setJobStatus(JobStatus.RUNNING.name());
-        primaryResourceNeedUpdate = true;
+        primarySpecNeedUpdate = true;
       }
 
-      if (primaryResourceNeedUpdate) {
+      if (primarySpecNeedUpdate) {
         primary.getMetadata().setManagedFields(null);
-        log.debug("Updating FlinkIngestTask Spec: {}", primary.getSpec());
+        log.debug("Updating FlinkIngestTask Status: {}", primary.getSpec());
       }
 
       context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
 
-      return primaryResourceNeedUpdate
-          ? UpdateControl.patchResourceAndStatus(primary)
-          : UpdateControl.noUpdate();
+      if (primarySpecNeedUpdate && primaryStatusNeedUpdate) {
+        primary.getMetadata().setManagedFields(null);
+        return UpdateControl.patchResourceAndStatus(primary);
+      } else if (primarySpecNeedUpdate) {
+        primary.getMetadata().setManagedFields(null);
+        return UpdateControl.patchResource(primary);
+      } else if (primaryStatusNeedUpdate) {
+        return UpdateControl.patchStatus(primary);
+      }
+
+      return UpdateControl.noUpdate();
 
     } catch (Exception e) {
       log.error(
-          "BUG!!! -> Error during reconciliation of resource {}: {}",
+          "Error during reconciliation of resource {}: {}",
           primary.getMetadata().getName(),
           e.getMessage(),
           e);
 
-      updateErrorStatus(
-          primary, context, new BugException("call the developers to fix the bug.", e));
-      return UpdateControl.patchResourceAndStatus(primary);
+      updateErrorStatus(primary, context, e);
+      return UpdateControl.patchResource(primary);
     }
   }
 
@@ -148,13 +124,8 @@ public class MetadataOperatorFlinkReconciler
       context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
     }
 
+    primary.getMetadata().setManagedFields(null);
     return DeleteControl.defaultDelete();
-  }
-
-  private boolean validateAppliedResource(FlinkIngestTask resource) {
-    FlinkIngestTaskSpec spec = resource.getSpec();
-
-    return true;
   }
 
   @Override
@@ -168,12 +139,17 @@ public class MetadataOperatorFlinkReconciler
     return handleError(primary, e);
   }
 
+  private boolean validateAppliedResource(FlinkIngestTask resource) {
+    FlinkIngestTaskSpec spec = resource.getSpec();
+
+    return true;
+  }
+
   private static ErrorStatusUpdateControl<FlinkIngestTask> handleError(
       FlinkIngestTask primary, Exception e) {
     log.error("Error occurred while reconciling task: {}", primary.getMetadata().getName(), e);
-    primary.getStatus().setJobStatus(JobStatus.FAILED.name());
-    primary.getStatus().setException(null == e ? e.getLocalizedMessage() : "Unknown bug error");
-    return ErrorStatusUpdateControl.patchStatus(primary);
+
+    return ErrorStatusUpdateControl.noStatusUpdate();
   }
 
   private ExtraSecret retrieveExtraSecretInfo(KubernetesClient k8sClient, ExtraSecret extraSecret) {

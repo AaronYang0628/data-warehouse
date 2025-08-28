@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.CronIngestTask;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
-import org.zhejianglab.astro.utils.StringUtils;
 
 @KubernetesDependent
 public class CronJobDependentResource
@@ -25,7 +24,7 @@ public class CronJobDependentResource
 
   private static final Logger log = LoggerFactory.getLogger(CronJobDependentResource.class);
 
-  private static final String CRON_JOB_SA_NAME = "metadata-ingest-flink-sa";
+  private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
 
   private static final String CRON_JOB_IMAGE = "docker.io/bitnami/kubectl:1.28-debian-11";
 
@@ -77,82 +76,67 @@ public class CronJobDependentResource
                                                                 List.of(
                                                                     "/bin/sh",
                                                                     "-c",
-                                                                    "|",
-                                                                    "cat <<EOF | kubectl apply -f -",
-                                                                    "apiVersion: astro.zhejianglab.org/v1",
-                                                                    "kind:" + FlinkIngestTask.KIND,
-                                                                    "metadata:",
-                                                                    "  name: "
+                                                                    "cat <<'EOF' | kubectl apply -f -\n"
+                                                                        + "apiVersion: org.zhejianglab.astro.metadata/v1\n"
+                                                                        + "kind: "
+                                                                        + FlinkIngestTask.KIND
+                                                                        + "\n"
+                                                                        + "metadata: \n"
+                                                                        + "  name: "
                                                                         + primary
                                                                             .getMetadata()
                                                                             .getName()
-                                                                        + "-$(date +%s)",
-                                                                    "spec:",
-                                                                    "  path: "
+                                                                        + "-"
+                                                                        + System.currentTimeMillis()
+                                                                        + "\n"
+                                                                        + "spec: \n"
+                                                                        + "  path: "
                                                                         + primary
                                                                             .getSpec()
-                                                                            .getPath(),
-                                                                    "  platform: "
+                                                                            .getPath()
+                                                                        + "\n"
+                                                                        + "  platform: "
                                                                         + primary
                                                                             .getSpec()
-                                                                            .getPlatform(),
-                                                                    "  jobParallelism: "
+                                                                            .getPlatform()
+                                                                        + "\n"
+                                                                        + "  jobParallelism: "
                                                                         + primary
                                                                             .getSpec()
-                                                                            .getJobParallelism(),
-                                                                    "  s3TableName: "
-                                                                        + primary
-                                                                            .getSpec()
-                                                                            .getS3TableName(),
-                                                                    "  allowedSuffixes: "
-                                                                        + StringUtils
-                                                                            .listToYamlString(
-                                                                                primary
-                                                                                    .getSpec()
-                                                                                    .getAllowedSuffixes()),
-                                                                    "  tags: "
-                                                                        + StringUtils
-                                                                            .listToYamlString(
-                                                                                primary
-                                                                                    .getSpec()
-                                                                                    .getTags()),
-                                                                    "  userProperties: "
-                                                                        + StringUtils
-                                                                            .mapToYamlString(
-                                                                                primary
-                                                                                    .getSpec()
-                                                                                    .getUserProperties()),
-                                                                    "  pathPatterns: "
-                                                                        + primary
-                                                                            .getSpec()
-                                                                            .getPathPatterns(),
-                                                                    "  extraSecret: ",
-                                                                    "    name: "
+                                                                            .getJobParallelism()
+                                                                        + "\n"
+                                                                        + "  extraSecret: \n"
+                                                                        + "    name: "
                                                                         + primary
                                                                             .getSpec()
                                                                             .getExtraSecret()
-                                                                            .getName(),
-                                                                    "    namespace: "
+                                                                            .getName()
+                                                                        + "\n"
+                                                                        + "    namespace: "
                                                                         + primary
                                                                             .getSpec()
                                                                             .getExtraSecret()
-                                                                            .getNamespace(),
-                                                                    "   accessKeyName: "
+                                                                            .getNamespace()
+                                                                        + "\n"
+                                                                        + "    accessKeyName: "
                                                                         + primary
                                                                             .getSpec()
                                                                             .getExtraSecret()
-                                                                            .getAccessKeyName(),
-                                                                    "   secretKeyName: "
+                                                                            .getAccessKeyName()
+                                                                        + "\n"
+                                                                        + "    secretKeyName: "
                                                                         + primary
                                                                             .getSpec()
                                                                             .getExtraSecret()
-                                                                            .getSecretKeyName(),
-                                                                    "   endpointKeyName: "
+                                                                            .getSecretKeyName()
+                                                                        + "\n"
+                                                                        + "    endpointKeyName: "
                                                                         + primary
                                                                             .getSpec()
                                                                             .getExtraSecret()
-                                                                            .getEndpointKeyName(),
-                                                                    "EOF"))
+                                                                            .getEndpointKeyName()
+                                                                        + "\n"
+                                                                        + "EOF"))
                                                             .build()))
                                                 .build())
                                         .build())

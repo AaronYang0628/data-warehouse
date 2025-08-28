@@ -11,7 +11,6 @@ import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.CronIngestTask;
-import org.zhejianglab.astro.customresource.FlinkIngestTask;
 import org.zhejianglab.astro.customresource.cron.CronIngestTaskSpec;
 import org.zhejianglab.astro.customresource.cron.CronIngestTaskStatus;
 import org.zhejianglab.astro.dependentresource.CronJobDependentResource;
@@ -52,12 +51,12 @@ public class MetadataOperatorCronReconciler
         updateErrorStatus(
             primary,
             context,
-            new IllegalArgumentException("An Invalid FlinkIngestTask resource applied."));
+            new IllegalArgumentException("An Invalid CronIngestTask resource applied."));
         return UpdateControl.patchStatus(primary);
       }
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
-        log.info("This FlinkIngestTask is being deleted, skip reconciliation");
+        log.info("This CronIngestTask is being deleted, skip reconciliation");
         primary.getStatus().setJobStatus(ResourceLifecycleState.DELETING.name());
         return UpdateControl.patchStatus(primary);
       }
@@ -67,19 +66,20 @@ public class MetadataOperatorCronReconciler
       if (cronJobOptional.isPresent()) {
         CronJob generatedCronJob = cronJobOptional.get();
         primary.getStatus().setSchedule(generatedCronJob.getSpec().getSchedule());
+        primary.getStatus().setJobStatus(ResourceLifecycleState.DEPLOYED.name());
         primaryStatusNeedUpdate = true;
       }
 
       List<String> finalizers = primary.getMetadata().getFinalizers();
-      if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
-        finalizers.add(FlinkIngestTask.FINALIZER_NAME);
+      if (!finalizers.contains(CronIngestTask.FINALIZER_NAME)) {
+        finalizers.add(CronIngestTask.FINALIZER_NAME);
         primary.getMetadata().setFinalizers(finalizers);
         primarySpecNeedUpdate = true;
       }
 
       if (primarySpecNeedUpdate) {
         primary.getMetadata().setManagedFields(null);
-        log.debug("Updating FlinkIngestTask Status: {}", primary.getSpec());
+        log.debug("Updating CronIngestTask Status: {}", primary.getSpec());
       }
 
       context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
@@ -154,7 +154,8 @@ public class MetadataOperatorCronReconciler
       CronIngestTask primary, Exception e) {
     log.error("Error occurred while reconciling task: {}", primary.getMetadata().getName(), e);
 
-    return ErrorStatusUpdateControl.noStatusUpdate();
+    primary.getStatus().setJobStatus(ResourceLifecycleState.FAILED.name());
+    return ErrorStatusUpdateControl.patchStatus(primary);
   }
 
   private Optional<CronJob> retrieveCronJobInfo(

@@ -22,6 +22,10 @@ spec:
       name: "JOB STATUS"
       priority: 3
       type: "string"
+    - jsonPath: ".status.schedule"
+      name: "SCHEDULE"
+      priority: 5
+      type: "string"
     name: "v1"
     schema:
       openAPIV3Schema:
@@ -9595,6 +9599,8 @@ spec:
               exception:
                 type: "string"
               jobStatus:
+                type: "string"
+              schedule:
                 type: "string"
             type: "object"
         type: "object"

@@ -46,7 +46,6 @@ public class MetadataOperatorFlinkReconciler
         primary.setStatus(
             FlinkIngestTaskStatus.builder().jobStatus(JobStatus.INITIALIZING).build());
         primaryStatusNeedUpdate = true;
-        // return UpdateControl.patchResourceAndStatus(primary);
       }
 
       if (!validateAppliedResource(primary)) {
@@ -55,6 +54,13 @@ public class MetadataOperatorFlinkReconciler
             context,
             new IllegalArgumentException("An Invalid FlinkIngestTask resource applied."));
         return UpdateControl.patchStatus(primary);
+      }
+
+      if (primary.getSpec().getBatchId() != null
+          && !primary.getSpec().getBatchId().equals(primary.getStatus().getBatchId())) {
+        primary.getStatus().setBatchId(primary.getSpec().getBatchId());
+        primary.getStatus().setJobStatus(JobStatus.RUNNING.name());
+        primaryStatusNeedUpdate = true;
       }
 
       if (null == primary.getSpec().getExtraSecret()) {
@@ -71,13 +77,14 @@ public class MetadataOperatorFlinkReconciler
           retrieveExtraSecretInfo(context.getClient(), primary.getSpec().getExtraSecret());
 
       if (!extraSecretWithData.getSecretData().isEmpty()) {
-        log.info("Updating FlinkIngestTask with new secret data");
+        log.debug("Updating FlinkIngestTask with new secret data");
         primary.getSpec().setExtraSecret(extraSecretWithData);
         primarySpecNeedUpdate = true;
       }
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
+        primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());
         return UpdateControl.patchStatus(primary);
       }
 
@@ -107,15 +114,23 @@ public class MetadataOperatorFlinkReconciler
 
       return UpdateControl.noUpdate();
 
+    } catch (KubernetesClientException e) {
+      if (e.getCode() == 409 || e.getCode() == 404) {
+        log.warn(
+            "Resource conflict detected for {}, will retry in next reconciliation: {}",
+            primary.getMetadata().getName(),
+            e.getMessage());
+      }
+      return UpdateControl.noUpdate();
     } catch (Exception e) {
       log.error(
-          "Error during reconciliation of resource {}: {}",
+          "BUG!!! -> Error during reconciliation of resource {}: {}",
           primary.getMetadata().getName(),
           e.getMessage(),
           e);
 
       updateErrorStatus(primary, context, e);
-      return UpdateControl.patchResource(primary);
+      return UpdateControl.patchStatus(primary);
     }
   }
 
@@ -125,6 +140,7 @@ public class MetadataOperatorFlinkReconciler
     }
 
     primary.getMetadata().setManagedFields(null);
+    log.info("FlinkIngestTask {} cleaned up successfully", primary.getMetadata().getName());
     return DeleteControl.defaultDelete();
   }
 
@@ -136,6 +152,12 @@ public class MetadataOperatorFlinkReconciler
         && ((KubernetesClientException) e).getCode() == 404) {
       return ErrorStatusUpdateControl.noStatusUpdate();
     }
+
+    if (e instanceof KubernetesClientException
+        && ((KubernetesClientException) e).getCode() == 409) {
+      return ErrorStatusUpdateControl.patchStatus(primary);
+    }
+
     return handleError(primary, e);
   }
 
@@ -200,7 +222,7 @@ public class MetadataOperatorFlinkReconciler
     }
 
     extraSecret.setSecretData(result);
-    log.info("Extra secret information retrieved: {}", extraSecret.getSecretData());
+    log.debug("Extra secret information retrieved: {}", extraSecret.getSecretData());
 
     return extraSecret;
   }

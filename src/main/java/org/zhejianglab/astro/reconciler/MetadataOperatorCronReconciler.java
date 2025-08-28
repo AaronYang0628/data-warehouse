@@ -1,9 +1,12 @@
 package org.zhejianglab.astro.reconciler;
 
+import io.fabric8.kubernetes.api.model.batch.v1.CronJob;
+import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import java.util.List;
+import java.util.Optional;
 import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,6 +62,14 @@ public class MetadataOperatorCronReconciler
         return UpdateControl.patchStatus(primary);
       }
 
+      Optional<CronJob> cronJobOptional = retrieveCronJobInfo(context.getClient(), primary);
+
+      if (cronJobOptional.isPresent()) {
+        CronJob generatedCronJob = cronJobOptional.get();
+        primary.getStatus().setSchedule(generatedCronJob.getSpec().getSchedule());
+        primaryStatusNeedUpdate = true;
+      }
+
       List<String> finalizers = primary.getMetadata().getFinalizers();
       if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
         finalizers.add(FlinkIngestTask.FINALIZER_NAME);
@@ -105,10 +116,15 @@ public class MetadataOperatorCronReconciler
   }
 
   @Override
-  public DeleteControl cleanup(CronIngestTask resource, Context<CronIngestTask> context)
+  public DeleteControl cleanup(CronIngestTask primary, Context<CronIngestTask> context)
       throws Exception {
-    // TODO Auto-generated method stub
-    throw new UnsupportedOperationException("Unimplemented method 'cleanup'");
+    if (primary.getMetadata().getDeletionTimestamp() == null) {
+      context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
+    }
+
+    primary.getMetadata().setManagedFields(null);
+    log.info("CronIngestTask {} cleaned up successfully", primary.getMetadata().getName());
+    return DeleteControl.defaultDelete();
   }
 
   @Override
@@ -139,5 +155,22 @@ public class MetadataOperatorCronReconciler
     log.error("Error occurred while reconciling task: {}", primary.getMetadata().getName(), e);
 
     return ErrorStatusUpdateControl.noStatusUpdate();
+  }
+
+  private Optional<CronJob> retrieveCronJobInfo(
+      KubernetesClient k8sClient, CronIngestTask primary) {
+
+    try {
+      String namespace = primary.getMetadata().getNamespace();
+      String name = primary.getMetadata().getName();
+
+      CronJob cronJob =
+          k8sClient.resources(CronJob.class).inNamespace(namespace).withName(name).get();
+
+      return Optional.ofNullable(cronJob);
+    } catch (Exception e) {
+      log.error("Failed to retrieve CronJob: {}", e.getMessage());
+      return Optional.empty();
+    }
   }
 }

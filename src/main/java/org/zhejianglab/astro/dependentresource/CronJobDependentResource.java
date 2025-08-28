@@ -69,6 +69,7 @@ public class CronJobDependentResource
                                                                     ? primary
                                                                             .getSpec()
                                                                             .getImageMirror()
+                                                                        + "/"
                                                                         + CRON_JOB_IMAGE
                                                                     : CRON_JOB_IMAGE)
                                                             .withImagePullPolicy("IfNotPresent")

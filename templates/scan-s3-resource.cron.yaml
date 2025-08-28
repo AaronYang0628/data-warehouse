@@ -1,9 +1,10 @@
 apiVersion: org.zhejianglab.astro.metadata/v1
 kind: CronIngestTask
 metadata:
-  name: ingest-table-or-fits-from-s3-cron
+  name: ingest-table-or-fits-from-s3-cron-test
 spec:
   cron: "*/5 * * * *"
+  delay: 100
   path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
   tags:
     - CRAFTS_SPECTRUM_ORIGINAL

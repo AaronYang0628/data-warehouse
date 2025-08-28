@@ -42,8 +42,8 @@ helm install --create-namespace -n flink flink-kubernetes-operator flink-operato
 2. test metadata operator
 ```shell
 ## install from local
-helm upgrade  --create-namespace -n warehouse --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml warehouse /tmp/data-warehouse-0.0.14.tgz
-# helm upgrade  --create-namespace -n metadata --install -f environments/helm/metadata-environment/values.yaml metadata /tmp/data-warehouse-0.0.11.tgz
+helm upgrade  --create-namespace -n warehouse --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/values.yaml warehouse /tmp/data-warehouse-0.0.15.tgz
+# helm upgrade  --create-namespace -n metadata --install -f environments/helm/metadata-environment/values.yaml metadata /tmp/data-warehouse-0.0.15.tgz
 
 # ## install to zverse
 # helm upgrade  --kubeconfig=/root/.kube/zverse_config --create-namespace -n metadata --install -f /root/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.10

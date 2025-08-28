@@ -8,8 +8,12 @@ import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.flink.api.common.JobStatus;
+import org.apache.flink.kubernetes.operator.api.FlinkSessionJob;
+import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
+import org.apache.flink.kubernetes.operator.api.status.FlinkSessionJobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
@@ -20,6 +24,9 @@ import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
 import org.zhejianglab.astro.utils.SecretConstant;
 
+@ControllerConfiguration(
+    generationAwareEventProcessing = false,
+    name = "metadataoperatorflinkreconciler")
 @Workflow(
     explicitInvocation = true,
     dependents = {
@@ -44,7 +51,7 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getStatus() == null) {
         primary.setStatus(
-            FlinkIngestTaskStatus.builder().jobStatus(JobStatus.INITIALIZING).build());
+            FlinkIngestTaskStatus.builder().jobStatus(ResourceLifecycleState.CREATED).build());
         primaryStatusNeedUpdate = true;
       }
 
@@ -86,6 +93,24 @@ public class MetadataOperatorFlinkReconciler
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
         primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());
         return UpdateControl.patchStatus(primary);
+      }
+
+      Optional<FlinkSessionJob> flinkSessionJobOptional =
+          retrieveFlinkSessionJobInfo(context.getClient(), primary);
+
+      if (flinkSessionJobOptional.isPresent()) {
+        FlinkSessionJob flinkSessionJob = flinkSessionJobOptional.get();
+        FlinkSessionJobStatus flinkSessionJobStatus = flinkSessionJob.getStatus();
+
+        if (flinkSessionJobStatus != null) {
+          log.info("Got Corresponding FlinkSessionJob status: {}", flinkSessionJobStatus);
+
+          if (flinkSessionJobStatus.getJobStatus() != null) {
+            primary.getStatus().setJobStatus(flinkSessionJobStatus.getLifecycleState().name());
+            primary.getStatus().setException(flinkSessionJobStatus.getError());
+            primaryStatusNeedUpdate = true;
+          }
+        }
       }
 
       List<String> finalizers = primary.getMetadata().getFinalizers();
@@ -225,5 +250,22 @@ public class MetadataOperatorFlinkReconciler
     log.debug("Extra secret information retrieved: {}", extraSecret.getSecretData());
 
     return extraSecret;
+  }
+
+  private Optional<FlinkSessionJob> retrieveFlinkSessionJobInfo(
+      KubernetesClient k8sClient, FlinkIngestTask primary) {
+
+    try {
+      String namespace = primary.getMetadata().getNamespace();
+      String name = primary.getMetadata().getName();
+
+      FlinkSessionJob sessionJob =
+          k8sClient.resources(FlinkSessionJob.class).inNamespace(namespace).withName(name).get();
+
+      return Optional.ofNullable(sessionJob);
+    } catch (Exception e) {
+      log.error("Failed to retrieve FlinkSessionJob: {}", e.getMessage());
+      return Optional.empty();
+    }
   }
 }

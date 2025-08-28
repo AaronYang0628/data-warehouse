@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.CronIngestTask;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
+import org.zhejianglab.astro.utils.StringUtils;
 
 @KubernetesDependent
 public class CronJobDependentResource
@@ -104,6 +105,27 @@ public class CronJobDependentResource
                                                                         + primary
                                                                             .getSpec()
                                                                             .getJobParallelism()
+                                                                        + "\n"
+                                                                        + "  allowedSuffixes: "
+                                                                        + StringUtils
+                                                                            .listToYamlString(
+                                                                                primary
+                                                                                    .getSpec()
+                                                                                    .getAllowedSuffixes())
+                                                                        + "\n"
+                                                                        + "  tags: "
+                                                                        + StringUtils
+                                                                            .listToYamlString(
+                                                                                primary
+                                                                                    .getSpec()
+                                                                                    .getTags())
+                                                                        + "\n"
+                                                                        + "  userProperties: "
+                                                                        + StringUtils
+                                                                            .mapToYamlString(
+                                                                                primary
+                                                                                    .getSpec()
+                                                                                    .getUserProperties())
                                                                         + "\n"
                                                                         + "  extraSecret: \n"
                                                                         + "    name: "

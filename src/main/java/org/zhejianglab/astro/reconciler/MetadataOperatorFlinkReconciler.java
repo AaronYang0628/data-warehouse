@@ -52,6 +52,9 @@ public class MetadataOperatorFlinkReconciler
         primary.setStatus(
             FlinkIngestTaskStatus.builder().jobStatus(ResourceLifecycleState.CREATED).build());
         primaryStatusNeedUpdate = true;
+      } else {
+        primary.getStatus().setException("");
+        primaryStatusNeedUpdate = true;
       }
 
       if (!validateAppliedResource(primary)) {

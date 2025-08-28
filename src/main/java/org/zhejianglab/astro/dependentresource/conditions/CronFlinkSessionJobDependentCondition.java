@@ -7,7 +7,7 @@ import io.javaoperatorsdk.operator.processing.dependent.workflow.Condition;
 import org.zhejianglab.astro.customresource.CronIngestTask;
 import org.zhejianglab.astro.customresource.Platform;
 
-public class CornFlinkSessionJobDependentCondition implements Condition<CronJob, CronIngestTask> {
+public class CronFlinkSessionJobDependentCondition implements Condition<CronJob, CronIngestTask> {
 
   @Override
   public boolean isMet(

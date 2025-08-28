@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.probes.LivenessHandler;
 import org.zhejianglab.astro.probes.StartupHandler;
-import org.zhejianglab.astro.reconciler.MetadataOperatorCornReconciler;
+import org.zhejianglab.astro.reconciler.MetadataOperatorCronReconciler;
 import org.zhejianglab.astro.reconciler.MetadataOperatorFlinkReconciler;
 
 public class Runner {
@@ -31,7 +31,7 @@ public class Runner {
                     .checkingCRDAndValidateLocalModel(true));
 
     operator.register(new MetadataOperatorFlinkReconciler());
-    operator.register(new MetadataOperatorCornReconciler());
+    operator.register(new MetadataOperatorCronReconciler());
     // operator.register(new MetadataOperatorJavaReconciler());
     operator.start();
 

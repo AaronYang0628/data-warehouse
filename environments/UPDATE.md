@@ -23,7 +23,7 @@ helm package --dependency-update  --destination /tmp/ /workspaces/data-warehouse
 kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
 
 ### java crud
-kubectl apply -f  environments/helm/metadata-environment/crds/virtualingesttasks.org.zhejianglab.astro.metadata-v1.yaml
+kubectl apply -f  environments/helm/metadata-environment/crds/croningesttasks.org.zhejianglab.astro.metadata-v1.yaml
 ```
 
 # install chart

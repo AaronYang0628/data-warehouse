@@ -1,11 +1,14 @@
 package org.zhejianglab.astro.customresource.cron;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import io.fabric8.generator.annotation.Required;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.jackson.Jacksonized;
 import org.apache.commons.lang3.StringUtils;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
@@ -15,15 +18,17 @@ import org.zhejianglab.astro.customresource.flink.FlinkJobConfig;
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
+  @Required private String cron;
 
-  private ExtraSecret extraSecret;
+  @Nullable private Boolean suspend;
 
-  private Map<String, String> pathPatterns;
+  @Nullable private Long delay;
 
-  private List<String> allowedSuffixes;
+  @Nullable private ExtraSecret extraSecret;
 
-  private String cron;
+  @Nullable private Map<String, String> pathPatterns;
 
+  @Nullable private List<String> allowedSuffixes;
   @Nullable private Integer jobParallelism;
 
   @Nullable private FlinkJobConfig flinkJobConfig;
@@ -32,37 +37,42 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
 
   @Nullable private String imageMirror;
 
+  @Builder
+  @Jacksonized
   public CronIngestTaskSpec(
       String path,
       String cron,
       String platform,
-      ExtraSecret extraSecret,
-      List<String> tags,
-      Map<String, String> userProperties,
-      Map<String, String> pathPatterns,
-      List<String> allowedSuffixes,
-      @Nullable String batchId,
-      @Nullable String imageMirror,
-      @Nullable Integer timeout,
+      @Nullable Boolean suspend,
+      @Nullable Long delay,
+      @Nullable String s3TableName,
       @Nullable Integer jobParallelism,
+      @Nullable List<String> allowedSuffixes,
+      @Nullable Integer timeout,
+      @Nullable List<String> tags,
+      @Nullable ExtraSecret extraSecret,
+      @Nullable Map<String, String> userProperties,
+      @Nullable Map<String, String> pathPatterns,
+      @Nullable String imageMirror,
       @Nullable FlinkJobConfig flinkJobConfig) {
 
     this.setCron(cron);
     this.setPath(path);
     this.setPlatform(platform);
+
+    this.setSuspend(null != suspend ? suspend : false);
+    this.setDelay(null != delay ? delay : 600L);
+    this.setS3TableName(null != s3TableName ? s3TableName : StringUtils.EMPTY);
+    this.setJobParallelism(null != jobParallelism ? jobParallelism : 1);
+    this.setAllowedSuffixes(null != allowedSuffixes ? allowedSuffixes : List.of("*"));
+
     this.setTimeout(null != timeout ? timeout : 20);
-    this.setTags(tags);
-    this.setUserProperties(userProperties);
-    this.setExtraSecret(extraSecret);
-    this.setPathPatterns(pathPatterns);
-    this.setAllowedSuffixes(allowedSuffixes);
+    this.setTags(null != tags ? tags : List.of());
+    this.setUserProperties(null != userProperties ? userProperties : Map.of());
 
-    this.jobParallelism = null != jobParallelism ? jobParallelism : 1;
-
-    this.s3TableName = null != s3TableName ? s3TableName : StringUtils.EMPTY;
-
-    this.imageMirror = null != imageMirror ? imageMirror : StringUtils.EMPTY;
-
+    this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
+    this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());
+    this.setImageMirror(null != imageMirror ? imageMirror : "m.daocloud.io");
     if (null == flinkJobConfig) {
       this.flinkJobConfig =
           FlinkJobConfig.builder()
@@ -81,7 +91,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
       this.flinkJobConfig.getJob().setParallelism(this.jobParallelism);
       this.flinkJobConfig.getJobArgsMap().put("S3_TABLE_NAME", this.s3TableName);
     } else {
-      this.flinkJobConfig = flinkJobConfig;
+      this.setFlinkJobConfig(flinkJobConfig);
     }
   }
 }

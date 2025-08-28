@@ -11,15 +11,15 @@ spec:
     shortNames:
     - "croningest"
     singular: "croningesttask"
-  scope: "Cluster"
+  scope: "Namespaced"
   versions:
   - additionalPrinterColumns:
     - jsonPath: ".status.exception"
-      name: "Exception"
+      name: "EXCEPTION"
       priority: 4
       type: "string"
-    - jsonPath: ".status.status"
-      name: "Status"
+    - jsonPath: ".status.jobStatus"
+      name: "JOB STATUS"
       priority: 3
       type: "string"
     name: "v1"
@@ -34,6 +34,8 @@ spec:
                 type: "array"
               cron:
                 type: "string"
+              delay:
+                type: "integer"
               extraSecret:
                 properties:
                   accessKeyName:
@@ -9571,6 +9573,8 @@ spec:
                 type: "string"
               s3TableName:
                 type: "string"
+              suspend:
+                type: "boolean"
               tags:
                 items:
                   type: "string"
@@ -9581,12 +9585,16 @@ spec:
                 additionalProperties:
                   type: "string"
                 type: "object"
+            required:
+            - "cron"
+            - "path"
+            - "platform"
             type: "object"
           status:
             properties:
               exception:
                 type: "string"
-              status:
+              jobStatus:
                 type: "string"
             type: "object"
         type: "object"

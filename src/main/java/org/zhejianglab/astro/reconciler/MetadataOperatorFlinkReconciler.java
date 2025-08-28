@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
-import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.kubernetes.operator.api.FlinkSessionJob;
 import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
 import org.apache.flink.kubernetes.operator.api.status.FlinkSessionJobStatus;
@@ -66,7 +65,7 @@ public class MetadataOperatorFlinkReconciler
       if (primary.getSpec().getBatchId() != null
           && !primary.getSpec().getBatchId().equals(primary.getStatus().getBatchId())) {
         primary.getStatus().setBatchId(primary.getSpec().getBatchId());
-        primary.getStatus().setJobStatus(JobStatus.RUNNING.name());
+        primary.getStatus().setJobStatus(ResourceLifecycleState.UPGRADING.name());
         primaryStatusNeedUpdate = true;
       }
 
@@ -91,7 +90,7 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
-        primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());
+        primary.getStatus().setJobStatus(ResourceLifecycleState.DELETING.name());
         return UpdateControl.patchStatus(primary);
       }
 
@@ -103,7 +102,7 @@ public class MetadataOperatorFlinkReconciler
         FlinkSessionJobStatus flinkSessionJobStatus = flinkSessionJob.getStatus();
 
         if (flinkSessionJobStatus != null) {
-          log.info("Got Corresponding FlinkSessionJob status: {}", flinkSessionJobStatus);
+          log.debug("Got Corresponding FlinkSessionJob status: {}", flinkSessionJobStatus);
 
           if (flinkSessionJobStatus.getJobStatus() != null) {
             primary.getStatus().setJobStatus(flinkSessionJobStatus.getLifecycleState().name());

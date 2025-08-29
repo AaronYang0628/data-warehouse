@@ -31,6 +31,14 @@ spec:
             echo "CRD 'flinkingesttasks.org.zhejianglab.astro.metadata' not found"
           fi
 
+          # check and delete CRD 'croningesttasks.org.zhejianglab.astro.metadata'
+          if kubectl get crd croningesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
+            kubectl delete crd croningesttasks.org.zhejianglab.astro.metadata
+            echo "Deleting CRD: croningesttasks.org.zhejianglab.astro.metadata"
+          else
+            echo "CRD 'croningesttasks.org.zhejianglab.astro.metadata' not found"
+          fi
+
           # check and delete CRD 'virtualingesttasks.org.zhejianglab.astro.metadata'
           if kubectl get crd virtualingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
             kubectl delete crd virtualingesttasks.org.zhejianglab.astro.metadata

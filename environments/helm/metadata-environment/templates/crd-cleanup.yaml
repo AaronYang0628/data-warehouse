@@ -32,8 +32,10 @@ rules:
     # Custom application CRDs
     - "flinkingesttasks.org.zhejianglab.astro.metadata-v1"
     - "virtualingesttasks.org.zhejianglab.astro.metadata-v1"
+    - "croningesttasks.org.zhejianglab.astro.metadata-v1"
     - "flinkingesttasks.org.zhejianglab.astro.metadata"
     - "virtualingesttasks.org.zhejianglab.astro.metadata"
+    - "croningesttasks.org.zhejianglab.astro.metadata"
 
 ---
 # ClusterRoleBinding to bind the role to the service account
@@ -76,6 +78,6 @@ spec:
         - "/bin/sh"
         - "-c"
         - >
-          kubectl delete crd certificaterequests.cert-manager.io certificates.cert-manager.io challenges.acme.cert-manager.io clusterissuers.cert-manager.io issuers.cert-manager.io orders.acme.cert-manager.io flinkingesttasks.org.zhejianglab.astro.metadata virtualingesttasks.org.zhejianglab.astro.metadata --ignore-not-found=true
+          kubectl delete crd certificaterequests.cert-manager.io certificates.cert-manager.io challenges.acme.cert-manager.io clusterissuers.cert-manager.io issuers.cert-manager.io orders.acme.cert-manager.io flinkingesttasks.org.zhejianglab.astro.metadata croningesttasks.org.zhejianglab.astro.metadata virtualingesttasks.org.zhejianglab.astro.metadata --ignore-not-found=true
       restartPolicy: OnFailure
   backoffLimit: 1

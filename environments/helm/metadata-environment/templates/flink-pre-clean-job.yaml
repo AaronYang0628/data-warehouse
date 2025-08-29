@@ -30,6 +30,14 @@ spec:
             echo "In Namespace {{ .Release.Namespace }} There is no FlinkIngestTask found"
           fi
 
+          # check and delete FlinkIngest
+          if kubectl get croningest -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            kubectl delete croningest -n {{ .Release.Namespace }} --all
+            echo "In Namespace {{ .Release.Namespace }} Deleting All CronIngestTasks"
+          else
+            echo "In Namespace {{ .Release.Namespace }} There is no CronIngestTasks found"
+          fi
+
           kubectl -n {{ .Release.Namespace }} patch flinkdeployment metadata-flink-job-ingest-kafka-to-es -p '{"metadata":{"finalizers":[]}}' --type=merge
 
           # check and delete FlinkDeployment 'metadata-flink-job-ingest-kafka-to-es'

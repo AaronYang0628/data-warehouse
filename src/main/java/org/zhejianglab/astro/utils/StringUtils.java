@@ -3,7 +3,6 @@ package org.zhejianglab.astro.utils;
 import java.math.BigInteger;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -54,22 +53,5 @@ public class StringUtils {
     }
     sb.append("}");
     return sb.toString();
-  }
-
-  public static void main(String[] args) {
-    System.out.println(mapToYamlString(null));
-    System.out.println(mapToYamlString(new HashMap<>()));
-    System.out.println(
-        mapToYamlString(
-            new HashMap<>() {
-              {
-                put("key1", "value1");
-                put("key2", "value2");
-              }
-            }));
-
-    System.out.println(listToYamlString(null));
-    System.out.println(listToYamlString(List.of()));
-    System.out.println(listToYamlString(List.of("a", "b", "c")));
   }
 }

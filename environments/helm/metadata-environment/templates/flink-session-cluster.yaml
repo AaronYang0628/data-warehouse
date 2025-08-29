@@ -1,18 +1,26 @@
+{{/* First, create a list containing Release.Namespace and optional additional namespaces */}}
+{{- $namespaces := list .Release.Namespace }}
+{{- if .Values.flink.session.clusterNamespaces }}
+{{- $namespaces = concat $namespaces .Values.flink.session.clusterNamespaces | uniq }}
+{{- end }}
+
+{{- range $namespace := $namespaces }}
+---
 apiVersion: flink.apache.org/v1beta1
 kind: FlinkDeployment
 metadata:
   name: metadata-flink-session-cluster
-  namespace: {{ .Release.Namespace | quote }}
+  namespace: {{ $namespace | quote }}
 spec:
-  mode: {{ .Values.flink.session.mode | quote }}
-  serviceAccount: {{ include "metadata-environment.flink.serviceAccountName" . }}
-  flinkVersion: {{ .Values.flink.session.version | quote }}
-  image: "{{ .Values.flink.session.image.registry }}/{{ .Values.flink.session.image.repository }}:{{ .Values.flink.session.image.tag }}"
+  mode: {{ $.Values.flink.session.mode | quote }}
+  serviceAccount: {{ include "metadata-environment.flink.serviceAccountName" $ }}
+  flinkVersion: {{ $.Values.flink.session.version | quote }}
+  image: "{{ $.Values.flink.session.image.registry }}/{{ $.Values.flink.session.image.repository }}:{{ $.Values.flink.session.image.tag }}"
   podTemplate:
     spec:
       imagePullSecrets:
-      {{- if .Values.flink.session.image.pullSecrets }}
-      {{- include "common.tplvalues.render" (dict "value" .Values.flink.session.image.pullSecrets "context" $) | nindent 12 }}
+      {{- if $.Values.flink.session.image.pullSecrets }}
+      {{- include "common.tplvalues.render" (dict "value" $.Values.flink.session.image.pullSecrets "context" $) | nindent 12 }}
       {{- end }}
       containers:
       - name: flink-main-container
@@ -23,24 +31,24 @@ spec:
           - name: ENABLE_BUILT_IN_PLUGINS
             value: flink-s3-fs-hadoop-1.19.1.jar
         ports:
-        {{- if .Values.flink.session.extraContainerPorts }}
-        {{- include "common.tplvalues.render" (dict "value" .Values.flink.session.extraContainerPorts "context" $) | nindent 12 }}
+        {{- if $.Values.flink.session.extraContainerPorts }}
+        {{- include "common.tplvalues.render" (dict "value" $.Values.flink.session.extraContainerPorts "context" $) | nindent 12 }}
         {{- end }}
         volumeMounts:
           - name: checkpoint-volume
-            mountPath: {{ .Values.flink.session.state.checkpoint.path | trimPrefix "file:///" }}
+            mountPath: {{ $.Values.flink.session.state.checkpoint.path | trimPrefix "file:///" }}
           - name: savepoint-volume
-            mountPath: {{ .Values.flink.session.state.savepoint.path | trimPrefix "file:///" }}
+            mountPath: {{ $.Values.flink.session.state.savepoint.path | trimPrefix "file:///" }}
       volumes:
         - name: checkpoint-volume
-          {{- if .Values.flink.session.persistence.enabled }}
+          {{- if $.Values.flink.session.persistence.enabled }}
           persistentVolumeClaim:
             claimName: meta-flink-session-checkpoint-pvc
           {{- else }}
           emptyDir: {}
           {{- end }}
         - name: savepoint-volume
-          {{- if .Values.flink.session.persistence.enabled }}
+          {{- if $.Values.flink.session.persistence.enabled }}
           persistentVolumeClaim:
             claimName: meta-flink-session-savepoint-pvc
           {{- else }}
@@ -52,26 +60,27 @@ spec:
     pekko.remote.netty.tcp.connection-timeout: 300s
     heartbeat.timeout: "300000"
     env.java.opts: --add-opens java.base/java.util=ALL-UNNAMED  --add-opens=java.base/java.lang=ALL-UNNAMED
-    state.checkpoints.dir: {{ .Values.flink.session.state.checkpoint.path }}
-    state.savepoints.dir: {{ .Values.flink.session.state.savepoint.path }}
-    taskmanager.numberOfTaskSlots: {{ .Values.flink.session.taskManager.taskSlots | quote }}
+    state.checkpoints.dir: {{ $.Values.flink.session.state.checkpoint.path }}
+    state.savepoints.dir: {{ $.Values.flink.session.state.savepoint.path }}
+    taskmanager.numberOfTaskSlots: {{ $.Values.flink.session.taskManager.taskSlots | quote }}
   jobManager:
-    replicas: {{ .Values.flink.session.jobManager.replicas }}
+    replicas: {{ $.Values.flink.session.jobManager.replicas }}
     resource:
-      {{- if .Values.flink.session.jobManager.resource }}
-        cpu: {{ .Values.flink.session.jobManager.resource.cpu }}
-        memory: {{ .Values.flink.session.jobManager.resource.memory }}
+      {{- if $.Values.flink.session.jobManager.resource }}
+        cpu: {{ $.Values.flink.session.jobManager.resource.cpu }}
+        memory: {{ $.Values.flink.session.jobManager.resource.memory }}
       {{- end }}
   taskManager:
-    replicas: {{ .Values.flink.session.taskManager.replicas }}
+    replicas: {{ $.Values.flink.session.taskManager.replicas }}
     resource:
-      {{- if .Values.flink.session.taskManager.resource }}
-        cpu: {{ .Values.flink.session.taskManager.resource.cpu }}
-        memory: {{ .Values.flink.session.taskManager.resource.memory }}
+      {{- if $.Values.flink.session.taskManager.resource }}
+        cpu: {{ $.Values.flink.session.taskManager.resource.cpu }}
+        memory: {{ $.Values.flink.session.taskManager.resource.memory }}
       {{- end }}
-  {{- if .Values.flink.session.ingress.enabled }}
+  {{- if $.Values.flink.session.ingress.enabled }}
   ingress:
-    template: {{ .Values.flink.session.ingress.template }}
-    className: {{ .Values.flink.session.ingress.className }}
-    annotations: {{- toYaml .Values.flink.session.ingress.annotations | nindent 6 }}
+    template: {{ $.Values.flink.session.ingress.template }}
+    className: {{ $.Values.flink.session.ingress.className }}
+    annotations: {{- toYaml $.Values.flink.session.ingress.annotations | nindent 6 }}
   {{- end }}
+{{- end }}

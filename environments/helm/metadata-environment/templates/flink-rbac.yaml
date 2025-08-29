@@ -1,26 +1,8 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: {{ include "metadata-environment.flink.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
-automountServiceAccountToken: true
-
 ---
-
 apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
   name: {{ .Values.ingestTaskOperator.flink.clusterRole.name | quote }}
-  {{- if not .Values.flinkk8soperator.enabled }}
-  namespace: {{ .Values.flinkk8soperator.existingNamespace | quote }}
-  {{- else }}
-  namespace: {{ .Release.Namespace | quote }}
-  {{- end }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
   {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
   {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
@@ -64,25 +46,44 @@ rules:
 
 ---
 
-apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
+{{/* First, create a list containing Release.Namespace and optional additional namespaces */}}
+{{- $namespaces := list .Release.Namespace }}
+{{- if .Values.flink.session.clusterNamespaces }}
+{{- $namespaces = concat $namespaces .Values.flink.session.clusterNamespaces | uniq }}
+{{- end }}
+
+
+
+{{- range $namespace := $namespaces }}
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: {{ include "metadata-environment.flink.serviceAccountName" $ }}
+  namespace: {{ $namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
+  {{- end }}
+automountServiceAccountToken: true
+
+---
+apiVersion:  {{ include "common.capabilities.rbac.apiVersion" $ }}
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.ingestTaskOperator.flink.clusterRoleBinding.name | quote }}
-  {{- if not .Values.flinkk8soperator.enabled }}
-  namespace: {{ .Values.flinkk8soperator.existingNamespace | quote }}
-  {{- else }}
-  namespace: {{ .Release.Namespace | quote }}
-  {{- end }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
+  name: {{ printf "%s-%s" $.Values.ingestTaskOperator.flink.clusterRoleBinding.name $namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
   {{- end }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.ingestTaskOperator.flink.clusterRole.name | quote }}
+  name: {{ $.Values.ingestTaskOperator.flink.clusterRole.name | quote }}
 subjects:
 - kind: ServiceAccount
-  name: {{ include "metadata-environment.flink.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace | quote }}
+  name: {{ include "metadata-environment.flink.serviceAccountName" $ }}
+  namespace: {{ $namespace | quote }}
+{{- end }}

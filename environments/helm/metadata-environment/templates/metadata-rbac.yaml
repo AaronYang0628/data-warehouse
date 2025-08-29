@@ -1,83 +1,8 @@
-apiVersion: v1
-kind: ServiceAccount
-metadata:
-  name: {{ include "metadata-environment.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
-automountServiceAccountToken: {{ .Values.ingestTaskOperator.automountServiceAccountToken }}
-
 ---
-
-apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
-kind: Role
-metadata:
-  name: {{ include "metadata-environment.roleName" . }}
-  namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
-rules:
-  - apiGroups:
-      - ""
-    resources:
-      - configmaps
-      - secrets
-    verbs:
-      - create
-      - get
-      - delete
-      - watch
-      - list
-  - apiGroups:
-      - "apps/v1"  
-    resources:
-      - deployments
-    verbs:
-      - create
-      - get
-      - delete
-  - apiGroups:
-    - "batch/v1"
-    resources:
-      - jobs
-    verbs:
-      - create
-      - get
-      - delete
-
----
-
-apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
-kind: RoleBinding
-metadata:
-  name: {{ include "metadata-environment.roleBindingName" . }}
-  namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
-subjects:
-  - kind: ServiceAccount
-    name: {{ include "metadata-environment.serviceAccountName" . }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: Role
-  name: {{ include "metadata-environment.roleName" . }}
-
----
-
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
   name: {{ include "metadata-environment.clusterRoleName" . }}
-  namespace: {{ .Release.Namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
   {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
   {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
@@ -130,94 +55,103 @@ rules:
     - patch
     - delete
 
----
 
-apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
-kind: ClusterRoleBinding
-metadata:
-  name: {{ include "metadata-environment.clusterRoleBindingName" . }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
-subjects:
-- kind: ServiceAccount
-  name: {{ include "metadata-environment.serviceAccountName" . }}
-  namespace: {{ .Release.Namespace | quote }}
-roleRef:
-  apiGroup: rbac.authorization.k8s.io
-  kind: ClusterRole
-  name: {{ include "metadata-environment.clusterRoleName" . }}
+{{/* First, create a list containing Release.Namespace and optional additional namespaces */}}
+{{- $namespaces := list .Release.Namespace }}
+{{- if .Values.flink.session.clusterNamespaces }}
+{{- $namespaces = concat $namespaces .Values.flink.session.clusterNamespaces | uniq }}
+{{- end }}
 
+{{- range $namespace := $namespaces }}
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: {{ .Values.apiServer.serviceAccount.name | quote }}
-  namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.apiServer.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.apiServer.serviceAccount.annotations .Values.apiServer.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.apiServer.serviceAccount.annotations .Values.apiServer.commonAnnotations ) "context" . ) }}
+  name: {{ include "metadata-environment.serviceAccountName" $ }}
+  namespace: {{ $namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
   {{- end }}
-automountServiceAccountToken: {{ .Values.apiServer.automountServiceAccountToken }}
+automountServiceAccountToken: {{ $.Values.ingestTaskOperator.automountServiceAccountToken }}
 
 ---
-apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
-kind: ClusterRole
+apiVersion: {{ include "common.capabilities.rbac.apiVersion" $ }}
+kind: Role
 metadata:
-  name: {{ .Values.apiServer.clusterRole.name | quote }}
-  namespace: {{ .Release.Namespace | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.apiServer.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.apiServer.serviceAccount.annotations .Values.apiServer.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.apiServer.serviceAccount.annotations .Values.apiServer.commonAnnotations ) "context" . ) }}
+  name: {{ include "metadata-environment.roleName" $ }}
+  namespace: {{ $namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
   {{- end }}
 rules:
   - apiGroups:
-    - "batch"
+      - ""
     resources:
-    - "jobs"
+      - configmaps
+      - secrets
     verbs:
-    - "*"
+      - create
+      - get
+      - delete
+      - watch
+      - list
   - apiGroups:
-    - ""
+      - "apps/v1"  
     resources:
-    - "configmaps"
-    - "pods"
-    - "secrets"
+      - deployments
     verbs:
-    - "*"
+      - create
+      - get
+      - delete
   - apiGroups:
-    - ""
+    - "batch/v1"
     resources:
-    - "pods"
+      - jobs
     verbs:
-    - "list"
-  - apiGroups:
-    - ""
-    resources:
-    - "pods/log"
-    verbs:
-    - "get"
+      - create
+      - get
+      - delete
 
 ---
+apiVersion: {{ include "common.capabilities.rbac.apiVersion" $ }}
+kind: RoleBinding
+metadata:
+  name: {{ printf "%s-%s" $.Values.ingestTaskOperator.serviceAccount.roleBinding.name $namespace | quote }}
+  namespace: {{ $namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
+  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
+  {{- end }}
+subjects:
+  - kind: ServiceAccount
+    name: {{ include "metadata-environment.serviceAccountName" $ }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: {{ include "metadata-environment.roleName" $ }}
 
-apiVersion:  {{ include "common.capabilities.rbac.apiVersion" . }}
+
+---
+apiVersion:  {{ include "common.capabilities.rbac.apiVersion" $ }}
 kind: ClusterRoleBinding
 metadata:
-  name: {{ .Values.apiServer.clusterRole.roleBinding.name | quote }}
-  labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.apiServer.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.apiServer.serviceAccount.annotations .Values.apiServer.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.apiServer.serviceAccount.annotations .Values.apiServer.commonAnnotations ) "context" . ) }}
+  name: {{ printf "%s-%s" $.Values.ingestTaskOperator.serviceAccount.clusterRoleBinding.name $namespace | quote }}
+  labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
+  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
+  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
   annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
   {{- end }}
 subjects:
 - kind: ServiceAccount
-  name:  {{ .Values.apiServer.serviceAccount.name | quote }}
-  namespace: {{ .Release.Namespace | quote }}
+  name: {{ include "metadata-environment.serviceAccountName" $ }}
+  namespace: {{ $namespace | quote }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
-  name: {{ .Values.apiServer.clusterRole.name | quote }}
+  name: {{ include "metadata-environment.clusterRoleName" $ }}
+{{- end }}

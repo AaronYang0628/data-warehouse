@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.crd.generator.annotation.PrinterColumn;
 import lombok.*;
 import lombok.extern.jackson.Jacksonized;
-import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
+import org.apache.flink.api.common.JobStatus;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskStatus;
 
 @Data
@@ -18,8 +18,7 @@ public class FlinkIngestTaskStatus extends AbstractIngestTaskStatus {
 
   @Builder
   @Jacksonized
-  public FlinkIngestTaskStatus(
-      String batchId, Exception exception, ResourceLifecycleState jobStatus) {
+  public FlinkIngestTaskStatus(String batchId, Exception exception, JobStatus jobStatus) {
     this.setBatchId(batchId);
     if (null != exception) {
       this.setException(exception.getLocalizedMessage());
@@ -27,7 +26,7 @@ public class FlinkIngestTaskStatus extends AbstractIngestTaskStatus {
       this.setException("NONE");
     }
     if (null == jobStatus) {
-      this.setJobStatus(ResourceLifecycleState.FAILED.name());
+      this.setJobStatus(JobStatus.INITIALIZING.name());
     } else {
       this.setJobStatus(jobStatus.name());
     }

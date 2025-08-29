@@ -10,8 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.kubernetes.operator.api.FlinkSessionJob;
-import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
 import org.apache.flink.kubernetes.operator.api.status.FlinkSessionJobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +50,7 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getStatus() == null) {
         primary.setStatus(
-            FlinkIngestTaskStatus.builder().jobStatus(ResourceLifecycleState.CREATED).build());
+            FlinkIngestTaskStatus.builder().jobStatus(JobStatus.INITIALIZING).build());
         primaryStatusNeedUpdate = true;
       } else {
         primary.getStatus().setException("");
@@ -68,7 +68,7 @@ public class MetadataOperatorFlinkReconciler
       if (primary.getSpec().getBatchId() != null
           && !primary.getSpec().getBatchId().equals(primary.getStatus().getBatchId())) {
         primary.getStatus().setBatchId(primary.getSpec().getBatchId());
-        primary.getStatus().setJobStatus(ResourceLifecycleState.UPGRADING.name());
+        primary.getStatus().setJobStatus(JobStatus.INITIALIZING.name());
         primaryStatusNeedUpdate = true;
       }
 
@@ -93,7 +93,7 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
-        primary.getStatus().setJobStatus(ResourceLifecycleState.DELETING.name());
+        primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());
         return UpdateControl.patchStatus(primary);
       }
 
@@ -108,7 +108,13 @@ public class MetadataOperatorFlinkReconciler
           log.debug("Got Corresponding FlinkSessionJob status: {}", flinkSessionJobStatus);
 
           if (flinkSessionJobStatus.getJobStatus() != null) {
-            primary.getStatus().setJobStatus(flinkSessionJobStatus.getLifecycleState().name());
+            if (flinkSessionJobStatus.getJobStatus().getState() != null) {
+              primary
+                  .getStatus()
+                  .setJobStatus(flinkSessionJobStatus.getJobStatus().getState().name());
+            } else {
+              primary.getStatus().setJobStatus(JobStatus.INITIALIZING.name());
+            }
             primary.getStatus().setException(flinkSessionJobStatus.getError());
             primaryStatusNeedUpdate = true;
           }

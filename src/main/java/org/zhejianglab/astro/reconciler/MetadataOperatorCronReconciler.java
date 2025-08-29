@@ -7,7 +7,7 @@ import io.javaoperatorsdk.operator.api.reconciler.*;
 import io.javaoperatorsdk.operator.api.reconciler.dependent.Dependent;
 import java.util.List;
 import java.util.Optional;
-import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
+import org.apache.flink.api.common.JobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.CronIngestTask;
@@ -42,8 +42,7 @@ public class MetadataOperatorCronReconciler
       log.info("A CronIngestTask is applied in namespace: {}", namespace);
 
       if (primary.getStatus() == null) {
-        primary.setStatus(
-            CronIngestTaskStatus.builder().jobStatus(ResourceLifecycleState.CREATED).build());
+        primary.setStatus(CronIngestTaskStatus.builder().jobStatus(JobStatus.INITIALIZING).build());
         primaryStatusNeedUpdate = true;
       }
 
@@ -57,7 +56,7 @@ public class MetadataOperatorCronReconciler
 
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This CronIngestTask is being deleted, skip reconciliation");
-        primary.getStatus().setJobStatus(ResourceLifecycleState.DELETING.name());
+        primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());
         return UpdateControl.patchStatus(primary);
       }
 
@@ -66,7 +65,7 @@ public class MetadataOperatorCronReconciler
       if (cronJobOptional.isPresent()) {
         CronJob generatedCronJob = cronJobOptional.get();
         primary.getStatus().setSchedule(generatedCronJob.getSpec().getSchedule());
-        primary.getStatus().setJobStatus(ResourceLifecycleState.DEPLOYED.name());
+        primary.getStatus().setJobStatus(JobStatus.CREATED.name());
         primaryStatusNeedUpdate = true;
       }
 
@@ -154,7 +153,7 @@ public class MetadataOperatorCronReconciler
       CronIngestTask primary, Exception e) {
     log.error("Error occurred while reconciling task: {}", primary.getMetadata().getName(), e);
 
-    primary.getStatus().setJobStatus(ResourceLifecycleState.FAILED.name());
+    primary.getStatus().setJobStatus(JobStatus.FAILED.name());
     return ErrorStatusUpdateControl.patchStatus(primary);
   }
 

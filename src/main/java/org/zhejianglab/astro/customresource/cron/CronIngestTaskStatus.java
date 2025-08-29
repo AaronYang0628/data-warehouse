@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import io.fabric8.crd.generator.annotation.PrinterColumn;
 import lombok.*;
 import lombok.extern.jackson.Jacksonized;
-import org.apache.flink.kubernetes.operator.api.lifecycle.ResourceLifecycleState;
+import org.apache.flink.api.common.JobStatus;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskStatus;
 
 @Data
@@ -18,10 +18,10 @@ public class CronIngestTaskStatus extends AbstractIngestTaskStatus {
 
   @Builder
   @Jacksonized
-  public CronIngestTaskStatus(String schedule, ResourceLifecycleState jobStatus) {
+  public CronIngestTaskStatus(String schedule, JobStatus jobStatus) {
     this.setSchedule(schedule);
     if (null == jobStatus) {
-      this.setJobStatus(ResourceLifecycleState.FAILED.name());
+      this.setJobStatus(JobStatus.INITIALIZING.name());
     } else {
       this.setJobStatus(jobStatus.name());
     }

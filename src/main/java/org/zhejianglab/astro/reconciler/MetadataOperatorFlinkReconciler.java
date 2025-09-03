@@ -46,7 +46,10 @@ public class MetadataOperatorFlinkReconciler
       boolean primaryStatusNeedUpdate = false;
 
       String namespace = primary.getMetadata().getNamespace();
-      log.info("A FlinkIngestTask is applied in namespace: {}", namespace);
+      log.info(
+          "A FlinkIngestTask is applied in namespace: {}, and content is {}",
+          namespace,
+          primary.getSpec().toString());
 
       if (primary.getStatus() == null) {
         primary.setStatus(

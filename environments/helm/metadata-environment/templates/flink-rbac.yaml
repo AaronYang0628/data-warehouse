@@ -15,6 +15,9 @@ rules:
     - flinkdeployments
     - flinksessionjobs
     - flinkstatesnapshots
+    - flinkingesttasks/status
+    - croningesttasks/status
+    - virtualingesttasks/status
     verbs:
     - get
     - list
@@ -27,6 +30,7 @@ rules:
     resources:
     - pods
     - configmaps
+    - namespaces
     verbs:
     - get
     - list

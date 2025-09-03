@@ -69,7 +69,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setTimeout(null != timeout ? timeout : 20);
     this.setTags(null != tags ? tags : List.of());
     this.setUserProperties(null != userProperties ? userProperties : Map.of());
-    this.setActivatedHandlers(null != activatedHandlers ? activatedHandlers : List.of(""));
+    this.setActivatedHandlers(null != activatedHandlers ? activatedHandlers : List.of());
 
     this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
     this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());

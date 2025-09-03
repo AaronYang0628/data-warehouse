@@ -74,6 +74,14 @@ rules:
     - update
     - patch
     - delete
+  - apiGroups:
+    - ""
+    resources:
+    - namespaces
+    verbs:
+    - get
+    - list
+    - watch
 
 
 {{/* First, create a list containing Release.Namespace and optional additional namespaces */}}
@@ -109,32 +117,33 @@ metadata:
   {{- end }}
 rules:
   - apiGroups:
-      - ""
+    - ""
     resources:
-      - configmaps
-      - secrets
+    - configmaps
+    - secrets
+    - namespaces
     verbs:
-      - create
-      - get
-      - delete
-      - watch
-      - list
+    - create
+    - get
+    - delete
+    - watch
+    - list
   - apiGroups:
-      - "apps/v1"  
+    - "apps/v1"  
     resources:
-      - deployments
+    - deployments
     verbs:
-      - create
-      - get
-      - delete
+    - create
+    - get
+    - delete
   - apiGroups:
     - "batch/v1"
     resources:
-      - jobs
+    - jobs
     verbs:
-      - create
-      - get
-      - delete
+    - create
+    - get
+    - delete
   - apiGroups:
     - batch
     resources:

@@ -166,7 +166,7 @@ public class FlinkJobConfig {
     }
 
     ArrayNode handlersNode = scanConfig.putArray("activatedHandlers");
-    if (activatedHandlers != null) {
+    if (activatedHandlers != null && !activatedHandlers.isEmpty()) {
       activatedHandlers.forEach(handlersNode::add);
     }
     return scanConfig.toString();

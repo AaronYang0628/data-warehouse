@@ -59,7 +59,6 @@ public class FlinkSessionJobDependentResource
                   primary.getSpec().getBatchId(),
                   primary.getSpec().getPlatform(),
                   primary.getSpec().getPath(),
-                  primary.getSpec().getS3TableName(),
                   primary.getSpec().getUserProperties(),
                   primary.getSpec().getActivatedHandlers(),
                   primary.getSpec().getTags(),

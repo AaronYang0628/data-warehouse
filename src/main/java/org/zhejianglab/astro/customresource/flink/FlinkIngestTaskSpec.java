@@ -30,8 +30,6 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
 
   @Nullable private FlinkJobConfig flinkJobConfig;
 
-  @Nullable private String s3TableName;
-
   @Builder
   @Jacksonized
   public FlinkIngestTaskSpec(
@@ -51,7 +49,6 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setPath(path);
     this.setPlatform(platform);
 
-    this.setS3TableName(null != s3TableName ? s3TableName : StringUtils.EMPTY);
     this.setJobParallelism(null != jobParallelism ? jobParallelism : 1);
     this.setAllowedSuffixes(null != allowedSuffixes ? allowedSuffixes : List.of("*"));
 
@@ -81,7 +78,6 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getBatchId(),
                   this.getPlatform(),
                   this.getPath(),
-                  this.getS3TableName(),
                   this.getUserProperties(),
                   this.getActivatedHandlers(),
                   this.getTags(),
@@ -89,7 +85,6 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getAllowedSuffixes(),
                   this.getExtraSecret());
       this.flinkJobConfig.getJob().setParallelism(this.jobParallelism);
-      this.flinkJobConfig.getJobArgsMap().put("S3_TABLE_NAME", this.s3TableName);
     } else {
       this.setFlinkJobConfig(flinkJobConfig);
     }

@@ -62,7 +62,6 @@ public class FlinkJobConfig {
       String bacthId,
       String platform,
       String scanPath,
-      String s3TableName,
       Map<String, String> userProperties,
       List<String> activatedHandlers,
       List<String> tags,
@@ -79,7 +78,6 @@ public class FlinkJobConfig {
 
     this.jobArgsMap.put("PLATFORM", platform);
     this.jobArgsMap.put("SCAN_PATH", scanPath);
-    this.jobArgsMap.put("S3_TABLE_NAME", s3TableName);
     if (null != extraSecret) {
       this.jobArgsMap.putAll(extraSecret.getSecretData());
     }
@@ -95,7 +93,7 @@ public class FlinkJobConfig {
                     "http://data-and-computing.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects/slurm-on-k8s/intel-mpi-libs/flink-es-ingest-job-1.0.0-all.jar")
                 .parallelism(parallelism)
                 .upgradeMode(UpgradeMode.STATELESS)
-                .entryClass("com.zhejianglab.astronomy.metadata.Main")
+                .entryClass("com.zhejianglab.astronomy.metadata.file.MetadataExtractorJob")
                 .args(mapToStringArray(this.getJobArgsMap()))
                 .build())
         .build();
@@ -106,7 +104,6 @@ public class FlinkJobConfig {
       String bacthId,
       String platform,
       String scanPath,
-      String s3TableName,
       Map<String, String> userProperties,
       List<String> activatedHandlers,
       List<String> tags,
@@ -122,7 +119,6 @@ public class FlinkJobConfig {
 
     this.jobArgsMap.put("PLATFORM", platform);
     this.jobArgsMap.put("SCAN_PATH", scanPath);
-    this.jobArgsMap.put("S3_TABLE_NAME", s3TableName);
     if (null != extraSecret) {
       this.jobArgsMap.putAll(extraSecret.getSecretData());
     }

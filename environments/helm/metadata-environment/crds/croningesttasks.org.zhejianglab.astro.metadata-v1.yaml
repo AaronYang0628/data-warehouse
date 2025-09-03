@@ -32,6 +32,10 @@ spec:
         properties:
           spec:
             properties:
+              activatedHandlers:
+                items:
+                  type: "string"
+                type: "array"
               allowedSuffixes:
                 items:
                   type: "string"
@@ -9574,8 +9578,6 @@ spec:
                   type: "string"
                 type: "object"
               platform:
-                type: "string"
-              s3TableName:
                 type: "string"
               suspend:
                 type: "boolean"

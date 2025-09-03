@@ -36,8 +36,6 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
 
   @Nullable private FlinkJobConfig flinkJobConfig;
 
-  @Nullable private String s3TableName;
-
   @Nullable private String imageMirror;
 
   @Builder
@@ -48,7 +46,6 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
       String platform,
       @Nullable Boolean suspend,
       @Nullable Long delay,
-      @Nullable String s3TableName,
       @Nullable Integer jobParallelism,
       @Nullable List<String> allowedSuffixes,
       @Nullable Integer timeout,
@@ -66,7 +63,6 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
 
     this.setSuspend(null != suspend ? suspend : false);
     this.setDelay(null != delay ? delay : 600L);
-    this.setS3TableName(null != s3TableName ? s3TableName : StringUtils.EMPTY);
     this.setJobParallelism(null != jobParallelism ? jobParallelism : 1);
     this.setAllowedSuffixes(null != allowedSuffixes ? allowedSuffixes : List.of("*"));
 
@@ -87,7 +83,6 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
                   StringUtils.EMPTY,
                   this.getPlatform(),
                   this.getPath(),
-                  this.getS3TableName(),
                   this.getUserProperties(),
                   this.getActivatedHandlers(),
                   this.getTags(),
@@ -95,7 +90,6 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getAllowedSuffixes(),
                   this.getExtraSecret());
       this.flinkJobConfig.getJob().setParallelism(this.jobParallelism);
-      this.flinkJobConfig.getJobArgsMap().put("S3_TABLE_NAME", this.s3TableName);
     } else {
       this.setFlinkJobConfig(flinkJobConfig);
     }

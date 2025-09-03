@@ -21,6 +21,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   @Nullable private ExtraSecret extraSecret;
   @Nullable private Map<String, String> pathPatterns;
   @Nullable private List<String> allowedSuffixes;
+  @Nullable private List<String> activatedHandlers;
 
   @Nullable private String batchId;
 
@@ -42,6 +43,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       @Nullable Integer timeout,
       @Nullable List<String> tags,
       @Nullable ExtraSecret extraSecret,
+      @Nullable List<String> activatedHandlers,
       @Nullable Map<String, String> userProperties,
       @Nullable Map<String, String> pathPatterns,
       @Nullable String batchId,
@@ -56,6 +58,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setTimeout(null != timeout ? timeout : 20);
     this.setTags(null != tags ? tags : List.of());
     this.setUserProperties(null != userProperties ? userProperties : Map.of());
+    this.setActivatedHandlers(null != activatedHandlers ? activatedHandlers : List.of(""));
 
     this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
     this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());
@@ -80,6 +83,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getPath(),
                   this.getS3TableName(),
                   this.getUserProperties(),
+                  this.getActivatedHandlers(),
                   this.getTags(),
                   this.getPathPatterns(),
                   this.getAllowedSuffixes(),

@@ -29,6 +29,9 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
   @Nullable private Map<String, String> pathPatterns;
 
   @Nullable private List<String> allowedSuffixes;
+
+  @Nullable private List<String> activatedHandlers;
+
   @Nullable private Integer jobParallelism;
 
   @Nullable private FlinkJobConfig flinkJobConfig;
@@ -50,6 +53,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
       @Nullable List<String> allowedSuffixes,
       @Nullable Integer timeout,
       @Nullable List<String> tags,
+      @Nullable List<String> activatedHandlers,
       @Nullable ExtraSecret extraSecret,
       @Nullable Map<String, String> userProperties,
       @Nullable Map<String, String> pathPatterns,
@@ -69,6 +73,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setTimeout(null != timeout ? timeout : 20);
     this.setTags(null != tags ? tags : List.of());
     this.setUserProperties(null != userProperties ? userProperties : Map.of());
+    this.setActivatedHandlers(null != activatedHandlers ? activatedHandlers : List.of(""));
 
     this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
     this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());
@@ -84,6 +89,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getPath(),
                   this.getS3TableName(),
                   this.getUserProperties(),
+                  this.getActivatedHandlers(),
                   this.getTags(),
                   this.getPathPatterns(),
                   this.getAllowedSuffixes(),

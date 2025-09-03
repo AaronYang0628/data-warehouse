@@ -64,6 +64,7 @@ public class FlinkJobConfig {
       String scanPath,
       String s3TableName,
       Map<String, String> userProperties,
+      List<String> activatedHandlers,
       List<String> tags,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
@@ -73,7 +74,8 @@ public class FlinkJobConfig {
     }
 
     this.jobArgsMap.put(
-        "SCAN_CONFIG", generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes));
+        "SCAN_CONFIG",
+        generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes, activatedHandlers));
 
     this.jobArgsMap.put("PLATFORM", platform);
     this.jobArgsMap.put("SCAN_PATH", scanPath);
@@ -106,6 +108,7 @@ public class FlinkJobConfig {
       String scanPath,
       String s3TableName,
       Map<String, String> userProperties,
+      List<String> activatedHandlers,
       List<String> tags,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
@@ -114,7 +117,8 @@ public class FlinkJobConfig {
       this.jobArgsMap.put("BATCH_ID", bacthId);
     }
     this.jobArgsMap.put(
-        "SCAN_CONFIG", generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes));
+        "SCAN_CONFIG",
+        generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes, activatedHandlers));
 
     this.jobArgsMap.put("PLATFORM", platform);
     this.jobArgsMap.put("SCAN_PATH", scanPath);
@@ -143,7 +147,8 @@ public class FlinkJobConfig {
       Map<String, String> userProperties,
       Map<String, String> pathPatterns,
       List<String> tags,
-      List<String> allowedSuffixes) {
+      List<String> allowedSuffixes,
+      List<String> activatedHandlers) {
     ObjectNode scanConfig = objectMapper.createObjectNode();
 
     scanConfig.set(
@@ -162,6 +167,11 @@ public class FlinkJobConfig {
     ArrayNode suffixesNode = scanConfig.putArray("allowedSuffixes");
     if (allowedSuffixes != null) {
       allowedSuffixes.forEach(suffixesNode::add);
+    }
+
+    ArrayNode handlersNode = scanConfig.putArray("activatedHandlers");
+    if (activatedHandlers != null) {
+      activatedHandlers.forEach(handlersNode::add);
     }
     return scanConfig.toString();
   }

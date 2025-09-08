@@ -42,7 +42,7 @@ spec:
           - name: PARTITIONS
             value: "8"
           - name: RETENTION_MS
-            value: "21600000"
+            value: "259200000"
           - name: REPLICATION_FACTOR
             value: {{ .Values.kafka.replicationFactor | quote }}
         command: ["/bin/bash", "-c"]

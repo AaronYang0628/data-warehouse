@@ -56,9 +56,9 @@ spec:
           {{- end }}
   flinkConfiguration:
     flink.client.timeout: 120s
-    pekko.ask.timeout: 300s
-    pekko.remote.netty.tcp.connection-timeout: 300s
-    heartbeat.timeout: "300000"
+    pekko.ask.timeout: 600s
+    pekko.remote.netty.tcp.connection-timeout: 600s
+    heartbeat.timeout: "600000"
     env.java.opts: --add-opens java.base/java.util=ALL-UNNAMED  --add-opens=java.base/java.lang=ALL-UNNAMED
     state.checkpoints.dir: {{ $.Values.flink.session.state.checkpoint.path }}
     state.savepoints.dir: {{ $.Values.flink.session.state.savepoint.path }}

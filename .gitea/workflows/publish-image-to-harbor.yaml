@@ -16,9 +16,12 @@ jobs:
             dockerfile_path: "Dockerfile"
     runs-on: ubuntu-latest
     container:
-      image: docker:dind
+      image: tinybuilder/alpine-git-dind:latest
       options: --privileged
     steps:
+    - name: Install dependencies
+      run: |
+        apk add --no-cache nodejs npm git
     - name: checkout-repository
       uses: actions/checkout@v4
     - name: start-docker-daemon

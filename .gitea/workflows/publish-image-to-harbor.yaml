@@ -14,7 +14,7 @@ jobs:
           - name_suffix: "operator"
             container_path: "src"
             dockerfile_path: "Dockerfile"
-    runs-on: ubuntu-latest:host
+    runs-on: ubuntu-latest
     steps:
     - name: checkout-repository
       uses: actions/checkout@v4

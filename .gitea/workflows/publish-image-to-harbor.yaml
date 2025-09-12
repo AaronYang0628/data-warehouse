@@ -12,7 +12,7 @@ jobs:
       matrix:
         include:
           - name_suffix: "operator"
-            container_path: "src"
+            container_path: "."
             dockerfile_path: "Dockerfile"
     runs-on: ubuntu-latest
     steps:

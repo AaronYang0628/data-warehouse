@@ -15,21 +15,21 @@ jobs:
             container_path: "."
             dockerfile_path: "Dockerfile"
     runs-on: ubuntu-latest
+    container:
+      image: docker:dind
+      options: --privileged
     steps:
     - name: checkout-repository
       uses: actions/checkout@v4
     - name: start-docker-daemon
       run: |
-        sudo systemctl start docker || true
-        sudo chmod 666 /var/run/docker.sock || true
+        dockerd &
+        sleep 5
         docker info
     - name: setup-docker-buildx
       uses: docker/setup-buildx-action@v3
       with:
-        driver-opts: |
-          image=moby/buildkit:latest
-          network=host
-        buildkitd-flags: --allow-insecure-entitlement security.insecure --allow-insecure-entitlement network.host
+        driver: docker
     - name: get-current-date
       id: date
       run: |

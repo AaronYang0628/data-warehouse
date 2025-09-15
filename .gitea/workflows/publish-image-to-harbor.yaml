@@ -7,79 +7,45 @@ env:
   USER: byang628@zhejianglab.com
   REPOSITORY_NAMESPACE: ay-dev
 jobs:
-  build-and-push-images:
-    strategy:
-      matrix:
-        include:
-          - name_suffix: "operator"
-            container_path: "."
-            dockerfile_path: "Dockerfile"
+  push_to_registry:
+    name: Push Docker image to Docker Hub
     runs-on: ubuntu-latest
+    permissions:
+      packages: write
+      contents: read
+      attestations: write
+      id-token: write
     steps:
-    - name: checkout-repository
-      uses: actions/checkout@v4
-    - name: get-current-date
-      id: date
-      run: |
-        echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-        echo "will push image: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}"
+      - name: Check out the repo
+        uses: actions/checkout@v4
 
-    # 验证代码结构
-    - name: verify-code
-      run: |
-        echo "Verifying code structure..."
-        ls -la ${{ matrix.container_path }}
-        if [ -f ${{ matrix.dockerfile_path }} ]; then
-          echo "Dockerfile exists: ${{ matrix.dockerfile_path }}"
-          cat ${{ matrix.dockerfile_path }} | head -10
-        else
-          echo "Warning: Dockerfile not found at ${{ matrix.dockerfile_path }}"
-          exit 1
-        fi
-    
-    - name: install-podman
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y podman
+      - name: Log in to Harbor
+        uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
+        with:
+        registry: "${{ env.REGISTRY }}"
+        username: "${{ env.USER }}"
+        password: "${{ secrets.ZJ_HARBOR_TOKEN }}"
 
-    # 尝试实际构建和推送镜像
-    - name: attempt-to-build-and-push
-      continue-on-error: true
-      run: |
-        echo "Attempting to build and push image..."
-        
-        # 构建镜像
-        echo "Building image..."
-        podman build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}
-        BUILD_STATUS=$?
-        
-        if [ $BUILD_STATUS -eq 0 ]; then
-          echo "Build successful!"
-          # 登录Harbor
-          echo "Logging in to Harbor..."
-          echo "${{ secrets.HARBOR_PASSWORD }}" | podman login ${{ env.REGISTRY }} --username ${{ env.USER }} --password-stdin
-          LOGIN_STATUS=$?
-          
-          if [ $LOGIN_STATUS -eq 0 ]; then
-            echo "Login successful!"
-            # 推送镜像
-            echo "Pushing image..."
-            podman push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}
-            PUSH_STATUS=$?
-            
-            if [ $PUSH_STATUS -eq 0 ]; then
-              echo "Push successful!"
-              echo "IMAGE_PUSHED=true" >> $GITHUB_ENV
-              exit 0
-            else
-              echo "Push failed!"
-            fi
-          else
-            echo "Login failed!"
-          fi
-        else
-          echo "Build failed!"
-        fi
-        
-        exit 1
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        with:
+          images: ${{ env.REPOSITORY_NAMESPACE }}/data-warehouse
+
+      - name: Build and push Docker image
+        id: push
+        uses: docker/build-push-action@3b5e8027fcad23fda98b2e3ac259d8d67585f671
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Generate artifact attestation
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-name: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/data-warehouse
+          subject-digest: ${{ steps.push.outputs.digest }}
+          push-to-registry: true
     

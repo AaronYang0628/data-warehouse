@@ -8,6 +8,9 @@ spec:
     syncOptions:
     - CreateNamespace=true
   project: default
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: warehouse
   source:
     repoURL: https://aaronyang0628.github.io/helm-chart-mirror/charts
     chart: data-warehouse

@@ -27,6 +27,7 @@ jobs:
           oci_registry: oci://harbor.zhejianglab.com/ay-dev
           oci_username: byang628@zhejianglab.com
           oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
+          github_token: ${{ secrets.ZJ_HARBOR_TOKEN }}
           charts_dir: "${{ matrix.chart_path }}"
           tag_name_pattern: ${{ github.ref_type == 'tag' && '{{chartName}}-chart' || '{{chartName}}-chart-latest' }}
           skip_dependencies: false

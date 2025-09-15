@@ -37,6 +37,11 @@ jobs:
           exit 1
         fi
     
+    - name: install-podman
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y podman
+
     # 尝试实际构建和推送镜像
     - name: attempt-to-build-and-push
       continue-on-error: true
@@ -45,21 +50,21 @@ jobs:
         
         # 构建镜像
         echo "Building image..."
-        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}
+        podman build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}
         BUILD_STATUS=$?
         
         if [ $BUILD_STATUS -eq 0 ]; then
           echo "Build successful!"
           # 登录Harbor
           echo "Logging in to Harbor..."
-          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login ${{ env.REGISTRY }} --username ${{ env.USER }} --password-stdin
+          echo "${{ secrets.HARBOR_PASSWORD }}" | podman login ${{ env.REGISTRY }} --username ${{ env.USER }} --password-stdin
           LOGIN_STATUS=$?
           
           if [ $LOGIN_STATUS -eq 0 ]; then
             echo "Login successful!"
             # 推送镜像
             echo "Pushing image..."
-            docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}
+            podman push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}
             PUSH_STATUS=$?
             
             if [ $PUSH_STATUS -eq 0 ]; then

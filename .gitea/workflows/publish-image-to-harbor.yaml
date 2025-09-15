@@ -1,3 +1,4 @@
+name: publish-image-to-harbor-registry
 run-name: ${{ gitea.actor }} is testing out Gitea Push Image 🚀
 on: [push]
 
@@ -23,7 +24,7 @@ jobs:
         echo "date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
         echo "will push image: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}"
 
-    # 跳过实际的镜像构建，仅执行代码验证步骤
+    # 验证代码结构
     - name: verify-code
       run: |
         echo "Verifying code structure..."
@@ -33,43 +34,47 @@ jobs:
           cat ${{ matrix.dockerfile_path }} | head -10
         else
           echo "Warning: Dockerfile not found at ${{ matrix.dockerfile_path }}"
+          exit 1
         fi
     
-    # 如果您需要在其他环境中手动构建和推送，可以添加提示信息
-    - name: provide-manual-instructions
+    # 尝试实际构建和推送镜像
+    - name: attempt-to-build-and-push
+      continue-on-error: true
       run: |
-        echo "Environment restrictions prevent automated image build."
-        echo "To build and push the image manually, run these commands:"
-        echo ""
-        echo "1. Build the image:"
-        echo "docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}"
-        echo ""
-        echo "2. Login to Harbor:"
-        echo "docker login ${{ env.REGISTRY }} --username ${{ env.USER }}"
-        echo ""
-        echo "3. Push the image:"
-        echo "docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}"
-
-    # # 安装 Podman（如果环境中没有的话）
-    # - name: install-podman
-    #   run: |
-    #     sudo apt-get update
-    #     sudo apt-get install -y podman
+        echo "Attempting to build and push image..."
+        
+        # 构建镜像
+        echo "Building image..."
+        docker build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}
+        BUILD_STATUS=$?
+        
+        if [ $BUILD_STATUS -eq 0 ]; then
+          echo "Build successful!"
+          # 登录Harbor
+          echo "Logging in to Harbor..."
+          echo "${{ secrets.HARBOR_PASSWORD }}" | docker login ${{ env.REGISTRY }} --username ${{ env.USER }} --password-stdin
+          LOGIN_STATUS=$?
+          
+          if [ $LOGIN_STATUS -eq 0 ]; then
+            echo "Login successful!"
+            # 推送镜像
+            echo "Pushing image..."
+            docker push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}
+            PUSH_STATUS=$?
+            
+            if [ $PUSH_STATUS -eq 0 ]; then
+              echo "Push successful!"
+              echo "IMAGE_PUSHED=true" >> $GITHUB_ENV
+              exit 0
+            else
+              echo "Push failed!"
+            fi
+          else
+            echo "Login failed!"
+          fi
+        else
+          echo "Build failed!"
+        fi
+        
+        exit 1
     
-    # # 使用 Podman 构建镜像
-    # - name: build-image-with-podman
-    #   run: |
-    #     podman build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}
-    
-    # # 使用 Podman 登录到 Harbor
-    # - name: login-to-harbor-with-podman
-    #   run: |
-    #     echo "${{ secrets.ZJ_HARBOR_TOKEN }}" | podman login \
-    #       ${{ env.REGISTRY }} \
-    #       --username ${{ env.USER }} \
-    #       --password-stdin
-    
-    # # 使用 Podman 推送镜像
-    # - name: push-image-with-podman
-    #   run: |
-    #     podman push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}

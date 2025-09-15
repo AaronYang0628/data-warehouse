@@ -59,8 +59,8 @@ jobs:
           cd ${{ matrix.chart_path }}
           
           # 获取chart版本和名称
-          CHART_VERSION=$(helm show chart . | grep version: | cut -d' ' -f2)
-          CHART_NAME=$(helm show chart . | grep name: | cut -d' ' -f2)
+          CHART_VERSION=$(helm show chart . | awk '/^version:/ {print $2}' | xargs)
+          CHART_NAME=$(helm show chart . | awk '/^name:/ {print $2}' | xargs)
           
           # 返回到打包后的文件所在目录
           cd - 

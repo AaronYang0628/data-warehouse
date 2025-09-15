@@ -37,7 +37,10 @@ jobs:
           wget -q -O helm.tar.gz https://files.m.daocloud.io/get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz
           tar -zxvf helm.tar.gz -C ~/helm
           mv ~/helm/linux-amd64/helm ~/helm/
-          echo "${HOME}/helm" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Add Helm to PATH
+        run: echo "${HOME}/helm" >> $GITHUB_PATH
         shell: bash
 
       - name: Verify Helm installation

@@ -55,7 +55,16 @@ jobs:
 
       - name: Push Helm chart
         run: |
+          # 切换到正确的chart目录
+          cd ${{ matrix.chart_path }}
+          
+          # 获取chart版本和名称
           CHART_VERSION=$(helm show chart . | grep version: | cut -d' ' -f2)
           CHART_NAME=$(helm show chart . | grep name: | cut -d' ' -f2)
-          echo "${CHART_NAME}-${CHART_VERSION}.tgz"
-          helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://${env.REGISTRY}/${env.REPOSITORY_NAMESPACE}
+          
+          # 返回到打包后的文件所在目录
+          cd - 
+          
+          # 推送chart
+          echo "Pushing chart: ${CHART_NAME}-${CHART_VERSION}.tgz"
+          helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}

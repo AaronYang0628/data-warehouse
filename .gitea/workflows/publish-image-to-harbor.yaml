@@ -22,9 +22,9 @@ jobs:
       - name: Log in to Harbor
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:
-        registry: "${{ env.REGISTRY }}"
-        username: "${{ env.USER }}"
-        password: "${{ secrets.ZJ_HARBOR_TOKEN }}"
+          registry: "${{ env.REGISTRY }}"
+          username: "${{ env.USER }}"
+          password: "${{ secrets.ZJ_HARBOR_TOKEN }}"
 
       - name: Extract metadata (tags, labels) for Docker
         id: meta

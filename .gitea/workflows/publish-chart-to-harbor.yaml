@@ -41,4 +41,5 @@ jobs:
           cd environments/helm/metadata-environment
           CHART_VERSION=$(helm show chart . | grep version: | cut -d' ' -f2)
           CHART_NAME=$(helm show chart . | grep name: | cut -d' ' -f2)
-          helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
+          ls -la ${CHART_NAME}-${CHART_VERSION}.tgz
+          helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://${env.REGISTRY}/${env.REPOSITORY_NAMESPACE}

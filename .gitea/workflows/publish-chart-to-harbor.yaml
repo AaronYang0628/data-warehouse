@@ -19,10 +19,25 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Install Helm
-        uses: azure/setup-helm@v3
+      - name: Cache Helm
+        id: cache-helm
+        uses: actions/cache@v3
         with:
-          version: v3.12.0
+          path: ~/helm
+          key: helm-${{ runner.os }}-${{ hashFiles('~/.helm/version') }}
+
+      - name: Install Helm
+        if: steps.cache-helm.outputs.cache-hit != 'true'
+        run: |
+          mkdir -p ~/helm
+          wget -q -O helm.tar.gz https://files.m.daocloud.io/get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz
+          tar -zxvf helm.tar.gz -C ~/helm
+          mv ~/helm/linux-amd64/helm ~/helm/
+          echo "${HOME}/helm" >> $GITHUB_PATH
+        shell: bash
+
+      - name: Verify Helm installation
+        run: helm version
 
       - name: Package Helm chart
         run: |

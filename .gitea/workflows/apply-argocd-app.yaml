@@ -6,7 +6,7 @@ jobs:
   sync-argocd-app:
     runs-on: ubuntu-latest
     steps:
-      - name: sync
+      - name: Sync App
         uses: aaronyang0628/argocd-async-app@v1.5
         with:
           argocd-server: '192.168.100.125:30443'

@@ -1,4 +1,4 @@
-# Metadata Operator
+# Data Metadata Operator
 - Deploy Cert Manager + Flink + ES + Kafka + API server middleware in one shot
 - Create Operator to manage metadata ingest job
 
@@ -97,7 +97,3 @@ In Namespace ayyy, there is no SessionJob hosted by metadata-flink-session-clust
 In Namespace ayyy Flinkdeployment 'metadata-flink-session-cluster' not found
 Cleanup completed successfully
 ```
-
-
-
-

@@ -31,4 +31,5 @@ jobs:
           skip_dependencies: false
           skip_gh_release: ${{ github.ref_type != 'tag' }}
           mark_as_latest: ${{ github.ref_type != 'tag' }}
+          force: true
           version: v3.17.4

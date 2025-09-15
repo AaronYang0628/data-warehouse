@@ -24,10 +24,9 @@ jobs:
       - name: chart-releaser
         uses: bitdeps/helm-oci-charts-releaser@v0.1.4
         with:
-          oci_registry: ghcr.io/${{ github.repository }}-charts
-          oci_username: ${{ github.actor }}
-          oci_password: ${{ secrets.GITHUB_TOKEN }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          oci_registry: oci://harbor.zhejianglab.com/ay-dev
+          oci_username: byang628@zhejianglab.com
+          oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
           charts_dir: "${{ matrix.chart_path }}"
           tag_name_pattern: ${{ github.ref_type == 'tag' && '{{chartName}}-chart' || '{{chartName}}-chart-latest' }}
           skip_dependencies: false

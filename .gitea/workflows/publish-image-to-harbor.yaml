@@ -15,20 +15,9 @@ jobs:
             container_path: "."
             dockerfile_path: "Dockerfile"
     runs-on: ubuntu-latest
-    container:
-      image: docker:dind-rootless
-      options: --privileged
     steps:
-    - name: Install dependencies
-      run: |
-        apk add --no-cache nodejs npm git
     - name: checkout-repository
       uses: actions/checkout@v4
-    - name: start-docker-daemon
-      run: |
-        dockerd-entrypoint.sh &
-        sleep 5
-        docker info
     - name: setup-docker-buildx
       uses: docker/setup-buildx-action@v3
       with:

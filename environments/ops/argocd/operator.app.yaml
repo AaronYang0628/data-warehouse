@@ -1,0 +1,360 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: data-warehouse-bundle
+  namespace: argocd
+spec:
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+  project: default
+  source:
+    repoURL: https://aaronyang0628.github.io/helm-chart-mirror/charts
+    chart: data-warehouse
+    targetRevision: 0.0.19
+    helm:
+      releaseName: data-warehouse-bundle
+      values: |
+        global:
+          storageClass: "" 
+          registryPrefix: m.lab.zverse.space
+          pullPolicy: IfNotPresent
+          security: 
+            allowInsecureImages: true
+        resourcesPreset: "nano"
+        ingestTaskOperator:
+          enabled: true
+          name: ingest-operator
+          commonLabels: {}
+          commonAnnotations: {}
+          image:
+            registry: docker-registry.lab.zverse.space
+            repository: ay-dev/metadata-operator
+            tag: v20250829r1
+            pullPolicy: Always
+            pullSecrets: []
+          serviceAccount:
+            annotations: {}
+            name: "metadata-ingest-operator-sa"
+            role:
+              name: "metadata-ingest-operator-role"
+            roleBinding:
+              name: "metadata-ingest-operator-rb"
+            clusterRole:
+              name: "metadata-ingest-operator-crole"
+            clusterRoleBinding:
+              name: "metadata-ingest-operator-crb"
+          flink:
+            serviceAccount:
+              name: "metadata-ingest-flink-sa"
+            clusterRole:
+              name: "metadata-ingest-flink-crole"
+            clusterRoleBinding:
+              name: "metadata-ingest-flink-crole-crb"
+          podSecurityContext:
+            enabled: true
+            fsGroupChangePolicy: Always
+            supplementalGroups: []
+            fsGroup: 0
+          resources: 
+            limits:
+              cpu: 2
+              ephemeral-storage: 8Gi
+              memory: 2Gi
+            requests:
+              cpu: 1
+              ephemeral-storage: 8Gi
+              memory: 1Gi
+          service:
+            name: healthz
+            healthz:
+              type: ClusterIP
+              port: 8099
+              targetPort: 8099
+
+        certManager:
+          enabled: true
+          installCRDs: true
+          image:
+            repository: m.daocloud.io/quay.io/jetstack/cert-manager-controller
+          webhook:
+            image:
+              repository: m.daocloud.io/quay.io/jetstack/cert-manager-webhook
+          cainjector:
+            image:
+              repository: m.daocloud.io/quay.io/jetstack/cert-manager-cainjector
+          acmesolver:
+            image:
+              repository: m.daocloud.io/quay.io/jetstack/cert-manager-acmesolver
+          startupapicheck:
+            image:
+              repository: m.daocloud.io/quay.io/jetstack/cert-manager-startupapicheck
+
+        flinkk8soperator:
+          enabled: false
+          image:
+            repository: m.lab.zverse.space/ghcr.io/apache/flink-kubernetes-operator
+            tag: 1.11.0
+          defaultConfiguration:
+            create: true
+            append: true
+            flink-conf.yaml: |+
+              kubernetes.operator.flink.client.timeout: 120 s
+          existingNamespace: flink
+
+        flink:
+          session:
+            version: v1_19
+            mode: native
+            image:
+              registry: docker-registry.lab.zverse.space
+              repository: astro-base-images/flink-oss-updated
+              tag: 1.19-java17
+              pullSecrets: []
+            clusterNamespaces: []
+            state:
+              checkpoint:
+                path: file:///opt/flink/checkpoints
+              savepoint:
+                path: file:///opt/flink/savepoints
+            extraContainerPorts:
+              - name: flink-metric
+                containerPort: 9249
+                protocol: TCP
+            jobManager:
+              replicas: 1
+              resource:
+                cpu: 1
+                memory: 1Gi
+            taskManager:
+              replicas: 1
+              taskSlots: 2
+              resource:
+                cpu: 1
+                memory: 1Gi
+            ingress:
+              enabled: true
+              annotations:
+                cert-manager.io/cluster-issuer: self-signed-ca-issuer
+                nginx.ingress.kubernetes.io/rewrite-target: /$1
+              className: nginx
+              template: flink.session.k8s.io/{{namespace}}/{{name}}/?(.*)
+            persistence:
+              enabled: false
+              accessModes:
+                - ReadWriteMany
+              size: 10Gi
+              storageClass: ""
+          residenceJobs:
+            consumeKafkaToES:
+              enabled: true
+              name: ingest-kafka-to-es
+              version: v1_19
+              mode: native
+              image: 
+                registry: docker-registry.lab.zverse.space  
+                repository: data-and-computing-dev/ingest-to-es-transfer
+                tag: test
+                pullSecrets: []
+              extraContainerPorts:
+              - name: flink-metric
+                containerPort: 9249
+                protocol: TCP
+              extraEnvVars: []
+              jobManager:
+                replicas: 1
+                resource:
+                  cpu: 1
+                  memory: 2Gi
+              taskManager:
+                replicas: 1
+                taskSlots: 2
+                resource:
+                  cpu: 1
+                  memory: 2Gi
+              ingress:
+                enabled: true
+                annotations:
+                  cert-manager.io/cluster-issuer: self-signed-ca-issuer
+                  nginx.ingress.kubernetes.io/rewrite-target: /$1
+                className: nginx
+                template: flink.residence.job/{{namespace}}/{{name}}/?(.*)
+              job:
+                jarURI: local:///app/flink-application.jar
+                parallelism: 2
+                entryClass: com.zhejianglab.astronomy.es.IngestToEs
+                args: []  
+            
+        minio:
+          image:
+            registry: m.lab.zverse.space/docker.io
+          clientImage:
+            registry: m.lab.zverse.space/docker.io
+          auth:
+            existingSecret: metadata-minio-secret
+          defaultBuckets: "es-snapshot"
+          ingress:
+            enabled: true
+            ingressClassName: "nginx"
+            hostname: minio-console.metadata.dev
+            path: /?(.*)
+            pathType: ImplementationSpecific
+            annotations: 
+              nginx.ingress.kubernetes.io/rewrite-target: /$1
+            tls: true
+            selfSigned: true
+            extraHosts: []
+          apiIngress:
+            enabled: true
+            ingressClassName: "nginx"
+            hostname: minio-api.metadata.dev
+            path: /?(.*)
+            pathType: ImplementationSpecific
+            annotations: 
+              nginx.ingress.kubernetes.io/rewrite-target: /$1
+
+
+        elasticsearch:
+          global:
+            kibanaEnabled: true
+          clusterName: elastic
+          image:
+            registry: m.lab.zverse.space/docker.io
+            pullPolicy: IfNotPresent
+          service:
+            type: ClusterIP
+          extraConfig:
+            s3:
+              client:
+                default:
+                  protocol: http
+                  endpoint: 'http://minio-api.metadata.dev'
+                  path_style_access: true
+          initScripts:
+            configure-s3-client.sh: |
+              elasticsearch_set_key_value "s3.client.default.access_key" "${S3_ACCESSKEY}"
+              elasticsearch_set_key_value "s3.client.default.secret_key" "${S3_SECRETKEY}"
+          extraEnvVars:
+          - name: S3_ACCESSKEY
+            valueFrom:
+              secretKeyRef:
+                key: s3-access-key
+                name: metadata-minio-secret
+          - name: S3_SECRETKEY
+            valueFrom:
+              secretKeyRef:
+                key: s3-access-secret
+                name: metadata-minio-secret
+          ingress:
+            enabled: true
+            annotations:
+              cert-manager.io/cluster-issuer: self-signed-ca-issuer
+              nginx.ingress.kubernetes.io/rewrite-target: /$1
+            hostname: elastic-search.metadata.dev
+            ingressClassName: nginx
+            path: /?(.*)
+            tls: false
+          master:
+            masterOnly: false
+            replicaCount: 1
+            resources:
+              requests:
+                cpu: 1
+                memory: 2048Mi
+              limits:
+                cpu: 2
+                memory: 4096Mi
+            heapSize: 2g
+          data:
+            replicaCount: 0
+          coordinating:
+            replicaCount: 0
+          sysctlImage:
+            enabled: true
+            registry: m.lab.zverse.space/docker.io
+            pullPolicy: IfNotPresent
+          kibana:
+            elasticsearch:
+              hosts:
+                - '{{ include "elasticsearch.service.name" . }}'
+              port: '{{ include "elasticsearch.service.ports.restAPI" . }}'
+            image:
+              registry: m.lab.zverse.space/docker.io
+            ingress:
+              enabled: true
+              annotations:
+                cert-manager.io/cluster-issuer: self-signed-ca-issuer
+                nginx.ingress.kubernetes.io/rewrite-target: /$1
+              hostname: kibana.metadata.dev
+              ingressClassName: nginx
+              path: /?(.*)
+              tls: false
+
+        kafka:
+          replicationFactor: 1
+          image:
+            registry: m.lab.zverse.space/docker.io
+          listeners:
+            client:
+              protocol: PLAINTEXT
+            interbroker:
+              protocol: PLAINTEXT
+          controller:
+            replicaCount: 1
+            heapOpts: -Xmx3500m -Xms512m
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+            extraConfig: |
+              message.max.bytes=5242880
+              default.replication.factor=1
+              offsets.topic.replication.factor=1
+              transaction.state.log.replication.factor=1
+          broker:
+            replicaCount: 0
+            minId: 100
+            heapOpts: -Xmx3500m -Xms512m
+            resources:
+              requests:
+                cpu: 500m
+                memory: 1Gi
+            extraConfig: |
+              message.max.bytes=5242880
+              default.replication.factor=1
+              offsets.topic.replication.factor=1
+              transaction.state.log.replication.factor=1
+          kraft:
+            enabled: true
+            clusterId: "1"
+
+        apiServer:
+          name: metadata-api-server
+          serviceAccount:
+            name: metadata-api-server-sa
+          clusterRole:
+            name: metadata-api-server-crole
+            roleBinding: 
+              name: metadata-api-server-crb
+          image:
+            registry: docker-registry.lab.zverse.space
+            repository: data-and-computing-dev/meta-data
+            tag: 1.0.7
+            pullPolicy: Always
+          podSecurityContext:
+            enabled: true
+            fsGroupChangePolicy: Always
+            supplementalGroups: []
+            fsGroup: 0
+          resources: 
+            limits:
+              cpu: 2
+              ephemeral-storage: 8Gi
+              memory: 2Gi
+            requests:
+              cpu: 1
+              ephemeral-storage: 8Gi
+              memory: 1Gi
+          destination:
+            server: https://kubernetes.default.svc
+            namespace: application

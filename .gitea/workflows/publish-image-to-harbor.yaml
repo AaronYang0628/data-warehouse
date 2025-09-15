@@ -32,7 +32,7 @@ jobs:
       with:
         registry: "${{ env.REGISTRY }}"
         username: "${{ env.USER }}"
-        password: "${{ secrets.HARBOR_REGISTRY_PWD }}"
+        password: "${{ secrets.ZJ_HARBOR_TOKEN }}"
     - name: build-and-push-container-image
       uses: docker/build-push-action@v6
       with:

@@ -6,30 +6,39 @@ env:
   REGISTRY: harbor.zhejianglab.com
   USER: byang628@zhejianglab.com
   REPOSITORY_NAMESPACE: ay-dev
+
 jobs:
   build-and-push-charts:
     runs-on: ubuntu-latest
     permissions:
       contents: write
       packages: write
-    strategy:
-      matrix:
-        include:
-          - chart_path: "environments/helm/metadata-environment"
     steps:
-      - name: checkout-repository
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: chart-releaser
-        uses: bitdeps/helm-oci-charts-releaser@v0.1.4
         with:
-          oci_registry: oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
-          oci_username: ${{ env.USER }}
-          oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
-          github_token: ${{ secrets.ZJ_HARBOR_TOKEN }}
-          charts_dir: "${{ matrix.chart_path }}"
-          tag_name_pattern: ${{ github.ref_type == 'tag' && '{{chartName}}-chart' || '{{chartName}}-chart-latest' }}
-          skip_dependencies: false
-          skip_gh_release: ${{ github.ref_type != 'tag' }}
-          mark_as_latest: ${{ github.ref_type != 'tag' }}
-          force: true
-          version: v3.17.4
+          fetch-depth: 0
+          
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+        with:
+          version: v3.12.0
+
+      - name: Package Helm chart
+        run: |
+          cd environments/helm/metadata-environment
+          helm package .
+          
+      - name: Login to Harbor
+        run: |
+          echo "${{ secrets.ZJ_HARBOR_TOKEN }}" | helm registry login \
+            ${{ env.REGISTRY }} \
+            --username ${{ env.USER }} \
+            --password-stdin
+
+      - name: Push Helm chart
+        run: |
+          cd environments/helm/metadata-environment
+          CHART_VERSION=$(helm show chart . | grep version: | cut -d' ' -f2)
+          CHART_NAME=$(helm show chart . | grep name: | cut -d' ' -f2)
+          helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}

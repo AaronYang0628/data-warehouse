@@ -25,7 +25,7 @@ jobs:
         username: "${{ env.USER }}"
         password: "${{ secrets.GIT_REGISTRY_PWD }}"
     - name: build and push container image
-      uses: docker/build-push-action@v6
+      uses: docker/build-push-action@v6.18.0
       with:
         context: "${{ matrix.container_path }}"
         file: "${{ matrix.dockerfile_path }}"

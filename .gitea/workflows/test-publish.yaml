@@ -25,11 +25,13 @@ jobs:
         username: "${{ env.USER }}"
         password: "${{ secrets.GIT_REGISTRY_PWD }}"
     - name: Build and Push with Kaniko
-      uses: aevea/action-kaniko@v0.9.0
+      uses: int128/kaniko-action@v1
       with:
-        image: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}
-        tag: ${{ github.ref_name }}
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ github.ref_name }}
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:latest
+        context: ${{ matrix.container_path }}
+        dockerfile: ${{ matrix.dockerfile_path }}
         username: ${{ env.USER }}
         password: ${{ secrets.GIT_REGISTRY_PWD }}
-        dockerfile: ${{ matrix.dockerfile_path }}
-        context: ${{ matrix.container_path }}

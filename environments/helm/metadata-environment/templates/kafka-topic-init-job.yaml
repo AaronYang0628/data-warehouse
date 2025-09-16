@@ -40,7 +40,7 @@ spec:
           - name: TOPIC_NAME
             value: "ingest-to-es"
           - name: PARTITIONS
-            value: "8"
+            value: "16"
           - name: RETENTION_MS
             value: "259200000"
           - name: REPLICATION_FACTOR

@@ -24,17 +24,13 @@ jobs:
         registry: "${{ env.REGISTRY }}"
         username: "${{ env.USER }}"
         password: "${{ secrets.GIT_REGISTRY_PWD }}"
-    - name: Build and Push with Kaniko
-      run: |
-        # 设置podman使用socket连接
-        export DOCKER_HOST=unix:///var/run/podman/podman.sock
-        
-        # 构建镜像
-        podman build -t ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ inputs.tag || 'latest' }} -f ${{ matrix.dockerfile_path }} ${{ matrix.container_path }}
-        
-        # 为镜像添加额外的标签
-        podman tag ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ inputs.tag || 'latest' }} ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ github.ref_name }}
-        
-        # 推送镜像
-        podman push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ inputs.tag || 'latest' }}
-        podman push ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ github.ref_name }}
+    - name: build and push container image
+      uses: docker/build-push-action@v6
+      with:
+        context: "${{ matrix.container_path }}"
+        file: "${{ matrix.dockerfile_path }}"
+        push: true
+        tags: |
+          ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ github.repository }}-${{ matrix.name_suffix }}:${{ inputs.tag || 'latest' }}
+        labels: |
+          org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}

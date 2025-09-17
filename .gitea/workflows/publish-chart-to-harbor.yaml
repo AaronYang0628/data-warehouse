@@ -31,7 +31,7 @@ jobs:
       - name: Release Chart
         uses: bitdeps/helm-oci-charts-releaser@v0.1.4
         with:
-          oci_registry: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
+          oci_registry: oci://harbor.zhejianglab.com/ay-dev
           oci_username: ${{ env.USER }}
           oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
           github_token: ${{ secrets.ZJ_HARBOR_TOKEN }}

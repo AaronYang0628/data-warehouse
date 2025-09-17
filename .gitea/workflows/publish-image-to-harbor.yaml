@@ -34,7 +34,7 @@ jobs:
         id: extract-date
         run: |
           echo "current-date=$(date +'%Y%m%d')" >> $GITHUB_OUTPUT
-          echo will push image: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ env.REPOSITORY_NAMESPACE }}-${{ matrix.name_suffix }}:v${{ steps.extract-date.outputs.current-date }}
+          echo will push image: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ env.IMAGE_NAME }}-${{ matrix.name_suffix }}:v${{ steps.extract-date.outputs.current-date }}
 
       - name: build and push container image
         uses: docker/build-push-action@v6
@@ -43,7 +43,7 @@ jobs:
           file: "${{ matrix.dockerfile_path }}"
           push: true
           tags: |
-            ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ env.REPOSITORY_NAMESPACE }}-${{ matrix.name_suffix }}:v${{ steps.date.outputs.date }}
+            ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ env.IMAGE_NAME }}-${{ matrix.name_suffix }}:v${{ steps.extract-date.outputs.current-date }}
           labels: |
             org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
     

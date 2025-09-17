@@ -6,7 +6,7 @@ env:
   REGISTRY: harbor.zhejianglab.com
   USER: byang628@zhejianglab.com
   REPOSITORY_NAMESPACE: ay-dev
-
+  CHART_NAME: data-warehouse
 jobs:
   build-and-push-charts:
     runs-on: ubuntu-latest
@@ -23,44 +23,21 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: Cache Helm
-        id: cache-helm
-        uses: actions/cache@v3
+      - name: configure Git
+        run: |
+          git config user.name "${{ gitea.actor }}"
+          git config user.email "${{ env.USER }}"
+
+      - name: chart-releaser
+        uses: bitdeps/helm-oci-charts-releaser@v0.1.4
         with:
-          path: ~/helm
-          key: helm-${{ runner.os }}-${{ hashFiles('~/.helm/version') }}
-
-      - name: Install Helm
-        if: steps.cache-helm.outputs.cache-hit != 'true'
-        run: |
-          mkdir -p ~/helm
-          wget -q -O helm.tar.gz https://files.m.daocloud.io/get.helm.sh/helm-v3.12.0-linux-amd64.tar.gz
-          tar -zxvf helm.tar.gz -C ~/helm
-          mv ~/helm/linux-amd64/helm ~/helm/
-        shell: bash
-
-      - name: Add Helm to PATH
-        run: echo "${HOME}/helm" >> $GITHUB_PATH
-        shell: bash
-
-      - name: Verify Helm installation
-        run: helm version
-
-      - name: Package Helm chart
-        run: helm package ${{ matrix.chart_path }}
-          
-      - name: Login to Harbor
-        run: |
-          echo "${{ secrets.ZJ_HARBOR_TOKEN }}" | helm registry login \
-            ${{ env.REGISTRY }} \
-            --username ${{ env.USER }} \
-            --password-stdin
-
-      - name: Push Helm chart
-        run: |
-          cd ${{ matrix.chart_path }}
-          CHART_VERSION=$(helm show chart . | awk '/^version:/ {print $2}' | xargs)
-          CHART_NAME=$(helm show chart . | awk '/^name:/ {print $2}' | xargs)
-          cd - 
-          echo "Pushing chart: ${CHART_NAME}-${CHART_VERSION}.tgz"
-          helm push ${CHART_NAME}-${CHART_VERSION}.tgz oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
+          oci_registry: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}/${{ gitea.repository }}-charts
+          oci_username: ${{ env.USER }}
+          oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
+          github_token: ${{ secrets.ZJ_HARBOR_TOKEN }}
+          charts_dir: "${{ matrix.chart_path }}"
+          tag_name_pattern: ${{ gitea.ref_type == 'tag' && '{{chartName}}-chart' || '{{chartName}}-chart-latest' }}
+          skip_dependencies: false
+          skip_gh_release: ${{ gitea.ref_type != 'tag' }}
+          mark_as_latest: ${{ gitea.ref_type != 'tag' }}
+          version: v3.17.4

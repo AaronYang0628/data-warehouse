@@ -4,7 +4,7 @@ on: [push]
 
 env:
   REGISTRY: harbor.zhejianglab.com
-  USER: byang628@zhejianglab.com
+  USER: aaron19940628@gmail.com
   REPOSITORY_NAMESPACE: ay-dev
   CHART_NAME: data-warehouse
 jobs:
@@ -31,10 +31,10 @@ jobs:
       - name: Release Chart
         uses: bitdeps/helm-oci-charts-releaser@v0.1.4
         with:
-          oci_registry: oci://harbor.zhejianglab.com/ay-dev
+          oci_registry: ghcr.io/aaronyang0628/data-warehouse-charts
           oci_username: ${{ env.USER }}
-          oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
-          github_token: ${{ secrets.ZJ_HARBOR_TOKEN }}
+          oci_password: ${{ secrets.GIT_REGISTRY_PWD }}
+          github_token: ${{ secrets.GIT_REGISTRY_PWD }}
           charts_dir: "${{ matrix.chart_path }}"
           skip_existing: false
           skip_gh_release: true

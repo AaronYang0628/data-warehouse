@@ -34,6 +34,7 @@ jobs:
           oci_registry: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
           oci_username: ${{ env.USER }}
           oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
+          github_token: ${{ secrets.ZJ_HARBOR_TOKEN }}
           charts_dir: "${{ matrix.chart_path }}"
           skip_existing: false
           skip_gh_release: true

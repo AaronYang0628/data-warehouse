@@ -24,13 +24,13 @@ jobs:
           fetch-depth: 0
 
       - name: Release Chart
-        uses: appany/helm-oci-chart-releaser@v0.5.0
+        uses: flownative/action-helm-release@v2
         with:
-          name: ${{ env.CHART_NAME }}
-          repository: ${{ env.REPOSITORY_NAMESPACE }}
-          tag: 0.1.0
-          path: environments/helm/metadata-environmen
-          registry: ${{ env.REGISTRY }}
-          registry_username: ${{ env.USER }}
-          registry_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
-          update_dependencies: 'true'
+          charts_folder: 'environments/helm/metadata-environment'
+          chart_name: 'data-warehouse'
+          chart_version: 0.0.20
+          app_version: 1.11.0
+          registry_host: '${{ env.REGISTRY }}'
+          repository_path: '${{ env.REPOSITORY_NAMESPACE }}'
+          repository_user: '${{ env.USER }}'
+          repository_password: '${{ secrets.ZJ_HARBOR_TOKEN }}'

@@ -18,11 +18,11 @@ jobs:
         include:
           - chart_path: "environments/helm/metadata-environment"
     steps:
-      - name: Checkout repository
+      - name: Checkout Repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
+
       - name: Log in to Harbor
         uses: docker/login-action@f4ef78c080cd8ba55a85445d5b36e214a81df20a
         with:

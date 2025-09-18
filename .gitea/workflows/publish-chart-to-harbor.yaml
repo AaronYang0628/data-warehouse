@@ -24,10 +24,9 @@ jobs:
           fetch-depth: 0
 
       - name: Helm Publish Action
-        uses: huggingface/helm-publish-action@latest
+        uses: aaronyang0628/push-chart-to-oci@latest
         with:
-          workingDirectory: ${{ matrix.chart_path }}
-          repository: oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
+          working-dir: ${{ matrix.chart_path }}
+          oci-repository: oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
           username: ${{ env.USER }}
           password: ${{ secrets.ZJ_HARBOR_TOKEN }}
-          beforeHook: helm package .

@@ -14,7 +14,7 @@ spec:
   source:
     repoURL: https://aaronyang0628.github.io/helm-chart-mirror/charts
     chart: data-warehouse
-    targetRevision: 0.0.19
+    targetRevision: 0.0.20
     helm:
       releaseName: data-warehouse-bundle
       values: |
@@ -31,9 +31,9 @@ spec:
           commonLabels: {}
           commonAnnotations: {}
           image:
-            registry: docker-registry.lab.zverse.space
-            repository: ay-dev/metadata-operator
-            tag: v20250829r1
+            registry:  harbor.zhejianglab.com
+            repository: ay-dev/metadata-crd-operator-dev
+            tag: v20250918
             pullPolicy: Always
             pullSecrets: []
           serviceAccount:

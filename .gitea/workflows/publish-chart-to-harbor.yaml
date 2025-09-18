@@ -23,14 +23,15 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Release Chart
-        uses: flownative/action-helm-release@v2.0.1
+      - name: Configure Git
+        run: |
+          git config user.name "${{ gitea.actor }}"
+          git config user.email "byang628@alumni.usc.edu"
+
+      - name: Run chart-releaser
+        uses: bitdeps/helm-oci-charts-releaser@v0.1.4
         with:
-          charts_folder: 'environments/helm/metadata-environment'
-          chart_name: 'data-warehouse'
-          chart_version: 0.0.20
-          app_version: 1.11.0
-          registry_host: '${{ env.REGISTRY }}'
-          repository_path: '${{ env.REPOSITORY_NAMESPACE }}'
-          repository_user: '${{ env.USER }}'
-          repository_password: '${{ secrets.ZJ_HARBOR_TOKEN }}'
+            oci_registry: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
+            oci_username: ${{ env.USER }}
+            oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
+            github_token: ${{ secrets.GIT_REGISTRY_PWD }}

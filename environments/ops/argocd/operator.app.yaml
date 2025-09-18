@@ -15,8 +15,6 @@ spec:
     repoURL: oci://harbor.zhejianglab.com/ay-dev
     chart: data-warehouse
     targetRevision: 0.0.20
-    secretRef:
-      name: zj-harbor-credentials
     helm:
       releaseName: data-warehouse-bundle
       passCredentials: true

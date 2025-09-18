@@ -24,7 +24,7 @@ jobs:
           fetch-depth: 0
 
       - name: Helm Publish Action
-        uses: aaronyang0628/push-chart-to-oci@latest
+        uses: AaronYang0628/push-helm-chart-to-oci@v0.0.1
         with:
           working-dir: ${{ matrix.chart_path }}
           oci-repository: oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}

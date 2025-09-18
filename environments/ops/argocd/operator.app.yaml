@@ -12,11 +12,14 @@ spec:
     server: https://kubernetes.default.svc
     namespace: warehouse
   source:
-    repoURL: https://aaronyang0628.github.io/helm-chart-mirror/charts
+    repoURL: oci://harbor.zhejianglab.com/ay-dev
     chart: data-warehouse
     targetRevision: 0.0.20
+    secretRef:
+      name: zj-harbor-credentials
     helm:
       releaseName: data-warehouse-bundle
+      passCredentials: true
       values: |
         global:
           storageClass: "" 

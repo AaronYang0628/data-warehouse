@@ -23,15 +23,11 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Configure Git
-        run: |
-          git config user.name "${{ gitea.actor }}"
-          git config user.email "byang628@alumni.usc.edu"
-
-      - name: Run chart-releaser
-        uses: bitdeps/helm-oci-charts-releaser@v0.1.4
+      - name: Helm Publish Action
+        uses: huggingface/helm-publish-action@latest
         with:
-            oci_registry: ${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
-            oci_username: ${{ env.USER }}
-            oci_password: ${{ secrets.ZJ_HARBOR_TOKEN }}
-            github_token: ${{ secrets.GIT_REGISTRY_PWD }}
+          workingDirectory: ${{ matrix.chart_path }}
+          repository: oci://${{ env.REGISTRY }}/${{ env.REPOSITORY_NAMESPACE }}
+          username: ${{ env.USER }}
+          password: ${{ secrets.ZJ_HARBOR_TOKEN }}
+          beforeHook: helm package .

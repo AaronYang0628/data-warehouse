@@ -11,13 +11,17 @@ COPY src ./src
 # 使用镜像中预装的Maven进行构建（不再需要mvnw）
 RUN mvn clean package -DskipTests
 
+# 复制依赖到target/dependency目录
+RUN mvn dependency:copy-dependencies -DoutputDirectory=target/dependency
+
 # 创建运行时镜像
 FROM m.daocloud.io/docker.io/library/eclipse-temurin:17-jre
 
 WORKDIR /app
 
-# 从构建阶段复制构建好的jar包
+# 从构建阶段复制构建好的jar包和依赖
 COPY --from=builder /app/target/metadata-operator-0.1.0-SNAPSHOT.jar ./app.jar
+COPY --from=builder /app/target/dependency ./lib
 
-# 设置入口点
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# 设置入口点，包含所有依赖
+ENTRYPOINT ["java", "-cp", "app.jar:lib/*", "org.zhejianglab.astro.Runner"]

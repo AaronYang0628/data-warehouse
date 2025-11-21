@@ -12,7 +12,7 @@ spec:
     server: https://kubernetes.default.svc
     namespace: warehouse
   source:
-    repoURL: oci://harbor.zhejianglab.com/ay-dev
+    repoURL: harbor.zhejianglab.com/ay-dev
     chart: data-warehouse
     targetRevision: 0.0.20
     helm:
@@ -25,16 +25,18 @@ spec:
           pullPolicy: IfNotPresent
           security: 
             allowInsecureImages: true
+
         resourcesPreset: "nano"
+
         ingestTaskOperator:
           enabled: true
           name: ingest-operator
           commonLabels: {}
           commonAnnotations: {}
           image:
-            registry:  harbor.zhejianglab.com
+            registry: harbor.zhejianglab.com
             repository: ay-dev/metadata-crd-operator-dev
-            tag: v20250918
+            tag: v20250919
             pullPolicy: Always
             pullSecrets: []
           serviceAccount:
@@ -55,11 +57,46 @@ spec:
               name: "metadata-ingest-flink-crole"
             clusterRoleBinding:
               name: "metadata-ingest-flink-crole-crb"
+          automountServiceAccountToken: true
+          podLabels: {}
+          affinity: {}
+          podAnnotations: {}
+          podAffinityPreset: ""
+          podAntiAffinityPreset: soft
+          nodeAffinityPreset:
+            type: ""
+            key: ""
+            values: []
+          hostNetwork: false
+          dnsPolicy: ""
+          dnsConfig: {}
+          hostIPC: false
+          priorityClassName: ""
+          nodeSelector: {}
+          tolerations: []
+          schedulerName: ""
+          topologySpreadConstraints: []
           podSecurityContext:
             enabled: true
             fsGroupChangePolicy: Always
             supplementalGroups: []
             fsGroup: 0
+          terminationGracePeriodSeconds: ""
+          hostAliases: []
+          command: []
+          args: []
+          diagnosticMode:
+            enabled: false
+            command: ["tail", "-f", "/etc/hosts"]
+            args: []
+          extraEnvVars: []
+          extraEnvVarsCM: ""
+          extraEnvVarsSecret: ""
+          revisionHistoryLimit: 10
+          updateStrategy:
+            type: RollingUpdate
+            rollingUpdate: {}
+          lifecycleHooks: {}
           resources: 
             limits:
               cpu: 2
@@ -69,6 +106,29 @@ spec:
               cpu: 1
               ephemeral-storage: 8Gi
               memory: 1Gi
+          extraVolumes: []
+          extraVolumeMounts: []
+          livenessProbe:
+            enabled: false
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+            successThreshold: 1
+          startupProbe:
+            enabled: false
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            enabled: false
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
           service:
             name: healthz
             healthz:
@@ -95,7 +155,7 @@ spec:
               repository: m.daocloud.io/quay.io/jetstack/cert-manager-startupapicheck
 
         flinkk8soperator:
-          enabled: true
+          enabled: false
           image:
             repository: m.lab.zverse.space/ghcr.io/apache/flink-kubernetes-operator
             tag: 1.11.0
@@ -104,6 +164,7 @@ spec:
             append: true
             flink-conf.yaml: |+
               kubernetes.operator.flink.client.timeout: 120 s
+          existingNamespace: flink
 
         flink:
           session:
@@ -114,7 +175,8 @@ spec:
               repository: astro-base-images/flink-oss-updated
               tag: 1.19-java17
               pullSecrets: []
-            clusterNamespaces: []
+            clusterNamespaces:
+            - astro-workbench
             state:
               checkpoint:
                 path: file:///opt/flink/checkpoints
@@ -127,27 +189,27 @@ spec:
             jobManager:
               replicas: 1
               resource:
-                cpu: 1
-                memory: 1Gi
+                cpu: 2
+                memory: 16Gi
             taskManager:
-              replicas: 1
-              taskSlots: 2
+              replicas: 8
+              taskSlots: 3
               resource:
-                cpu: 1
-                memory: 1Gi
+                cpu: 2
+                memory: 12Gi
             ingress:
               enabled: true
               annotations:
                 cert-manager.io/cluster-issuer: self-signed-ca-issuer
                 nginx.ingress.kubernetes.io/rewrite-target: /$1
               className: nginx
-              template: flink.session.k8s.io/{{namespace}}/{{name}}/?(.*)
+              template: flink.session.metadata.dev.lab.zverse.space/{{namespace}}/{{name}}/?(.*)
             persistence:
-              enabled: false
+              enabled: true
               accessModes:
                 - ReadWriteMany
-              size: 10Gi
-              storageClass: ""
+              size: 100Gi
+              storageClass: "juicefs-tidb-oss"
           residenceJobs:
             consumeKafkaToES:
               enabled: true
@@ -157,7 +219,7 @@ spec:
               image: 
                 registry: docker-registry.lab.zverse.space  
                 repository: data-and-computing-dev/ingest-to-es-transfer
-                tag: test
+                tag: v20250929.0
                 pullSecrets: []
               extraContainerPorts:
               - name: flink-metric
@@ -167,24 +229,24 @@ spec:
               jobManager:
                 replicas: 1
                 resource:
-                  cpu: 1
-                  memory: 2Gi
+                  cpu: 2
+                  memory: 4Gi
               taskManager:
-                replicas: 1
+                replicas: 8
                 taskSlots: 2
                 resource:
                   cpu: 1
-                  memory: 2Gi
+                  memory: 4Gi
               ingress:
                 enabled: true
                 annotations:
                   cert-manager.io/cluster-issuer: self-signed-ca-issuer
                   nginx.ingress.kubernetes.io/rewrite-target: /$1
                 className: nginx
-                template: flink.residence.job/{{namespace}}/{{name}}/?(.*)
+                template: flink.job.metadata.dev.lab.zverse.space/{{namespace}}/{{name}}/?(.*)
               job:
                 jarURI: local:///app/flink-application.jar
-                parallelism: 2
+                parallelism: 16
                 entryClass: com.zhejianglab.astronomy.es.IngestToEs
                 args: []  
             
@@ -199,7 +261,7 @@ spec:
           ingress:
             enabled: true
             ingressClassName: "nginx"
-            hostname: minio-console.metadata.dev
+            hostname: minio-console.metadata.dev.lab.zverse.space
             path: /?(.*)
             pathType: ImplementationSpecific
             annotations: 
@@ -210,12 +272,36 @@ spec:
           apiIngress:
             enabled: true
             ingressClassName: "nginx"
-            hostname: minio-api.metadata.dev
+            hostname: minio-api.metadata.dev.lab.zverse.space
             path: /?(.*)
             pathType: ImplementationSpecific
             annotations: 
               nginx.ingress.kubernetes.io/rewrite-target: /$1
-
+          persistence:
+            enabled: true
+            storageClass: "juicefs-tidb-oss"
+            accessModes:
+              - ReadWriteMany
+            size: 20Gi
+          volumePermissions:
+            enabled: false
+            image:
+              registry: m.lab.zverse.space/docker.io
+          metrics:
+            prometheusAuthType: public
+            enabled: false
+            serviceMonitor:
+              enabled: false
+              namespace: "monitor"
+              labels:
+                release: kube-prometheus-stack
+              jobLabel: "metadata-minio"
+              interval: 30s
+            prometheusRule:
+              enabled: false
+              namespace: "monitor"
+              additionalLabels:
+                release: kube-prometheus-stack
 
         elasticsearch:
           global:
@@ -224,6 +310,8 @@ spec:
           image:
             registry: m.lab.zverse.space/docker.io
             pullPolicy: IfNotPresent
+          security:
+            enabled: false
           service:
             type: ClusterIP
           extraConfig:
@@ -253,25 +341,55 @@ spec:
             annotations:
               cert-manager.io/cluster-issuer: self-signed-ca-issuer
               nginx.ingress.kubernetes.io/rewrite-target: /$1
-            hostname: elastic-search.metadata.dev
+            hostname: elastic-search.metadata.dev.lab.zverse.space
             ingressClassName: nginx
             path: /?(.*)
             tls: false
           master:
             masterOnly: false
-            replicaCount: 1
+            replicaCount: 3
+            persistence:
+              enabled: false
+              storageClass: ""
+              size: 30Gi
             resources:
               requests:
-                cpu: 1
-                memory: 2048Mi
-              limits:
                 cpu: 2
-                memory: 4096Mi
-            heapSize: 2g
+                memory: 4Gi
+              limits:
+                cpu: 4
+                memory: 8Gi
+            heapSize: 3g
           data:
-            replicaCount: 0
+            replicaCount: 5
+            persistence:
+              enabled: true
+              storageClass: "juicefs-tidb-oss"
+              accessModes:
+                - ReadWriteMany
+              size: 200Gi
+            resources:
+              requests:
+                cpu: 2
+                memory: 8Gi
+              limits: 
+                cpu: 6
+                memory: 12Gi
+            heapSize: 6g
           coordinating:
             replicaCount: 0
+          ingest:
+            enabled: false
+          metrics:
+            enabled: false
+            image:
+              registry: m.lab.zverse.space/docker.io
+              pullPolicy: IfNotPresent
+          volumePermissions:
+            enabled: false
+            image:
+              registry: m.lab.zverse.space/docker.io
+              pullPolicy: IfNotPresent
           sysctlImage:
             enabled: true
             registry: m.lab.zverse.space/docker.io
@@ -283,12 +401,15 @@ spec:
               port: '{{ include "elasticsearch.service.ports.restAPI" . }}'
             image:
               registry: m.lab.zverse.space/docker.io
+              pullPolicy: IfNotPresent
+            persistence:
+              enabled: false
             ingress:
               enabled: true
               annotations:
                 cert-manager.io/cluster-issuer: self-signed-ca-issuer
                 nginx.ingress.kubernetes.io/rewrite-target: /$1
-              hostname: kibana.metadata.dev
+              hostname: kibana.metadata.dev.lab.zverse.space
               ingressClassName: nginx
               path: /?(.*)
               tls: false
@@ -303,36 +424,83 @@ spec:
             interbroker:
               protocol: PLAINTEXT
           controller:
-            replicaCount: 1
+            replicaCount: 3
+            persistence:
+              enabled: false
+              storageClass: ""
+              size: 20Gi
+            logPersistence:
+              enabled: false
+            livenessProbe:
+              failureThreshold: 8
             heapOpts: -Xmx3500m -Xms512m
             resources:
               requests:
-                cpu: 500m
-                memory: 1Gi
+                cpu: 1
+                memory: 2Gi
+              limits:
+                cpu: 2
+                memory: 4Gi
             extraConfig: |
               message.max.bytes=5242880
               default.replication.factor=1
               offsets.topic.replication.factor=1
               transaction.state.log.replication.factor=1
           broker:
-            replicaCount: 0
+            replicaCount: 5
             minId: 100
+            persistence:
+              enabled: true
+              storageClass: "juicefs-tidb-oss"
+              accessModes:
+                - ReadWriteMany
+              size: 200Gi
+            logPersistence:
+              enabled: false
+            livenessProbe:
+              failureThreshold: 8
             heapOpts: -Xmx3500m -Xms512m
             resources:
               requests:
                 cpu: 500m
-                memory: 1Gi
+                memory: 2Gi
+              limits: 
+                cpu: 2
+                memory: 4Gi
             extraConfig: |
               message.max.bytes=5242880
               default.replication.factor=1
               offsets.topic.replication.factor=1
               transaction.state.log.replication.factor=1
+          externalAccess:
+            enabled: false
+            autoDiscovery:
+              enabled: false
+              image:
+                registry: m.lab.zverse.space/docker.io
+          volumePermissions:
+            enabled: false
+            image:
+              registry: m.lab.zverse.space/docker.io
+          metrics:
+            kafka:
+              enabled: false
+              image:
+                registry: m.lab.zverse.space/docker.io
+            jmx:
+              enabled: false
+              image:
+                registry: m.lab.zverse.space/docker.io
+          provisioning:
+            enabled: false
           kraft:
             enabled: true
             clusterId: "1"
 
         apiServer:
           name: metadata-api-server
+          commonLabels: {}
+          commonAnnotations: {}
           serviceAccount:
             name: metadata-api-server-sa
           clusterRole:
@@ -344,11 +512,47 @@ spec:
             repository: data-and-computing-dev/meta-data
             tag: 1.0.7
             pullPolicy: Always
+            pullSecrets: []
+          automountServiceAccountToken: true
+          podLabels: {}
+          affinity: {}
+          podAnnotations: {}
+          podAffinityPreset: ""
+          podAntiAffinityPreset: soft
+          nodeAffinityPreset:
+            type: ""
+            key: ""
+            values: []
+          hostNetwork: false
+          dnsPolicy: ""
+          dnsConfig: {}
+          hostIPC: false
+          priorityClassName: ""
+          nodeSelector: {}
+          tolerations: []
+          schedulerName: ""
+          topologySpreadConstraints: []
           podSecurityContext:
             enabled: true
             fsGroupChangePolicy: Always
             supplementalGroups: []
             fsGroup: 0
+          terminationGracePeriodSeconds: ""
+          hostAliases: []
+          command: []
+          args: []
+          diagnosticMode:
+            enabled: false
+            command: ["tail", "-f", "/etc/hosts"]
+            args: []
+          extraEnvVars: []
+          extraEnvVarsCM: ""
+          extraEnvVarsSecret: ""
+          revisionHistoryLimit: 10
+          updateStrategy:
+            type: RollingUpdate
+            rollingUpdate: {}
+          lifecycleHooks: {}
           resources: 
             limits:
               cpu: 2
@@ -358,6 +562,26 @@ spec:
               cpu: 1
               ephemeral-storage: 8Gi
               memory: 1Gi
-          destination:
-            server: https://kubernetes.default.svc
-            namespace: application
+          extraVolumes: []
+          extraVolumeMounts: []
+          livenessProbe:
+            enabled: false
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+            successThreshold: 1
+          startupProbe:
+            enabled: false
+            initialDelaySeconds: 30
+            timeoutSeconds: 5
+            periodSeconds: 10
+            failureThreshold: 6
+            successThreshold: 1
+          readinessProbe:
+            enabled: false
+            initialDelaySeconds: 5
+            timeoutSeconds: 3
+            periodSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1

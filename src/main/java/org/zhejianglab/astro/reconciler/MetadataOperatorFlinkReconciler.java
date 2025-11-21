@@ -16,6 +16,7 @@ import org.apache.flink.kubernetes.operator.api.status.FlinkSessionJobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
+import org.zhejianglab.astro.customresource.enums.IngestStatus;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskSpec;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskStatus;
@@ -53,7 +54,10 @@ public class MetadataOperatorFlinkReconciler
 
       if (primary.getStatus() == null) {
         primary.setStatus(
-            FlinkIngestTaskStatus.builder().jobStatus(JobStatus.INITIALIZING).build());
+            FlinkIngestTaskStatus.builder()
+                .jobStatus(JobStatus.INITIALIZING)
+                .ingestStatus(IngestStatus.INGESTING)
+                .build());
         primaryStatusNeedUpdate = true;
       } else {
         primary.getStatus().setException("");

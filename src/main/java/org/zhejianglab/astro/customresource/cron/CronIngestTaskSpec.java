@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import lombok.extern.jackson.Jacksonized;
 import org.apache.commons.lang3.StringUtils;
 import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
+import org.zhejianglab.astro.customresource.flink.ExtraEnvs;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
 import org.zhejianglab.astro.customresource.flink.FlinkJobConfig;
 
@@ -25,6 +26,8 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
   @Nullable private Long delay;
 
   @Nullable private ExtraSecret extraSecret;
+
+  @Nullable private ExtraEnvs extraEnvs;
 
   @Nullable private Map<String, String> pathPatterns;
 
@@ -41,7 +44,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
   @Builder
   @Jacksonized
   public CronIngestTaskSpec(
-      String path,
+      List<String> paths,
       String cron,
       String platform,
       @Nullable Boolean suspend,
@@ -51,6 +54,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
       @Nullable Integer timeout,
       @Nullable List<String> tags,
       @Nullable List<String> activatedHandlers,
+      @Nullable ExtraEnvs extraEnvs,
       @Nullable ExtraSecret extraSecret,
       @Nullable Map<String, String> userProperties,
       @Nullable Map<String, String> pathPatterns,
@@ -58,7 +62,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
       @Nullable FlinkJobConfig flinkJobConfig) {
 
     this.setCron(cron);
-    this.setPath(path);
+    this.setPaths(paths);
     this.setPlatform(platform);
 
     this.setSuspend(null != suspend ? suspend : false);
@@ -72,6 +76,7 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setActivatedHandlers(null != activatedHandlers ? activatedHandlers : List.of());
 
     this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
+    this.setExtraEnvs(null != extraEnvs ? extraEnvs : ExtraEnvs.builder().build());
     this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());
     this.setImageMirror(null != imageMirror ? imageMirror : "m.daocloud.io");
     if (null == flinkJobConfig) {
@@ -82,12 +87,13 @@ public class CronIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getJobParallelism(),
                   StringUtils.EMPTY,
                   this.getPlatform(),
-                  this.getPath(),
+                  this.getPaths(),
                   this.getUserProperties(),
                   this.getActivatedHandlers(),
                   this.getTags(),
                   this.getPathPatterns(),
                   this.getAllowedSuffixes(),
+                  this.getExtraEnvs(),
                   this.getExtraSecret());
       this.flinkJobConfig.getJob().setParallelism(this.jobParallelism);
     } else {

@@ -19,6 +19,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   private static final ObjectMapper objectMapper = new ObjectMapper();
 
   @Nullable private ExtraSecret extraSecret;
+  @Nullable private ExtraEnvs extraEnvs;
   @Nullable private Map<String, String> pathPatterns;
   @Nullable private List<String> allowedSuffixes;
   @Nullable private List<String> activatedHandlers;
@@ -33,7 +34,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
   @Builder
   @Jacksonized
   public FlinkIngestTaskSpec(
-      String path,
+      List<String> paths,
       String platform,
       @Nullable String s3TableName,
       @Nullable Integer jobParallelism,
@@ -41,12 +42,13 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       @Nullable Integer timeout,
       @Nullable List<String> tags,
       @Nullable ExtraSecret extraSecret,
+      @Nullable ExtraEnvs extraEnvs,
       @Nullable List<String> activatedHandlers,
       @Nullable Map<String, String> userProperties,
       @Nullable Map<String, String> pathPatterns,
       @Nullable String batchId,
       @Nullable FlinkJobConfig flinkJobConfig) {
-    this.setPath(path);
+    this.setPaths(paths);
     this.setPlatform(platform);
 
     this.setJobParallelism(null != jobParallelism ? jobParallelism : 1);
@@ -77,12 +79,13 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
                   this.getJobParallelism(),
                   this.getBatchId(),
                   this.getPlatform(),
-                  this.getPath(),
+                  this.getPaths(),
                   this.getUserProperties(),
                   this.getActivatedHandlers(),
                   this.getTags(),
                   this.getPathPatterns(),
                   this.getAllowedSuffixes(),
+                  this.getExtraEnvs(),
                   this.getExtraSecret());
       this.flinkJobConfig.getJob().setParallelism(this.jobParallelism);
     } else {

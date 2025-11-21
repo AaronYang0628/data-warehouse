@@ -11,7 +11,7 @@ import lombok.*;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AbstractIngestTaskSpec {
 
-  @Required private String path;
+  @Required private List<String> paths;
 
   @Required private String platform;
 

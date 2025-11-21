@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 import lombok.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -61,12 +62,13 @@ public class FlinkJobConfig {
       Integer parallelism,
       String bacthId,
       String platform,
-      String scanPath,
+      List<String> scanPaths,
       Map<String, String> userProperties,
       List<String> activatedHandlers,
       List<String> tags,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
+      ExtraEnvs extraEnvs,
       ExtraSecret extraSecret) {
     if (null != bacthId && !bacthId.isEmpty()) {
       this.jobArgsMap.put("BATCH_ID", bacthId);
@@ -77,7 +79,7 @@ public class FlinkJobConfig {
         generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes, activatedHandlers));
 
     this.jobArgsMap.put("PLATFORM", platform);
-    this.jobArgsMap.put("SCAN_PATH", scanPath);
+    this.jobArgsMap.put("SCAN_PATHS", scanPaths.stream().collect(Collectors.joining(",")));
     if (null != extraSecret) {
       this.jobArgsMap.putAll(extraSecret.getSecretData());
     }
@@ -85,6 +87,11 @@ public class FlinkJobConfig {
     this.jobArgsMap.put(
         "KAFKA_BOOTSTRAP_SERVER",
         System.getenv().getOrDefault("KAFKA_BOOTSTRAP_SERVER", DEFAULT_KAFKA_BOOTSTRAP_SERVER));
+
+    this.jobArgsMap.put("ES_HOST", extraEnvs.getEsHost());
+    this.jobArgsMap.put("ES_PORT", extraEnvs.getEsPort());
+    this.jobArgsMap.put("ES_DATASET_INDEX", extraEnvs.getDatasetIndex());
+    this.jobArgsMap.putAll(extraEnvs.getOthers());
 
     return FlinkJobConfig.builder()
         .job(
@@ -103,7 +110,7 @@ public class FlinkJobConfig {
       Integer parallelism,
       String bacthId,
       String platform,
-      String scanPath,
+      List<String> scanPaths,
       Map<String, String> userProperties,
       List<String> activatedHandlers,
       List<String> tags,
@@ -118,7 +125,7 @@ public class FlinkJobConfig {
         generateScanConfig(userProperties, pathPatterns, tags, allowedSuffixes, activatedHandlers));
 
     this.jobArgsMap.put("PLATFORM", platform);
-    this.jobArgsMap.put("SCAN_PATH", scanPath);
+    this.jobArgsMap.put("SCAN_PATH", scanPaths.stream().collect(Collectors.joining(",")));
     if (null != extraSecret) {
       this.jobArgsMap.putAll(extraSecret.getSecretData());
     }

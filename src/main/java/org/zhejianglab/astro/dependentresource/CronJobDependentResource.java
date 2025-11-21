@@ -13,6 +13,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.CronIngestTask;
@@ -91,10 +92,14 @@ public class CronJobDependentResource
                                                                         + System.currentTimeMillis()
                                                                         + "\n"
                                                                         + "spec: \n"
-                                                                        + "  path: "
+                                                                        + "  paths: "
                                                                         + primary
                                                                             .getSpec()
-                                                                            .getPath()
+                                                                            .getPaths()
+                                                                            .stream()
+                                                                            .collect(
+                                                                                Collectors.joining(
+                                                                                    ","))
                                                                         + "\n"
                                                                         + "  platform: "
                                                                         + primary

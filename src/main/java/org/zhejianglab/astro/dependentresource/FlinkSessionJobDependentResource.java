@@ -58,7 +58,7 @@ public class FlinkSessionJobDependentResource
                   primary.getSpec().getJobParallelism(),
                   primary.getSpec().getBatchId(),
                   primary.getSpec().getPlatform(),
-                  primary.getSpec().getPath(),
+                  primary.getSpec().getPaths(),
                   primary.getSpec().getUserProperties(),
                   primary.getSpec().getActivatedHandlers(),
                   primary.getSpec().getTags(),

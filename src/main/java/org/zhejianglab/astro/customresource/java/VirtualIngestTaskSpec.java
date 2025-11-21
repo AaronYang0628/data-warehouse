@@ -12,6 +12,7 @@ import org.zhejianglab.astro.customresource.abs.AbstractIngestTaskSpec;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class VirtualIngestTaskSpec extends AbstractIngestTaskSpec {
 
+  private String path;
   private String extraSecret;
   private Map<String, String> pathPatterns;
   private List<String> allowedSuffixes;

@@ -9,6 +9,6 @@ jobs:
       - name: Sync App
         uses: AaronYang0628/apply-and-sync-argocd@v1.0.6
         with:
-          argocd-server: '192.168.100.125:30443'
+          argocd-server: '10.109.80.38:30443'
           argocd-token: ${{ secrets.ARGOCD_TOKEN }}
           application-yaml-path: "environments/ops/argocd/operator.app.yaml"

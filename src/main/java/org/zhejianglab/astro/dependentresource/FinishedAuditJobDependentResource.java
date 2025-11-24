@@ -12,16 +12,16 @@ import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
 
 @KubernetesDependent
-public class FinishedJobCronJobDependentResource
+public class FinishedAuditJobDependentResource
     extends CRUDKubernetesDependentResource<Job, FlinkIngestTask> {
 
   private static final Logger log =
-      LoggerFactory.getLogger(FinishedJobCronJobDependentResource.class);
+      LoggerFactory.getLogger(FinishedAuditJobDependentResource.class);
 
   private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
   private static final String KAFKA_ES_IMAGE = "docker.io/bitnami/kubectl:1.28-debian-11";
 
-  public FinishedJobCronJobDependentResource() {
+  public FinishedAuditJobDependentResource() {
     super(Job.class);
   }
 
@@ -59,10 +59,8 @@ public class FinishedJobCronJobDependentResource
   }
 
   private String buildKafkaEsCommand(FlinkIngestTask primary) {
-    // 构建向Kafka发送消息并轮询ES的命令
     StringBuilder command = new StringBuilder();
 
-    // 1. 向Kafka发送消息
     command
         .append("echo 'Sending message to Kafka for job ")
         .append(primary.getMetadata().getName())
@@ -77,7 +75,6 @@ public class FinishedJobCronJobDependentResource
         .append("--bootstrap-server localhost:9092 ")
         .append("--topic ingest-to-es && ");
 
-    // 2. 轮询ES
     command.append("echo 'Polling Elasticsearch...' && ");
     command
         .append(
@@ -88,11 +85,10 @@ public class FinishedJobCronJobDependentResource
         .append(primary.getMetadata().getName())
         .append("\" && ");
 
-    // 3. 添加循环轮询逻辑
     command
         .append("for i in $(seq 1 10); do ")
         .append("echo \"Polling attempt $i\" && ")
-        .append("sleep 30 && ") // 每30秒轮询一次
+        .append("sleep 30 && ")
         .append(
             "kubectl exec -it $(kubectl get pods -l app=elasticsearch -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
         .append("\"http://localhost:9200/")

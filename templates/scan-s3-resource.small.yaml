@@ -4,9 +4,17 @@ metadata:
   name: ingest-table-or-fits-from-s3-small
 spec:
   paths: 
-    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000019/MS"
-    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000020/MS"
-    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000021/MS"
+    - "s3://fits-files/fits_copy"
   allowedSuffixes:
     - fits
   platform: s3
+  extraEnvs:
+    esHost: "warehouse-elasticsearch.warehouse.svc.cluster.local"
+    esPort: 9200
+    datasetIndex: "datasetindex"
+  extraSecret: 
+    name: munge-oss-ingestion-credential
+    namespace: warehouse
+    accessKeyName: access-key
+    secretKeyName: secret-key
+    endpointKeyName: s3-endpoint

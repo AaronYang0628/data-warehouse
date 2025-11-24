@@ -20,7 +20,7 @@ import org.zhejianglab.astro.customresource.enums.IngestStatus;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskSpec;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskStatus;
-import org.zhejianglab.astro.dependentresource.FinishedJobCronJobDependentResource;
+import org.zhejianglab.astro.dependentresource.FinishedAuditJobDependentResource;
 import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
 import org.zhejianglab.astro.utils.SecretConstant;
@@ -34,7 +34,7 @@ import org.zhejianglab.astro.utils.SecretConstant;
       @Dependent(
           type = FlinkSessionJobDependentResource.class,
           reconcilePrecondition = FlinkSessionJobDependentCondition.class),
-      @Dependent(type = FinishedJobCronJobDependentResource.class)
+      @Dependent(type = FinishedAuditJobDependentResource.class)
     })
 public class MetadataOperatorFlinkReconciler
     implements Reconciler<FlinkIngestTask>, Cleaner<FlinkIngestTask> {

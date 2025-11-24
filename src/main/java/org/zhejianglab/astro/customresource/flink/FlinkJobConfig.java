@@ -116,6 +116,7 @@ public class FlinkJobConfig {
       List<String> tags,
       Map<String, String> pathPatterns,
       List<String> allowedSuffixes,
+      ExtraEnvs extraEnvs,
       ExtraSecret extraSecret) {
     if (null != bacthId && !bacthId.isEmpty()) {
       this.jobArgsMap.put("BATCH_ID", bacthId);
@@ -129,6 +130,10 @@ public class FlinkJobConfig {
     if (null != extraSecret) {
       this.jobArgsMap.putAll(extraSecret.getSecretData());
     }
+
+    this.jobArgsMap.put("ES_HOST", extraEnvs.getEsHost());
+    this.jobArgsMap.put("ES_PORT", extraEnvs.getEsPort());
+    this.jobArgsMap.put("ES_DATASET_INDEX", extraEnvs.getDatasetIndex());
 
     this.jobArgsMap.put(
         "KAFKA_BOOTSTRAP_SERVER",

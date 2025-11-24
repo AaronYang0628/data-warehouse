@@ -17,5 +17,5 @@ dependencies:
 - name: flink-kubernetes-operator
   repository: https://aaronyang0628.github.io/helm-chart-mirror/charts
   version: 1.11.0
-digest: sha256:f032df6bd4fb191730cd97ccd4d3e6e7fd6228fc240c9bdf9be80238cf90436c
-generated: "2025-07-30T09:54:59.346808947+08:00"
+digest: sha256:327a30f0a92efc5c76d320c4be8f7801bd0256f2cd965f0bb3c557faadbaf6a5
+generated: "2025-11-24T01:54:08.836796979Z"

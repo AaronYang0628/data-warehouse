@@ -22,6 +22,10 @@ spec:
       name: "EXCEPTION"
       priority: 4
       type: "string"
+    - jsonPath: ".status.ingestStatus"
+      name: "INGEST STATUS"
+      priority: 6
+      type: "string"
     - jsonPath: ".status.jobStatus"
       name: "JOB STATUS"
       priority: 3
@@ -42,6 +46,19 @@ spec:
                 type: "array"
               batchId:
                 type: "string"
+              extraEnvs:
+                properties:
+                  datasetIndex:
+                    type: "string"
+                  esHost:
+                    type: "string"
+                  esPort:
+                    type: "integer"
+                  others:
+                    additionalProperties:
+                      type: "string"
+                    type: "object"
+                type: "object"
               extraSecret:
                 properties:
                   accessKeyName:
@@ -9567,12 +9584,14 @@ spec:
                 type: "object"
               jobParallelism:
                 type: "integer"
-              path:
-                type: "string"
               pathPatterns:
                 additionalProperties:
                   type: "string"
                 type: "object"
+              paths:
+                items:
+                  type: "string"
+                type: "array"
               platform:
                 type: "string"
               tags:
@@ -9586,7 +9605,7 @@ spec:
                   type: "string"
                 type: "object"
             required:
-            - "path"
+            - "paths"
             - "platform"
             type: "object"
           status:
@@ -9594,6 +9613,11 @@ spec:
               batchId:
                 type: "string"
               exception:
+                type: "string"
+              ingestStatus:
+                enum:
+                - "FINISHED"
+                - "INGESTING"
                 type: "string"
               jobStatus:
                 type: "string"

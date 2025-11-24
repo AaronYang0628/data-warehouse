@@ -3,7 +3,10 @@ kind: FlinkIngestTask
 metadata:
   name: ingest-table-or-fits-from-s3-small
 spec:
-  path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000019/MS"
+  paths: 
+    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000019/MS"
+    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000020/MS"
+    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000021/MS"
   allowedSuffixes:
     - fits
   platform: s3

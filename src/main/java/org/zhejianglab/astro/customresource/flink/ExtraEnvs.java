@@ -2,6 +2,7 @@ package org.zhejianglab.astro.customresource.flink;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import javax.annotation.Nullable;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -18,10 +19,14 @@ public class ExtraEnvs {
 
   @Builder
   @Jacksonized
-  public ExtraEnvs(String esHost, Integer esPort, String datasetIndex, Map<String, String> others) {
-    this.setDatasetIndex(null != datasetIndex ? datasetIndex : "");
-    this.setEsHost(null != esHost ? esHost : "");
-    this.setEsPort(null != esPort ? esPort : 5044);
+  public ExtraEnvs(
+      @Nullable String esHost,
+      @Nullable Integer esPort,
+      @Nullable String datasetIndex,
+      @Nullable Map<String, String> others) {
+    this.setDatasetIndex(null != datasetIndex ? datasetIndex : "datasetIndex");
+    this.setEsHost(null != esHost ? esHost : "elasticsearch");
+    this.setEsPort(null != esPort ? esPort : 9200);
     this.setOthers(null != others ? others : new ConcurrentHashMap<>());
   }
 }

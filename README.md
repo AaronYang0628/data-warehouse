@@ -26,7 +26,7 @@ helm upgrade  --create-namespace -n warehouse --install -f metadata.values.yaml 
 ### flink job
 kubectl -n metadata apply -f templates/scan-s3-resource.big.yaml
 kubectl -n metadata apply -f templates/scan-s3-resource.medium.yaml
-kubectl -n metadata apply -f templates/scan-s3-resource.small.yaml
+kubectl -n warehouse apply -f templates/scan-s3-resource.small.yaml
 
 # kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.long.yaml
 # kubectl --kubeconfig=/root/.kube/zverse_config get -n metadata apply -f templates/scan-s3-resource.short.yaml

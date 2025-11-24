@@ -8,7 +8,7 @@ global:
 resourcesPreset: "nano"
 
 ingestTaskOperator:
-  enabled: true
+  enabled: false
   name: ingest-operator
   commonLabels: {}
   commonAnnotations: {}
@@ -134,7 +134,7 @@ certManager:
       repository: m.daocloud.io/quay.io/jetstack/cert-manager-startupapicheck
 
 flinkk8soperator:
-  enabled: false
+  enabled: true
   image:
     repository: m.lab.zverse.space/ghcr.io/apache/flink-kubernetes-operator
     tag: 1.11.0
@@ -143,8 +143,6 @@ flinkk8soperator:
     append: true
     flink-conf.yaml: |+
       kubernetes.operator.flink.client.timeout: 120 s
-  existingNamespace: flink
-
 flink:
   session:
     version: v1_19
@@ -184,11 +182,11 @@ flink:
       className: nginx
       template: flink.session.k8s.io/{{namespace}}/{{name}}/?(.*)
     persistence:
-      enabled: true
+      enabled: false
       accessModes:
         - ReadWriteMany
       size: 10Gi
-      storageClass: "rook-cephfs-01"
+      storageClass: "local-path"
   residenceJobs:
     consumeKafkaToES:
       enabled: true
@@ -257,8 +255,8 @@ minio:
     annotations: 
       nginx.ingress.kubernetes.io/rewrite-target: /$1
   persistence:
-    enabled: true
-    storageClass: "rook-cephfs-01"
+    enabled: false
+    storageClass: "local-path"
     accessModes:
       - ReadWriteMany
     size: 20Gi
@@ -342,8 +340,8 @@ elasticsearch:
   data:
     replicaCount: 3
     persistence:
-      enabled: true
-      storageClass: "rook-cephfs-01"
+      enabled: false
+      storageClass: "local-path"
       accessModes:
         - ReadWriteMany
       size: 20Gi
@@ -418,8 +416,8 @@ kafka:
     replicaCount: 0
     minId: 100
     persistence:
-      enabled: true
-      storageClass: "rook-cephfs-01"
+      enabled: false
+      storageClass: "local-path"
       accessModes:
         - ReadWriteMany
       size: 20Gi
@@ -463,6 +461,7 @@ kafka:
     clusterId: "1"
 
 apiServer:
+  enabled: false
   name: metadata-api-server
   commonLabels: {}
   commonAnnotations: {}

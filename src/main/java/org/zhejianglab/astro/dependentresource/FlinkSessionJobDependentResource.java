@@ -64,6 +64,7 @@ public class FlinkSessionJobDependentResource
                   primary.getSpec().getTags(),
                   primary.getSpec().getPathPatterns(),
                   primary.getSpec().getAllowedSuffixes(),
+                  primary.getSpec().getExtraEnvs(),
                   primary.getSpec().getExtraSecret());
       flinkSessionJobSpecBuilder.job(updatedJobConfig.getJob());
 

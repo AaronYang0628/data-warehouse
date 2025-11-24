@@ -59,6 +59,7 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
     this.setUserProperties(null != userProperties ? userProperties : Map.of());
     this.setActivatedHandlers(null != activatedHandlers ? activatedHandlers : List.of());
 
+    this.setExtraEnvs(extraEnvs);
     this.setExtraSecret(null != extraSecret ? extraSecret : ExtraSecret.builder().build());
     this.setPathPatterns(null != pathPatterns ? pathPatterns : Map.of());
 

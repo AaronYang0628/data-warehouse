@@ -44,6 +44,19 @@ spec:
                 type: "string"
               delay:
                 type: "integer"
+              extraEnvs:
+                properties:
+                  datasetIndex:
+                    type: "string"
+                  esHost:
+                    type: "string"
+                  esPort:
+                    type: "integer"
+                  others:
+                    additionalProperties:
+                      type: "string"
+                    type: "object"
+                type: "object"
               extraSecret:
                 properties:
                   accessKeyName:
@@ -9571,12 +9584,14 @@ spec:
                 type: "string"
               jobParallelism:
                 type: "integer"
-              path:
-                type: "string"
               pathPatterns:
                 additionalProperties:
                   type: "string"
                 type: "object"
+              paths:
+                items:
+                  type: "string"
+                type: "array"
               platform:
                 type: "string"
               suspend:
@@ -9593,7 +9608,7 @@ spec:
                 type: "object"
             required:
             - "cron"
-            - "path"
+            - "paths"
             - "platform"
             type: "object"
           status:

@@ -98,6 +98,19 @@ public class MetadataOperatorFlinkReconciler
         primarySpecNeedUpdate = true;
       }
 
+      if (null == primary.getSpec().getExtraEnvs()) {
+        primary
+            .getSpec()
+            .setExtraEnvs(org.zhejianglab.astro.customresource.flink.ExtraEnvs.builder().build());
+        primarySpecNeedUpdate = true;
+      } else {
+        primary
+            .getSpec()
+            .setExtraEnvs(org.zhejianglab.astro.customresource.flink.ExtraEnvs.builder().build());
+        primary.getSpec().setExtraEnvs(primary.getSpec().getExtraEnvs());
+        primarySpecNeedUpdate = true;
+      }
+
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
         primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());

@@ -4,7 +4,7 @@ metadata:
   name: ingest-table-or-fits-from-s3-small
 spec:
   paths: 
-    - "s3://fits-files/fits_copy"
+    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000019/MS"
   allowedSuffixes:
     - fits
   platform: s3

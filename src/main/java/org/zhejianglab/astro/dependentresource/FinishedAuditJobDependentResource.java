@@ -10,6 +10,7 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDep
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
+import org.zhejianglab.astro.customresource.enums.IngestStatus;
 
 @KubernetesDependent
 public class FinishedAuditJobDependentResource
@@ -27,7 +28,16 @@ public class FinishedAuditJobDependentResource
 
   @Override
   protected Job desired(FlinkIngestTask primary, Context<FlinkIngestTask> context) {
-    String jobName = primary.getMetadata().getName() + "-finished-cronjob";
+    // Check if the ingest status is FINISHED before creating the job
+    if (primary.getStatus() == null
+        || primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
+      log.info(
+          "FlinkIngestTask {} is not in FINISHED state, skipping job creation",
+          primary.getMetadata().getName());
+      return null;
+    }
+
+    String jobName = primary.getMetadata().getName() + "-finished-audit-job";
 
     return new JobBuilder()
         .withMetadata(
@@ -69,16 +79,24 @@ public class FinishedAuditJobDependentResource
     command
         .append("echo '{\"jobName\":\"")
         .append(primary.getMetadata().getName())
-        .append("\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"FINISHED\"}' | ")
+        .append("\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"FINISHED\"}' && ")
+        .append("echo {\"topic\":" + primary.getSpec().getBatchId() + "\"} | ")
+        .append("kubectl -n " + primary.getMetadata().getNamespace())
+        .append(" exec -i $(kubectl")
+        .append(" -n " + primary.getMetadata().getNamespace())
         .append(
-            "kubectl exec -it $(kubectl get pods -l app=kafka -o jsonpath='{.items[0].metadata.name}') -- kafka-console-producer.sh ")
+            " get pods -l app.kubernetes.io/name=kafka  -o jsonpath='{.items[0].metadata.name}') -- kafka-console-producer.sh ")
         .append("--bootstrap-server localhost:9092 ")
-        .append("--topic ingest-to-es && ");
+        .append("--topic ingest-to-es ");
 
     command.append("echo 'Polling Elasticsearch...' && ");
     command
         .append(
-            "kubectl exec -it $(kubectl get pods -l app=elasticsearch -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
+            "kubectl -n "
+                + primary.getMetadata().getNamespace()
+                + " exec -it $(kubectl "
+                + primary.getMetadata().getNamespace()
+                + " get pods -l app.kubernetes.io/name=elasticsearch -l app.kubernetes.io/component=master -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
         .append("\"http://localhost:9200/")
         .append(primary.getMetadata().getName())
         .append("/_search?q=jobName:")
@@ -90,7 +108,11 @@ public class FinishedAuditJobDependentResource
         .append("echo \"Polling attempt $i\" && ")
         .append("sleep 30 && ")
         .append(
-            "kubectl exec -it $(kubectl get pods -l app=elasticsearch -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
+            "kubectl "
+                + primary.getMetadata().getNamespace()
+                + " exec -it $(kubectl "
+                + primary.getMetadata().getNamespace()
+                + " get pods -l app.kubernetes.io/name=elasticsearch -l app.kubernetes.io/component=master -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
         .append("\"http://localhost:9200/")
         .append(primary.getMetadata().getName())
         .append("/_search?q=jobName:")

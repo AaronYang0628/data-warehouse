@@ -20,6 +20,7 @@ import org.zhejianglab.astro.customresource.enums.IngestStatus;
 import org.zhejianglab.astro.customresource.flink.ExtraSecret;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskSpec;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskStatus;
+import org.zhejianglab.astro.dependentresource.FinishedJobCronJobDependentResource;
 import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
 import org.zhejianglab.astro.utils.SecretConstant;
@@ -33,6 +34,7 @@ import org.zhejianglab.astro.utils.SecretConstant;
       @Dependent(
           type = FlinkSessionJobDependentResource.class,
           reconcilePrecondition = FlinkSessionJobDependentCondition.class),
+      @Dependent(type = FinishedJobCronJobDependentResource.class)
     })
 public class MetadataOperatorFlinkReconciler
     implements Reconciler<FlinkIngestTask>, Cleaner<FlinkIngestTask> {
@@ -129,9 +131,16 @@ public class MetadataOperatorFlinkReconciler
 
           if (flinkSessionJobStatus.getJobStatus() != null) {
             if (flinkSessionJobStatus.getJobStatus().getState() != null) {
-              primary
-                  .getStatus()
-                  .setJobStatus(flinkSessionJobStatus.getJobStatus().getState().name());
+              String jobState = flinkSessionJobStatus.getJobStatus().getState().name();
+              primary.getStatus().setJobStatus(jobState);
+
+              // Check if the job is finished and handle accordingly
+              if ("FINISHED".equals(jobState)) {
+                log.info(
+                    "Flink job {} has finished. Creating CronJob for post-processing.",
+                    primary.getMetadata().getName());
+                // The FinishedJobCronJobDependentResource will be automatically reconciled
+              }
             } else {
               primary.getStatus().setJobStatus(JobStatus.INITIALIZING.name());
             }

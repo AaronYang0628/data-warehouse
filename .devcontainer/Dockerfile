@@ -31,7 +31,7 @@ RUN mkdir -p /etc/apt/keyrings && \
 ENV JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64
 
 # 安装Maven
-ARG MAVEN_VERSION=3.9.10
+ARG MAVEN_VERSION=3.9.11
 RUN wget https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz -O /tmp/maven.tar.gz && \
     mkdir -p /opt/maven && \
     tar -C /opt/maven -xzf /tmp/maven.tar.gz --strip-components=1 && \

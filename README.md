@@ -7,7 +7,7 @@
 ```shell
 ### flink job
 kubectl apply -f environments/helm/metadata-environment/crds/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yaml
-
+# kubectl apply -f /workspaces/data-warehouse/target/classes/META-INF/fabric8/flinkingesttasks.org.zhejianglab.astro.metadata-v1.yml
 ### cron job
 kubectl apply -f environments/helm/metadata-environment/crds/croningesttasks.org.zhejianglab.astro.metadata-v1.yaml
 

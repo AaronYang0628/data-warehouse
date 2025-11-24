@@ -122,11 +122,6 @@
             <version>${slf4j.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.code.findbugs</groupId>
-            <artifactId>jsr305</artifactId>
-            <version>3.0.2</version>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>${slf4j.version}</version>
@@ -215,7 +210,11 @@
                         <image>m.daocloud.io/docker.io/library/eclipse-temurin:17-jre</image>
                     </from>
                     <to>
-                        <image>harbor.zhejianglab.com/ay-dev/metadata-crd-operator:v20250918</image>
+                        <image>harbor.zhejianglab.com/ay-dev/metadata-crd-operator:v20251124</image>
+                        <auth>
+                            <username>byang628@zhejianglab.com</username>
+                            <password>Aaron0628.</password>
+                        </auth>
                     </to>
                 </configuration>
             </plugin>

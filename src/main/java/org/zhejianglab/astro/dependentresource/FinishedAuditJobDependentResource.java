@@ -18,7 +18,7 @@ public class FinishedAuditJobDependentResource
   private static final Logger log =
       LoggerFactory.getLogger(FinishedAuditJobDependentResource.class);
 
-  public static final String AUDIT_JOB_NAME_SUFFIX = "finished-audit-job";
+  public static final String AUDIT_JOB_NAME_SUFFIX = "-finished-audit-job";
 
   private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
   private static final String KAFKA_ES_IMAGE =

@@ -35,32 +35,20 @@ public class FlinkSessionJobDependentResource
       return null;
     }
 
+    // 关键修改：如果任务已完成，直接返回 null，让框架忽略这个资源
     if (primary.getStatus() != null
         && primary.getStatus().getIngestStatus() == IngestStatus.FINISHED) {
-      log.warn(
-          "Task {} is already finished, but desired() was called. This should not happen.",
+      log.info(
+          "Task {} is FINISHED, returning null to stop managing FlinkSessionJob",
           primary.getMetadata().getName());
-
-      FlinkSessionJob existingJob =
-          context
-              .getClient()
-              .resources(FlinkSessionJob.class)
-              .inNamespace(primary.getMetadata().getNamespace())
-              .withName(primary.getMetadata().getName())
-              .get();
-
-      if (existingJob != null) {
-        if (existingJob.getSpec().getJob().getState() != JobState.SUSPENDED) {
-          existingJob.getSpec().getJob().setState(JobState.SUSPENDED);
-        }
-        return existingJob;
-      }
+      return null;
     }
 
     boolean isFinished =
         primary.getStatus() != null
             && primary.getStatus().getIngestStatus() == IngestStatus.FINISHED;
 
+    // 后面是正常的创建逻辑
     ObjectMeta metadata =
         new ObjectMetaBuilder()
             .withName(primary.getMetadata().getName())

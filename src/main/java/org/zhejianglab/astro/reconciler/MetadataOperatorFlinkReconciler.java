@@ -1,6 +1,7 @@
 package org.zhejianglab.astro.reconciler;
 
 import io.fabric8.kubernetes.api.model.Secret;
+import io.fabric8.kubernetes.api.model.batch.v1.Job;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.javaoperatorsdk.operator.api.reconciler.*;
@@ -35,7 +36,8 @@ import org.zhejianglab.astro.utils.SecretConstant;
     dependents = {
       @Dependent(
           type = FlinkSessionJobDependentResource.class,
-          reconcilePrecondition = FlinkSessionJobDependentCondition.class),
+          reconcilePrecondition = FlinkSessionJobDependentCondition.class,
+          deletePostcondition = FlinkSessionJobDependentCondition.class),
       @Dependent(
           type = FinishedAuditJobDependentResource.class,
           reconcilePrecondition = FinishedAuditJobDependentCondition.class),
@@ -213,8 +215,30 @@ public class MetadataOperatorFlinkReconciler
         context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
       } else {
         log.info("Job is finished, skipping workflow reconciliation to prevent restart");
-        // TODO 删除 session job dependent resource
-        // context.managedWorkflowAndDependentResourceContext().deleteDependentResources();
+
+        // 检查 audit job 是否已存在
+        String auditJobName =
+            primary.getMetadata().getName()
+                + FinishedAuditJobDependentResource.AUDIT_JOB_NAME_SUFFIX;
+
+        Job existingAuditJob =
+            context
+                .getClient()
+                .batch()
+                .v1()
+                .jobs()
+                .inNamespace(primary.getMetadata().getNamespace())
+                .withName(auditJobName)
+                .get();
+
+        if (existingAuditJob == null) {
+          // Audit job 不存在，需要创建
+          log.info("Audit job does not exist, reconciling workflow to create it");
+          context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
+        } else {
+          log.debug("Audit job already exists, no action needed");
+          // 不调用 reconcileManagedWorkflow()，避免重复处理
+        }
       }
 
       if (primarySpecNeedUpdate && primaryStatusNeedUpdate) {

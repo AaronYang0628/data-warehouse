@@ -122,12 +122,19 @@ rules:
     - configmaps
     - secrets
     - namespaces
+    - pods
     verbs:
     - create
     - get
     - delete
     - watch
     - list
+  - apiGroups:
+    - ""
+    resources:
+    - pods/exec
+    verbs:
+    - create
   - apiGroups:
     - "apps/v1"  
     resources:

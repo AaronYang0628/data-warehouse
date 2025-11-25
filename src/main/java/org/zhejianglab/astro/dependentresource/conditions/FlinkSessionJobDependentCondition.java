@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
 import org.zhejianglab.astro.customresource.Platform;
+import org.zhejianglab.astro.customresource.enums.IngestStatus;
 
 public class FlinkSessionJobDependentCondition
     implements Condition<FlinkSessionJob, FlinkIngestTask> {
@@ -21,15 +22,23 @@ public class FlinkSessionJobDependentCondition
       FlinkIngestTask primary,
       Context<FlinkIngestTask> context) {
 
-    if (primary.getStatus() != null && "FINISHED".equals(primary.getStatus().getJobStatus())) {
+    if (primary.getStatus() != null
+        && primary.getStatus().getIngestStatus() == IngestStatus.FINISHED) {
       log.info(
-          "Flink job {} is already finished, skipping FlinkSessionJob creation",
+          "FlinkIngestTask {} is already finished, condition not met",
           primary.getMetadata().getName());
       return false;
     }
 
-    return primary.getSpec().getPlatform().equalsIgnoreCase(Platform.OSS.getProtocol())
-        || primary.getSpec().getPlatform().equalsIgnoreCase(Platform.S3.getProtocol())
-        || primary.getSpec().getPlatform().equalsIgnoreCase(Platform.JDBC.getProtocol());
+    boolean platformMatches =
+        primary.getSpec().getPlatform().equalsIgnoreCase(Platform.OSS.getProtocol())
+            || primary.getSpec().getPlatform().equalsIgnoreCase(Platform.S3.getProtocol())
+            || primary.getSpec().getPlatform().equalsIgnoreCase(Platform.JDBC.getProtocol());
+
+    if (!platformMatches) {
+      log.debug("Platform {} does not match, condition not met", primary.getSpec().getPlatform());
+    }
+
+    return platformMatches;
   }
 }

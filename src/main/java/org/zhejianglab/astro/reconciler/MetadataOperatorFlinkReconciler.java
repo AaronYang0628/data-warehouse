@@ -123,6 +123,8 @@ public class MetadataOperatorFlinkReconciler
       Optional<FlinkSessionJob> flinkSessionJobOptional =
           retrieveFlinkSessionJobInfo(context.getClient(), primary);
 
+      boolean jobIsFinished = false;
+
       if (flinkSessionJobOptional.isPresent()) {
         FlinkSessionJob flinkSessionJob = flinkSessionJobOptional.get();
         FlinkSessionJobStatus flinkSessionJobStatus = flinkSessionJob.getStatus();
@@ -134,7 +136,11 @@ public class MetadataOperatorFlinkReconciler
             if (flinkSessionJobStatus.getJobStatus().getState() != null) {
               String jobState = flinkSessionJobStatus.getJobStatus().getState().name();
               primary.getStatus().setJobStatus(jobState);
-              if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
+
+              if ("FINISHED".equals(jobState)) {
+                jobIsFinished = true;
+                primary.getStatus().setIngestStatus(IngestStatus.FINISHED);
+              } else if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
                 primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
               }
 
@@ -149,6 +155,13 @@ public class MetadataOperatorFlinkReconciler
             primaryStatusNeedUpdate = true;
           }
         }
+      }
+
+      if (!jobIsFinished) {
+        log.debug("Job is not finished, reconciling workflow");
+        context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
+      } else {
+        log.info("Job is finished, skipping workflow reconciliation to prevent restart");
       }
 
       List<String> finalizers = primary.getMetadata().getFinalizers();

@@ -21,7 +21,6 @@ public class FlinkSessionJobDependentCondition
       FlinkIngestTask primary,
       Context<FlinkIngestTask> context) {
 
-    // 如果作业已完成，则不需要重新创建FlinkSessionJob
     if (primary.getStatus() != null && "FINISHED".equals(primary.getStatus().getJobStatus())) {
       log.info(
           "Flink job {} is already finished, skipping FlinkSessionJob creation",

@@ -20,7 +20,8 @@ public class FinishedAuditJobDependentResource
       LoggerFactory.getLogger(FinishedAuditJobDependentResource.class);
 
   private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
-  private static final String KAFKA_ES_IMAGE = "docker.io/bitnami/kubectl:1.28-debian-11";
+  private static final String KAFKA_ES_IMAGE =
+      "m.daocloud.io/docker.io/bitnami/kubectl:1.28-debian-11";
 
   public FinishedAuditJobDependentResource() {
     super(Job.class);
@@ -34,7 +35,7 @@ public class FinishedAuditJobDependentResource
       log.info(
           "FlinkIngestTask {} is not in FINISHED state, skipping job creation",
           primary.getMetadata().getName());
-      return null;
+      return createEmptyJob(primary);
     }
 
     String jobName = primary.getMetadata().getName() + "-finished-audit-job";
@@ -61,6 +62,37 @@ public class FinishedAuditJobDependentResource
                         .withName("kubectl")
                         .withImage(KAFKA_ES_IMAGE)
                         .withCommand("sh", "-c", buildKafkaEsCommand(primary))
+                        .endContainer()
+                        .endSpec()
+                        .build())
+                .build())
+        .build();
+  }
+
+  private Job createEmptyJob(FlinkIngestTask primary) {
+    String jobName = primary.getMetadata().getName();
+    if (jobName.length() > 32) {
+      jobName = jobName.substring(0, 32);
+    }
+    jobName += "-audit-job-placeholder";
+
+    return new JobBuilder()
+        .withMetadata(
+            new ObjectMetaBuilder()
+                .withName(jobName)
+                .withNamespace(primary.getMetadata().getNamespace())
+                .build())
+        .withSpec(
+            new JobSpecBuilder()
+                .withSuspend(true)
+                .withTemplate(
+                    new io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder()
+                        .withNewSpec()
+                        .withRestartPolicy("Never")
+                        .addNewContainer()
+                        .withName("placeholder")
+                        .withImage(KAFKA_ES_IMAGE)
+                        .withCommand("sh", "-c", "exit 0")
                         .endContainer()
                         .endSpec()
                         .build())

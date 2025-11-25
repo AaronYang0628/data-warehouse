@@ -7,6 +7,7 @@ import io.javaoperatorsdk.operator.api.reconciler.Context;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.CRUDKubernetesDependentResource;
 import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDependent;
 import java.util.List;
+import java.util.Map;
 import org.apache.flink.kubernetes.operator.api.FlinkSessionJob;
 import org.apache.flink.kubernetes.operator.api.spec.*;
 import org.slf4j.Logger;
@@ -66,7 +67,12 @@ public class FlinkSessionJobDependentResource
                   primary.getSpec().getAllowedSuffixes(),
                   primary.getSpec().getExtraEnvs(),
                   primary.getSpec().getExtraSecret());
+
+      updatedJobConfig
+          .getFlinkConfiguration()
+          .putAll(Map.of("kubernetes.operator.job.restart.failed", "false"));
       flinkSessionJobSpecBuilder.job(updatedJobConfig.getJob());
+      flinkSessionJobSpecBuilder.flinkConfiguration(updatedJobConfig.getFlinkConfiguration());
 
       FlinkSessionJob sessionJob = new FlinkSessionJob();
       sessionJob.setMetadata(metadata);

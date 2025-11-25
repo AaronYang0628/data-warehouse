@@ -133,13 +133,15 @@ public class MetadataOperatorFlinkReconciler
             if (flinkSessionJobStatus.getJobStatus().getState() != null) {
               String jobState = flinkSessionJobStatus.getJobStatus().getState().name();
               primary.getStatus().setJobStatus(jobState);
+              primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
 
               // Check if the job is finished and handle accordingly
               if ("FINISHED".equals(jobState)) {
                 log.info(
-                    "Flink job {} has finished. Creating CronJob for post-processing.",
+                    "Flink job {} has finished. Creating job for post-processing.",
                     primary.getMetadata().getName());
-                // The FinishedJobCronJobDependentResource will be automatically reconciled
+                primary.getStatus().setIngestStatus(IngestStatus.FINISHED);
+                primaryStatusNeedUpdate = true;
               }
             } else {
               primary.getStatus().setJobStatus(JobStatus.INITIALIZING.name());

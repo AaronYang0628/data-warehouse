@@ -23,6 +23,7 @@ import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskSpec;
 import org.zhejianglab.astro.customresource.flink.FlinkIngestTaskStatus;
 import org.zhejianglab.astro.dependentresource.FinishedAuditJobDependentResource;
 import org.zhejianglab.astro.dependentresource.FlinkSessionJobDependentResource;
+import org.zhejianglab.astro.dependentresource.conditions.FinishedAuditJobDependentCondition;
 import org.zhejianglab.astro.dependentresource.conditions.FlinkSessionJobDependentCondition;
 import org.zhejianglab.astro.utils.SecretConstant;
 
@@ -35,7 +36,9 @@ import org.zhejianglab.astro.utils.SecretConstant;
       @Dependent(
           type = FlinkSessionJobDependentResource.class,
           reconcilePrecondition = FlinkSessionJobDependentCondition.class),
-      @Dependent(type = FinishedAuditJobDependentResource.class)
+      @Dependent(
+          type = FinishedAuditJobDependentResource.class,
+          reconcilePrecondition = FinishedAuditJobDependentCondition.class),
     })
 public class MetadataOperatorFlinkReconciler
     implements Reconciler<FlinkIngestTask>, Cleaner<FlinkIngestTask> {
@@ -140,12 +143,12 @@ public class MetadataOperatorFlinkReconciler
               if ("FINISHED".equals(jobState)) {
                 jobIsFinished = true;
                 primary.getStatus().setIngestStatus(IngestStatus.FINISHED);
+
+                suspendFlinkSessionJobIfFinished(
+                    context.getClient(), primary, flinkSessionJob, jobState);
               } else if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
                 primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
               }
-
-              suspendFlinkSessionJobIfFinished(
-                  context.getClient(), primary, flinkSessionJob, jobState);
 
               primaryStatusNeedUpdate = true;
             } else {
@@ -155,13 +158,6 @@ public class MetadataOperatorFlinkReconciler
             primaryStatusNeedUpdate = true;
           }
         }
-      }
-
-      if (!jobIsFinished) {
-        log.debug("Job is not finished, reconciling workflow");
-        context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
-      } else {
-        log.info("Job is finished, skipping workflow reconciliation to prevent restart");
       }
 
       List<String> finalizers = primary.getMetadata().getFinalizers();
@@ -174,6 +170,13 @@ public class MetadataOperatorFlinkReconciler
       if (primarySpecNeedUpdate) {
         primary.getMetadata().setManagedFields(null);
         log.debug("Updating FlinkIngestTask Status: {}", primary.getSpec());
+      }
+
+      if (!jobIsFinished) {
+        log.debug("Job is not finished, reconciling workflow");
+        context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
+      } else {
+        log.info("Job is finished, skipping workflow reconciliation to prevent restart");
       }
 
       context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();

@@ -10,7 +10,6 @@ import io.javaoperatorsdk.operator.processing.dependent.kubernetes.KubernetesDep
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
-import org.zhejianglab.astro.customresource.enums.IngestStatus;
 
 @KubernetesDependent
 public class FinishedAuditJobDependentResource
@@ -29,31 +28,10 @@ public class FinishedAuditJobDependentResource
 
   @Override
   protected Job desired(FlinkIngestTask primary, Context<FlinkIngestTask> context) {
-    // Check if the ingest status is FINISHED before creating the job
-    if (primary.getStatus() == null
-        || primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
-      log.info(
-          "FlinkIngestTask {} is not in FINISHED state, skipping job creation",
-          primary.getMetadata().getName());
-      return null;
-    }
 
     String jobName = primary.getMetadata().getName() + "-finished-audit-job";
 
-    Job existingJob =
-        context
-            .getClient()
-            .batch()
-            .v1()
-            .jobs()
-            .inNamespace(primary.getMetadata().getNamespace())
-            .withName(jobName)
-            .get();
-
-    if (existingJob != null) {
-      log.info("Audit job {} already exists, skipping creation", jobName);
-      return null;
-    }
+    log.info("Creating audit job {} for finished task", jobName);
 
     return new JobBuilder()
         .withMetadata(
@@ -63,9 +41,7 @@ public class FinishedAuditJobDependentResource
                 .build())
         .withSpec(
             new JobSpecBuilder()
-                .withBackoffLimit(1)
-                .withSuspend(false)
-                .withBackoffLimit(1)
+                .withBackoffLimit(3)
                 .withTemplate(
                     new io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder()
                         .withNewMetadata()
@@ -73,8 +49,9 @@ public class FinishedAuditJobDependentResource
                         .endMetadata()
                         .withNewSpec()
                         .withRestartPolicy("OnFailure")
+                        .withServiceAccountName(CRON_JOB_SA_NAME)
                         .addNewContainer()
-                        .withName("kubectl")
+                        .withName("audit")
                         .withImage(KAFKA_ES_IMAGE)
                         .withCommand("sh", "-c", buildKafkaEsCommand(primary))
                         .endContainer()
@@ -88,53 +65,46 @@ public class FinishedAuditJobDependentResource
     StringBuilder command = new StringBuilder();
 
     command
-        .append("echo 'Sending message to Kafka for job ")
+        .append("echo 'Audit job started for ")
         .append(primary.getMetadata().getName())
         .append("' && ");
 
     command
+        .append("echo 'Sending completion message to Kafka...' && ")
         .append("echo '{\"jobName\":\"")
         .append(primary.getMetadata().getName())
-        .append("\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"FINISHED\"}' && ")
-        .append("echo {\"topic\":" + primary.getSpec().getBatchId() + "\"} | ")
-        .append("kubectl -n " + primary.getMetadata().getNamespace())
-        .append(" exec -i $(kubectl")
-        .append(" -n " + primary.getMetadata().getNamespace())
+        .append("\",\"batchId\":\"")
+        .append(primary.getSpec().getBatchId())
+        .append("\",\"timestamp\":\"$(date -u +%Y-%m-%dT%H:%M:%SZ)\",\"status\":\"FINISHED\"}' | ")
+        .append("kubectl -n ")
+        .append(primary.getMetadata().getNamespace())
+        .append(" exec -i $(kubectl -n ")
+        .append(primary.getMetadata().getNamespace())
         .append(
-            " get pods -l app.kubernetes.io/name=kafka  -o jsonpath='{.items[0].metadata.name}') -- kafka-console-producer.sh ")
+            " get pods -l app.kubernetes.io/name=kafka -o jsonpath='{.items[0].metadata.name}') -- ")
+        .append("kafka-console-producer.sh ")
         .append("--bootstrap-server localhost:9092 ")
-        .append("--topic ingest-to-es ");
-
-    command.append("echo 'Polling Elasticsearch...' && ");
-    command
-        .append(
-            "kubectl -n "
-                + primary.getMetadata().getNamespace()
-                + " exec -it $(kubectl "
-                + primary.getMetadata().getNamespace()
-                + " get pods -l app.kubernetes.io/name=elasticsearch -l app.kubernetes.io/component=master -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
-        .append("\"http://localhost:9200/")
-        .append(primary.getMetadata().getName())
-        .append("/_search?q=jobName:")
-        .append(primary.getMetadata().getName())
-        .append("\" && ");
+        .append("--topic ingest-to-es && ");
 
     command
+        .append("echo 'Polling Elasticsearch for results...' && ")
         .append("for i in $(seq 1 10); do ")
-        .append("echo \"Polling attempt $i\" && ")
-        .append("sleep 30 && ")
+        .append("  echo \"Polling attempt $i\" && ")
+        .append("  kubectl -n ")
+        .append(primary.getMetadata().getNamespace())
+        .append(" exec $(kubectl -n ")
+        .append(primary.getMetadata().getNamespace())
         .append(
-            "kubectl "
-                + primary.getMetadata().getNamespace()
-                + " exec -it $(kubectl "
-                + primary.getMetadata().getNamespace()
-                + " get pods -l app.kubernetes.io/name=elasticsearch -l app.kubernetes.io/component=master -o jsonpath='{.items[0].metadata.name}') -- curl -X GET ")
-        .append("\"http://localhost:9200/")
-        .append(primary.getMetadata().getName())
-        .append("/_search?q=jobName:")
-        .append(primary.getMetadata().getName())
-        .append("\" || true; ")
-        .append("done");
+            " get pods -l app.kubernetes.io/name=elasticsearch -l app.kubernetes.io/component=master ")
+        .append("-o jsonpath='{.items[0].metadata.name}') -- ")
+        .append("curl -s -X GET 'http://localhost:9200/")
+        .append(primary.getSpec().getExtraEnvs().getDatasetIndex())
+        .append("/_search?q=batchId:")
+        .append(primary.getSpec().getBatchId())
+        .append("' && ")
+        .append("  sleep 30; ")
+        .append("done && ")
+        .append("echo 'Audit completed successfully'");
 
     return command.toString();
   }

@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zhejianglab.astro.customresource.FlinkIngestTask;
 import org.zhejianglab.astro.customresource.enums.IngestStatus;
+import org.zhejianglab.astro.dependentresource.FinishedAuditJobDependentResource;
 
 public class FinishedAuditJobDependentCondition implements Condition<Job, FlinkIngestTask> {
 
@@ -28,7 +29,9 @@ public class FinishedAuditJobDependentCondition implements Condition<Job, FlinkI
       return false;
     }
 
-    String jobName = primary.getMetadata().getName() + "-finished-audit-job";
+    String jobName =
+        primary.getMetadata().getName() + FinishedAuditJobDependentResource.AUDIT_JOB_NAME_SUFFIX;
+
     Job existingJob =
         context
             .getClient()

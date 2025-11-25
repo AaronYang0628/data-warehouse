@@ -18,6 +18,8 @@ public class FinishedAuditJobDependentResource
   private static final Logger log =
       LoggerFactory.getLogger(FinishedAuditJobDependentResource.class);
 
+  public static final String AUDIT_JOB_NAME_SUFFIX = "finished-audit-job";
+
   private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
   private static final String KAFKA_ES_IMAGE =
       "m.daocloud.io/docker.io/bitnami/kubectl:1.28-debian-11";
@@ -29,7 +31,7 @@ public class FinishedAuditJobDependentResource
   @Override
   protected Job desired(FlinkIngestTask primary, Context<FlinkIngestTask> context) {
 
-    String jobName = primary.getMetadata().getName() + "-finished-audit-job";
+    String jobName = primary.getMetadata().getName() + AUDIT_JOB_NAME_SUFFIX;
 
     log.info("Creating audit job {} for finished task", jobName);
 

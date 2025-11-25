@@ -35,6 +35,28 @@ public class FlinkSessionJobDependentResource
       return null;
     }
 
+    if (primary.getStatus() != null
+        && primary.getStatus().getIngestStatus() == IngestStatus.FINISHED) {
+      log.warn(
+          "Task {} is already finished, but desired() was called. This should not happen.",
+          primary.getMetadata().getName());
+
+      FlinkSessionJob existingJob =
+          context
+              .getClient()
+              .resources(FlinkSessionJob.class)
+              .inNamespace(primary.getMetadata().getNamespace())
+              .withName(primary.getMetadata().getName())
+              .get();
+
+      if (existingJob != null) {
+        if (existingJob.getSpec().getJob().getState() != JobState.SUSPENDED) {
+          existingJob.getSpec().getJob().setState(JobState.SUSPENDED);
+        }
+        return existingJob;
+      }
+    }
+
     boolean isFinished =
         primary.getStatus() != null
             && primary.getStatus().getIngestStatus() == IngestStatus.FINISHED;

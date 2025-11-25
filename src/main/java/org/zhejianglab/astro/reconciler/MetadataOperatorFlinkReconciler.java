@@ -54,10 +54,12 @@ public class MetadataOperatorFlinkReconciler
 
       String namespace = primary.getMetadata().getNamespace();
       log.info(
-          "A FlinkIngestTask is applied in namespace: {}, and content is {}",
+          "Reconciling FlinkIngestTask in namespace: {}, current ingestStatus: {}, jobStatus: {}",
           namespace,
-          primary.getSpec().toString());
+          primary.getStatus() != null ? primary.getStatus().getIngestStatus() : "null",
+          primary.getStatus() != null ? primary.getStatus().getJobStatus() : "null");
 
+      // 初始化 status
       if (primary.getStatus() == null) {
         primary.setStatus(
             FlinkIngestTaskStatus.builder()
@@ -67,9 +69,9 @@ public class MetadataOperatorFlinkReconciler
         primaryStatusNeedUpdate = true;
       } else {
         primary.getStatus().setException("");
-        primaryStatusNeedUpdate = true;
       }
 
+      // 验证资源
       if (!validateAppliedResource(primary)) {
         updateErrorStatus(
             primary,
@@ -78,6 +80,7 @@ public class MetadataOperatorFlinkReconciler
         return UpdateControl.patchStatus(primary);
       }
 
+      // 处理 batchId 变化
       if (primary.getSpec().getBatchId() != null
           && !primary.getSpec().getBatchId().equals(primary.getStatus().getBatchId())) {
         primary.getStatus().setBatchId(primary.getSpec().getBatchId());
@@ -85,6 +88,7 @@ public class MetadataOperatorFlinkReconciler
         primaryStatusNeedUpdate = true;
       }
 
+      // 处理 extraSecret
       if (null == primary.getSpec().getExtraSecret()) {
         primary.getSpec().setExtraSecret(ExtraSecret.builder().namespace(namespace).build());
         primarySpecNeedUpdate = true;
@@ -104,29 +108,52 @@ public class MetadataOperatorFlinkReconciler
         primarySpecNeedUpdate = true;
       }
 
+      // 处理 extraEnvs
       if (null == primary.getSpec().getExtraEnvs()) {
         primary
             .getSpec()
             .setExtraEnvs(org.zhejianglab.astro.customresource.flink.ExtraEnvs.builder().build());
         primarySpecNeedUpdate = true;
-      } else {
-        primary
-            .getSpec()
-            .setExtraEnvs(org.zhejianglab.astro.customresource.flink.ExtraEnvs.builder().build());
-        primary.getSpec().setExtraEnvs(primary.getSpec().getExtraEnvs());
-        primarySpecNeedUpdate = true;
       }
 
+      // 处理删除
       if (primary.getMetadata().getDeletionTimestamp() != null) {
         log.info("This FlinkIngestTask is being deleted, skip reconciliation");
         primary.getStatus().setJobStatus(JobStatus.CANCELLING.name());
         return UpdateControl.patchStatus(primary);
       }
 
+      // 关键修改：检查是否已经完成，如果已完成则跳过后续处理
+      if (primary.getStatus().getIngestStatus() == IngestStatus.FINISHED) {
+        log.info(
+            "FlinkIngestTask {} is already in FINISHED state, skipping workflow reconciliation",
+            primary.getMetadata().getName());
+
+        // 添加 finalizers（如果需要）
+        List<String> finalizers = primary.getMetadata().getFinalizers();
+        if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
+          finalizers.add(FlinkIngestTask.FINALIZER_NAME);
+          primary.getMetadata().setFinalizers(finalizers);
+          primarySpecNeedUpdate = true;
+        }
+
+        // 只更新必要的字段，不触发 workflow
+        if (primarySpecNeedUpdate && primaryStatusNeedUpdate) {
+          primary.getMetadata().setManagedFields(null);
+          return UpdateControl.patchResourceAndStatus(primary);
+        } else if (primarySpecNeedUpdate) {
+          primary.getMetadata().setManagedFields(null);
+          return UpdateControl.patchResource(primary);
+        } else if (primaryStatusNeedUpdate) {
+          return UpdateControl.patchStatus(primary);
+        }
+
+        return UpdateControl.noUpdate();
+      }
+
+      // 只有在未完成时才检查 SessionJob 状态
       Optional<FlinkSessionJob> flinkSessionJobOptional =
           retrieveFlinkSessionJobInfo(context.getClient(), primary);
-
-      boolean jobIsFinished = false;
 
       if (flinkSessionJobOptional.isPresent()) {
         FlinkSessionJob flinkSessionJob = flinkSessionJobOptional.get();
@@ -138,28 +165,36 @@ public class MetadataOperatorFlinkReconciler
           if (flinkSessionJobStatus.getJobStatus() != null) {
             if (flinkSessionJobStatus.getJobStatus().getState() != null) {
               String jobState = flinkSessionJobStatus.getJobStatus().getState().name();
+
+              // 更新 job status
               primary.getStatus().setJobStatus(jobState);
 
               if ("FINISHED".equals(jobState)) {
-                jobIsFinished = true;
+                log.info("Flink job {} has finished.", primary.getMetadata().getName());
                 primary.getStatus().setIngestStatus(IngestStatus.FINISHED);
 
+                // 暂停 SessionJob
                 suspendFlinkSessionJobIfFinished(
                     context.getClient(), primary, flinkSessionJob, jobState);
-              } else if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
-                primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
-              }
 
-              primaryStatusNeedUpdate = true;
+                primaryStatusNeedUpdate = true;
+              } else {
+                // 未完成，保持 INGESTING 状态
+                if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
+                  primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
+                }
+                primaryStatusNeedUpdate = true;
+              }
             } else {
               primary.getStatus().setJobStatus(JobStatus.INITIALIZING.name());
+              primaryStatusNeedUpdate = true;
             }
             primary.getStatus().setException(flinkSessionJobStatus.getError());
-            primaryStatusNeedUpdate = true;
           }
         }
       }
 
+      // 添加 finalizers
       List<String> finalizers = primary.getMetadata().getFinalizers();
       if (!finalizers.contains(FlinkIngestTask.FINALIZER_NAME)) {
         finalizers.add(FlinkIngestTask.FINALIZER_NAME);
@@ -172,14 +207,15 @@ public class MetadataOperatorFlinkReconciler
         log.debug("Updating FlinkIngestTask Status: {}", primary.getSpec());
       }
 
-      if (!jobIsFinished) {
+      // 只有在未完成时才调用 workflow
+      if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
         log.debug("Job is not finished, reconciling workflow");
         context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
       } else {
         log.info("Job is finished, skipping workflow reconciliation to prevent restart");
+        // TODO 删除 session job dependent resource
+        // context.managedWorkflowAndDependentResourceContext().deleteDependentResources();
       }
-
-      context.managedWorkflowAndDependentResourceContext().reconcileManagedWorkflow();
 
       if (primarySpecNeedUpdate && primaryStatusNeedUpdate) {
         primary.getMetadata().setManagedFields(null);

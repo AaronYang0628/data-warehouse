@@ -54,7 +54,7 @@ public class FlinkJobConfig {
 
   @Builder.Default @JsonIgnore private Map<String, Object> jobArgsMap = new ConcurrentHashMap<>();
 
-  private Map<String, String> flinkConfiguration;
+  @Builder.Default private Map<String, String> flinkConfiguration = new ConcurrentHashMap<>();
 
   @Builder.Default private KubernetesDeploymentMode mode = KubernetesDeploymentMode.NATIVE;
 

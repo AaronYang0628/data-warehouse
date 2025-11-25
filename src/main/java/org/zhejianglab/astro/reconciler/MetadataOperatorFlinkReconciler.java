@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import org.apache.flink.api.common.JobStatus;
 import org.apache.flink.kubernetes.operator.api.FlinkSessionJob;
+import org.apache.flink.kubernetes.operator.api.spec.JobState;
 import org.apache.flink.kubernetes.operator.api.status.FlinkSessionJobStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -133,16 +134,14 @@ public class MetadataOperatorFlinkReconciler
             if (flinkSessionJobStatus.getJobStatus().getState() != null) {
               String jobState = flinkSessionJobStatus.getJobStatus().getState().name();
               primary.getStatus().setJobStatus(jobState);
-              primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
-
-              // Check if the job is finished and handle accordingly
-              if ("FINISHED".equals(jobState)) {
-                log.info(
-                    "Flink job {} has finished. Creating job for post-processing.",
-                    primary.getMetadata().getName());
-                primary.getStatus().setIngestStatus(IngestStatus.FINISHED);
-                primaryStatusNeedUpdate = true;
+              if (primary.getStatus().getIngestStatus() != IngestStatus.FINISHED) {
+                primary.getStatus().setIngestStatus(IngestStatus.INGESTING);
               }
+
+              suspendFlinkSessionJobIfFinished(
+                  context.getClient(), primary, flinkSessionJob, jobState);
+
+              primaryStatusNeedUpdate = true;
             } else {
               primary.getStatus().setJobStatus(JobStatus.INITIALIZING.name());
             }
@@ -223,6 +222,55 @@ public class MetadataOperatorFlinkReconciler
     }
 
     return handleError(primary, e);
+  }
+
+  private void suspendFlinkSessionJobIfFinished(
+      KubernetesClient k8sClient,
+      FlinkIngestTask primary,
+      FlinkSessionJob flinkSessionJob,
+      String jobState) {
+
+    if ("FINISHED".equals(jobState)) {
+      log.info(
+          "Flink job {} has finished. Suspending FlinkSessionJob.",
+          primary.getMetadata().getName());
+
+      primary.getStatus().setIngestStatus(IngestStatus.FINISHED);
+
+      if (flinkSessionJob.getSpec().getJob().getState() != JobState.SUSPENDED) {
+        flinkSessionJob.getSpec().getJob().setState(JobState.SUSPENDED);
+
+        try {
+          k8sClient
+              .resources(FlinkSessionJob.class)
+              .inNamespace(primary.getMetadata().getNamespace())
+              .withName(primary.getMetadata().getName())
+              .patch(flinkSessionJob);
+
+          log.info("Successfully suspended FlinkSessionJob {}", primary.getMetadata().getName());
+        } catch (KubernetesClientException e) {
+          if (e.getCode() == 409) {
+            log.warn(
+                "Conflict when suspending FlinkSessionJob {}, will retry in next reconciliation",
+                primary.getMetadata().getName());
+          } else {
+            log.error(
+                "Failed to suspend FlinkSessionJob {}: {}",
+                primary.getMetadata().getName(),
+                e.getMessage(),
+                e);
+          }
+        } catch (Exception e) {
+          log.error(
+              "Unexpected error when suspending FlinkSessionJob {}: {}",
+              primary.getMetadata().getName(),
+              e.getMessage(),
+              e);
+        }
+      } else {
+        log.debug("FlinkSessionJob {} is already suspended", primary.getMetadata().getName());
+      }
+    }
   }
 
   private boolean validateAppliedResource(FlinkIngestTask resource) {

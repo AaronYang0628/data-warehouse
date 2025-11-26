@@ -87,7 +87,7 @@ public class FinishedAuditJobDependentResource
         .append("echo \"Found partition_num=$partition_num\" && ")
         .append("TIMESTAMP_MS=$(date +%s%3N) && ")
         .append("for i in $(seq 0 $((partition_num - 1))); do ")
-        .append("  echo \"Sending message for partition $i\" && ")
+        .append("  echo \"Sending message for partition $i to Kafka partition $i\" && ")
         .append("  echo '{\"type\":3,\"jobid\":\"")
         .append(primary.getSpec().getBatchId())
         .append(
@@ -97,7 +97,10 @@ public class FinishedAuditJobDependentResource
         .append(" exec -i $KAFKA_POD -- ")
         .append("  kafka-console-producer.sh ")
         .append("  --bootstrap-server localhost:9092 ")
-        .append("  --topic ingest-to-es; ")
+        .append("  --topic ingest-to-es ")
+        .append("  --property \"parse.key=true\" ")
+        .append("  --property \"key.separator=:\" ")
+        .append("  --property \"key=$i\"; ")
         .append("done && ")
         .append("echo \"Sent $partition_num messages to Kafka\" && ");
 
@@ -125,7 +128,7 @@ public class FinishedAuditJobDependentResource
         .append(
             "  hits_count=$(echo \"$result\" | sed -n 's/.*\"total\":{\"value\":\\([0-9]*\\).*/\\1/p') && ")
         .append(
-            "  partition_num=$(echo \"$result\" | sed -n 's/.*\"partitionNum\":\\([0-9]*\\).*/\\1/p' | head -1) && ")
+            "  partition_num=$(echo \"$result\" | sed -n 's/.*\"partitionNum\":\"\\([0-9]*\\)\".*/\\1/p' | head -1) && ")
         .append("  echo \"hits_count=$hits_count\" && ")
         .append("  echo \"partition_num=$partition_num\" && ")
         .append(

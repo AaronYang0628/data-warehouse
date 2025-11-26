@@ -47,3 +47,15 @@ helm upgrade  --create-namespace -n warehouse --install -f /workspaces/data-ware
 # ## install to zverse
 # helm upgrade  --kubeconfig=/root/.kube/zverse_config --create-namespace -n metadata --install -f /root/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.10
 ```
+
+
+
+### Kafka
+
+```shell
+kubectl -n warehouse exec $(kubectl -n warehouse get pods -l app.kubernetes.io/name=kafka -o jsonpath='{.items[0].metadata.name}') -- sh -c "kafka-topics.sh --bootstrap-server localhost:9092 --delete --topic ingest-to-es && kafka-topics.sh --bootstrap-server localhost:9092 --create --topic ingest-to-es --partitions 16 --replication-factor 1"
+```
+
+```
+kubectl -n warehouse exec -it warehouse-kafka-controller-0 -- kafka-console-consumer.sh   --bootstrap-server localhost:9092   --topic ingest-to-es 
+```

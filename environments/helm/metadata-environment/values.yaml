@@ -13,9 +13,9 @@ ingestTaskOperator:
   commonLabels: {}
   commonAnnotations: {}
   image:
-    registry: docker-registry.lab.zverse.space
-    repository: ay-dev/metadata-operator
-    tag: v20250829r1
+    registry: harbor.zhejianglab.com
+    repository: ay-dev/metadata-crd-operator
+    tag: v20251126
     pullPolicy: Always
     pullSecrets: []
   serviceAccount:

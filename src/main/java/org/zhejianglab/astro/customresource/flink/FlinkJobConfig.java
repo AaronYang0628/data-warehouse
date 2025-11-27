@@ -97,7 +97,7 @@ public class FlinkJobConfig {
         .job(
             JobSpec.builder()
                 .jarURI(
-                    "http://data-and-computing.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects/slurm-on-k8s/intel-mpi-libs/flink-es-ingest-job-1.0.0-all.jar")
+                    "http://data-and-computing.oss-cn-hangzhou-zjy-d01-a.res.cloud.zhejianglab.com/projects/slurm-on-k8s/intel-mpi-libs/flink-es-ingest-job-1127.jar")
                 .parallelism(parallelism)
                 .upgradeMode(UpgradeMode.STATELESS)
                 .entryClass("com.zhejianglab.astronomy.metadata.file.MetadataExtractorJob")

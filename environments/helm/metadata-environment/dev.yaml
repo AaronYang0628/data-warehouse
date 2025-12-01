@@ -134,22 +134,23 @@ certManager:
       repository: m.daocloud.io/quay.io/jetstack/cert-manager-startupapicheck
 
 flinkk8soperator:
-  enabled: true
+  enabled: false
   image:
     repository: m.lab.zverse.space/ghcr.io/apache/flink-kubernetes-operator
-    tag: 1.11.0
+    tag: 1.13.0
   defaultConfiguration:
     create: true
     append: true
     flink-conf.yaml: |+
       kubernetes.operator.flink.client.timeout: 120 s
+  existingNamespace: "flink"
 
 flink:
   session:
     version: v1_19
     mode: native
     image:
-      registry: docker-registry.lab.zverse.space
+      registry: harbor.zhejianglab.com
       repository: astro-base-images/flink-oss-updated
       tag: 1.19-java17
       pullSecrets: []
@@ -194,7 +195,7 @@ flink:
       version: v1_19
       mode: native
       image: 
-        registry: docker-registry.lab.zverse.space  
+        registry: harbor.zhejianglab.com
         repository: data-and-computing-dev/ingest-to-es-transfer
         tag: test
         pullSecrets: []

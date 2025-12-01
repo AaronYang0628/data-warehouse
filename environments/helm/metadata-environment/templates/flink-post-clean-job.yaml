@@ -17,7 +17,7 @@ spec:
         {{- if .Values.global.registryPrefix }}
         image: {{ .Values.global.registryPrefix }}/docker.io/bitnami/kubectl:1.28-debian-11
         {{- else }}
-        image: docker.io/bitnami/kubectl:1.28-debian-11
+        image: crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11
         {{- end }}
         command: ["/bin/sh", "-c"]
         args:

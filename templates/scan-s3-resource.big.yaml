@@ -3,41 +3,18 @@ kind: FlinkIngestTask
 metadata:
   name: ingest-table-or-fits-from-s3-big
 spec:
-  batchId: "b1c2d3e4f5g6h7i8j9k0"
-  path: "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000000/MS"
-  tags:
-    - CRAFTS_SPECTRUM_ORIGINAL
-    - FAST
-  userProperties:
-    key1: "value1"
-    key2: "1231"
-    key3: "true"
-  pathPatterns:
-    bucket_name: "[^/]*\\/([^/]+)\\/.*"
+  paths: 
+    - "s3://csst-prod/CSST_L0/MSC/SCI/60310/10100000020/MS"
   allowedSuffixes:
     - fits
   platform: s3
-  jobParallelism: 2
-  s3TableName: ""
+  extraEnvs:
+    esHost: "warehouse-elasticsearch.metadata.svc.cluster.local"
+    esPort: 9200
+    datasetIndex: "datasetindex"
   extraSecret: 
-    name: metadata-minio-secret
-    namespace: bbb
-    accessKeyName: root-password
-    secretKeyName: secretKeyName
-    endpointKeyName: s3-access-secret
-  flinkJobConfig:
-    job:
-      jarURI: https://repo1.maven.org/maven2/org/apache/flink/flink-examples-streaming_2.12/1.16.1/flink-examples-streaming_2.12-1.16.1-TopSpeedWindowing.jar
-      parallelism: 2
-      upgradeMode: stateless
-    flinkConfiguration:
-      taskmanager.numberOfTaskSlots: "2"
-      kubernetes.operator.flink.client.timeout: 120 s
-    jobManager:
-      resource:
-        cpu: 1
-        memory: 1Gi
-    taskManager:
-      resource:
-        cpu: 1
-        memory: 1Gi
+    name: munge-oss-ingestion-credential
+    namespace: metadata
+    accessKeyName: access-key
+    secretKeyName: secret-key
+    endpointKeyName: s3-endpoint

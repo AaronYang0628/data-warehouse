@@ -28,7 +28,8 @@ public class CronJobDependentResource
 
   private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
 
-  private static final String CRON_JOB_IMAGE = "docker.io/bitnami/kubectl:1.28-debian-11";
+  private static final String CRON_JOB_IMAGE =
+      "crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11";
 
   public CronJobDependentResource() {
     super(CronJob.class);

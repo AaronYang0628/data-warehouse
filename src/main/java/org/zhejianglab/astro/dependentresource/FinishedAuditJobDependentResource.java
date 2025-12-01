@@ -22,7 +22,7 @@ public class FinishedAuditJobDependentResource
 
   private static final String CRON_JOB_SA_NAME = "metadata-ingest-operator-sa";
   private static final String KAFKA_ES_IMAGE =
-      "m.lab.zverse.space/docker.io/bitnami/kubectl:1.28-debian-11";
+      "crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11";
 
   public FinishedAuditJobDependentResource() {
     super(Job.class);
@@ -88,19 +88,19 @@ public class FinishedAuditJobDependentResource
         .append("TIMESTAMP_MS=$(date +%s%3N) && ")
         .append("for i in $(seq 0 $((partition_num - 1))); do ")
         .append("  echo \"Sending message for partition $i to Kafka partition $i\" && ")
-        .append("  echo '{\"type\":3,\"jobid\":\"")
+        .append("  MESSAGE=\"{\\\"jobid\\\":\\\"")
         .append(primary.getSpec().getBatchId())
         .append(
-            "\",\"partitionId\":\"'\"$i\"'\",\"partitionNum\":'\"$partition_num\"',\"finishedTime\":'\"$TIMESTAMP_MS\"'}' | ")
+            "\\\",\\\"partitionId\\\":\\\"$i\\\",\\\"partitionNum\\\":$partition_num,\\\"type\\\":3,\\\"finishedTime\\\":$TIMESTAMP_MS}\" && ")
+        .append("  echo \"$MESSAGE\" | ")
         .append("  kubectl -n ")
         .append(primary.getMetadata().getNamespace())
         .append(" exec -i $KAFKA_POD -- ")
         .append("  kafka-console-producer.sh ")
         .append("  --bootstrap-server localhost:9092 ")
         .append("  --topic ingest-to-es ")
-        .append("  --property \"parse.key=true\" ")
-        .append("  --property \"key.separator=:\" ")
-        .append("  --property \"key=$i\"; ")
+        .append("  --property \"parse.key=false\" ")
+        .append("  ; ")
         .append("done && ")
         .append("echo \"Sent $partition_num messages to Kafka\" && ");
 

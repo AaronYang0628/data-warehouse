@@ -4,67 +4,178 @@ metadata:
   name: {{ .Values.ingestTaskOperator.name }}-flink-pre-cleanup-job
   namespace: {{ .Release.Namespace }}
   annotations:
-    "helm.sh/hook": pre-delete  
-    "helm.sh/hook-weight": "0"   
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "-10"  # 更早执行
     "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
 spec:
-  backoffLimit: 1  
+  backoffLimit: 3  # 增加重试次数
+  activeDeadlineSeconds: 300  # 5分钟超时
   template:
     spec:
       restartPolicy: Never
+      serviceAccountName: {{ include "metadata-environment.serviceAccountName" . }}
       containers:
       - name: cleanup-container
         {{- if .Values.global.registryPrefix }}
         image: {{ .Values.global.registryPrefix }}/docker.io/bitnami/kubectl:1.28-debian-11
         {{- else }}
-        image: docker.io/bitnami/kubectl:1.28-debian-11
+        image: crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11
         {{- end }}
-        command: ["/bin/sh", "-c"]
+        command: ["/bin/bash", "-c"]
         args:
         - |
-          # check and delete FlinkIngest
+          set -e
+          
+          echo "=========================================="
+          echo "Step 1: Checking Flink Operator status"
+          echo "=========================================="
+          
+          # 检查 Flink Operator 是否存在
+          OPERATOR_EXISTS=$(kubectl get deployment -n {{ .Release.Namespace }} | grep -c "flink-kubernetes-operator" || true)
+          
+          if [ "$OPERATOR_EXISTS" -eq 0 ]; then
+            echo "WARNING: Flink Operator not found. Will force remove finalizers."
+            FORCE_CLEANUP=true
+          else
+            echo "Flink Operator is running. Will perform graceful cleanup."
+            FORCE_CLEANUP=false
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "Step 2: Cleanup FlinkIngestTasks"
+          echo "=========================================="
+          
+          # 删除 FlinkIngestTasks
           if kubectl get flinkingest -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete flinkingest -n {{ .Release.Namespace }} --all
-            echo "In Namespace {{ .Release.Namespace }} Deleting All FlinkIngestTasks"
+            echo "Deleting FlinkIngestTasks..."
+            kubectl delete flinkingest -n {{ .Release.Namespace }} --all --timeout=60s || true
+            echo "FlinkIngestTasks deletion initiated"
           else
-            echo "In Namespace {{ .Release.Namespace }} There is no FlinkIngestTask found"
+            echo "No FlinkIngestTasks found"
           fi
-
-          # check and delete FlinkIngest
+          
+          echo ""
+          echo "=========================================="
+          echo "Step 3: Cleanup CronIngestTasks"
+          echo "=========================================="
+          
+          # 删除 CronIngestTasks
           if kubectl get croningest -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete croningest -n {{ .Release.Namespace }} --all
-            echo "In Namespace {{ .Release.Namespace }} Deleting All CronIngestTasks"
+            echo "Deleting CronIngestTasks..."
+            kubectl delete croningest -n {{ .Release.Namespace }} --all --timeout=60s || true
+            echo "CronIngestTasks deletion initiated"
           else
-            echo "In Namespace {{ .Release.Namespace }} There is no CronIngestTasks found"
+            echo "No CronIngestTasks found"
           fi
-
-          kubectl -n {{ .Release.Namespace }} patch flinkdeployment metadata-flink-job-ingest-kafka-to-es -p '{"metadata":{"finalizers":[]}}' --type=merge
-
-          # check and delete FlinkDeployment 'metadata-flink-job-ingest-kafka-to-es'
-          if kubectl get flinkdeployment metadata-flink-job-ingest-kafka-to-es -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete flinkdeployment metadata-flink-job-ingest-kafka-to-es -n {{ .Release.Namespace }}
-            echo "In Namespace {{ .Release.Namespace }} Deleting Flinkdeployment: metadata-flink-job-ingest-kafka-to-es"
-          else
-            echo "In Namespace {{ .Release.Namespace }} Flinkdeployment 'metadata-flink-job-ingest-kafka-to-es' not found"
-          fi
-
-          # check and delete sesssion job using 'metadata-flink-session-cluster'
+          
+          echo ""
+          echo "=========================================="
+          echo "Step 4: Cleanup FlinkSessionJobs"
+          echo "=========================================="
+          
+          # 删除 FlinkSessionJobs
           if kubectl get flinksessionjob -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete flinksessionjob -n {{ .Release.Namespace }} --all
-            echo "In Namespace {{ .Release.Namespace }} Deleting All SessionJobs which hosted by metadata-flink-session-cluster"
+            SESSIONJOBS=$(kubectl get flinksessionjob -n {{ .Release.Namespace }} -o name)
+            if [ -n "$SESSIONJOBS" ]; then
+              echo "Found FlinkSessionJobs:"
+              echo "$SESSIONJOBS"
+              
+              for job in $SESSIONJOBS; do
+                echo "Processing $job..."
+                
+                if [ "$FORCE_CLEANUP" = true ]; then
+                  echo "  Force removing finalizers..."
+                  kubectl patch $job -n {{ .Release.Namespace }} \
+                    -p '{"metadata":{"finalizers":[]}}' --type=merge || true
+                fi
+                
+                echo "  Deleting $job..."
+                kubectl delete $job -n {{ .Release.Namespace }} --timeout=30s || true
+              done
+            fi
           else
-            echo "In Namespace {{ .Release.Namespace }}, there is no SessionJob hosted by metadata-flink-session-cluster"
+            echo "No FlinkSessionJobs found"
           fi
-
-          kubectl -n {{ .Release.Namespace }}  patch flinkdeployment metadata-flink-session-cluster -p '{"metadata":{"finalizers":[]}}' --type=merge
-
-          # check and delete FlinkDeployment 'metadata-flink-session-cluster'
-          if kubectl get flinkdeployment metadata-flink-session-cluster -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete flinkdeployment metadata-flink-session-cluster -n {{ .Release.Namespace }}
-            echo "In Namespace {{ .Release.Namespace }} Deleting Flinkdeployment: metadata-flink-session-cluster"
+          
+          echo ""
+          echo "=========================================="
+          echo "Step 5: Cleanup Residence Job FlinkDeployment"
+          echo "=========================================="
+          
+          # 删除 metadata-flink-job-ingest-kafka-to-es
+          RESIDENCE_JOB="metadata-flink-job-ingest-kafka-to-es"
+          if kubectl get flinkdeployment $RESIDENCE_JOB -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            echo "Processing FlinkDeployment: $RESIDENCE_JOB"
+            
+            if [ "$FORCE_CLEANUP" = true ]; then
+              echo "  Force removing finalizers..."
+              kubectl patch flinkdeployment $RESIDENCE_JOB -n {{ .Release.Namespace }} \
+                -p '{"metadata":{"finalizers":[]}}' --type=merge || true
+            fi
+            
+            echo "  Deleting $RESIDENCE_JOB..."
+            kubectl delete flinkdeployment $RESIDENCE_JOB -n {{ .Release.Namespace }} \
+              --timeout=60s || true
+            
+            # 等待删除完成
+            echo "  Waiting for deletion to complete..."
+            kubectl wait --for=delete flinkdeployment/$RESIDENCE_JOB \
+              -n {{ .Release.Namespace }} --timeout=60s || true
           else
-            echo "In Namespace {{ .Release.Namespace }} Flinkdeployment 'metadata-flink-session-cluster' not found"
+            echo "FlinkDeployment '$RESIDENCE_JOB' not found"
           fi
-
+          
+          echo ""
+          echo "=========================================="
+          echo "Step 6: Cleanup Session Cluster FlinkDeployment"
+          echo "=========================================="
+          
+          # 删除 metadata-flink-session-cluster
+          SESSION_CLUSTER="metadata-flink-session-cluster"
+          if kubectl get flinkdeployment $SESSION_CLUSTER -n {{ .Release.Namespace }} >/dev/null 2>&1; then
+            echo "Processing FlinkDeployment: $SESSION_CLUSTER"
+            
+            if [ "$FORCE_CLEANUP" = true ]; then
+              echo "  Force removing finalizers..."
+              kubectl patch flinkdeployment $SESSION_CLUSTER -n {{ .Release.Namespace }} \
+                -p '{"metadata":{"finalizers":[]}}' --type=merge || true
+            fi
+            
+            echo "  Deleting $SESSION_CLUSTER..."
+            kubectl delete flinkdeployment $SESSION_CLUSTER -n {{ .Release.Namespace }} \
+              --timeout=60s || true
+            
+            # 等待删除完成
+            echo "  Waiting for deletion to complete..."
+            kubectl wait --for=delete flinkdeployment/$SESSION_CLUSTER \
+              -n {{ .Release.Namespace }} --timeout=60s || true
+          else
+            echo "FlinkDeployment '$SESSION_CLUSTER' not found"
+          fi
+          
+          echo ""
+          echo "=========================================="
+          echo "Step 7: Force cleanup any remaining FlinkDeployments"
+          echo "=========================================="
+          
+          # 检查是否还有其他 FlinkDeployments
+          REMAINING=$(kubectl get flinkdeployment -n {{ .Release.Namespace }} -o name 2>/dev/null || true)
+          if [ -n "$REMAINING" ]; then
+            echo "Found remaining FlinkDeployments:"
+            echo "$REMAINING"
+            
+            for fd in $REMAINING; do
+              echo "Force cleaning $fd..."
+              kubectl patch $fd -n {{ .Release.Namespace }} \
+                -p '{"metadata":{"finalizers":[]}}' --type=merge || true
+              kubectl delete $fd -n {{ .Release.Namespace }} --timeout=30s || true
+            done
+          else
+            echo "No remaining FlinkDeployments found"
+          fi
+          
+          echo ""
+          echo "=========================================="
           echo "Cleanup completed successfully"
-      
+          echo "=========================================="

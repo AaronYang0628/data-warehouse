@@ -1,0 +1,53 @@
+{{- if .Values.flinkk8soperator.enabled }}
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: flink-operator-pre-stop
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-weight": "10"  # 在 FlinkDeployment 清理之后执行
+    "helm.sh/hook-delete-policy": hook-succeeded,before-hook-creation
+spec:
+  backoffLimit: 1
+  activeDeadlineSeconds: 60
+  template:
+    spec:
+      restartPolicy: Never
+      serviceAccountName: {{ include "metadata-environment.serviceAccountName" . }}
+      containers:
+      - name: pre-stop
+        {{- if .Values.global.registryPrefix }}
+        image: {{ .Values.global.registryPrefix }}/docker.io/bitnami/kubectl:1.28-debian-11
+        {{- else }}
+        image: crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11
+        {{- end }}
+        command: ["/bin/bash", "-c"]
+        args:
+        - |
+          set -e
+          
+          echo "=========================================="
+          echo "Verifying all FlinkDeployments are removed"
+          echo "=========================================="
+          
+          # 等待所有 FlinkDeployments 被删除
+          for i in {1..30}; do
+            REMAINING=$(kubectl get flinkdeployment -n {{ .Release.Namespace }} -o name 2>/dev/null | wc -l)
+            
+            if [ "$REMAINING" -eq 0 ]; then
+              echo "All FlinkDeployments have been removed"
+              exit 0
+            fi
+            
+            echo "Attempt $i/30: Still waiting for $REMAINING FlinkDeployment(s) to be removed..."
+            kubectl get flinkdeployment -n {{ .Release.Namespace }} -o name
+            sleep 2
+          done
+          
+          echo "WARNING: Some FlinkDeployments still exist, but proceeding with operator shutdown"
+          kubectl get flinkdeployment -n {{ .Release.Namespace }} -o wide || true
+          
+          exit 0
+{{- end }}

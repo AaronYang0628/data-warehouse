@@ -67,7 +67,8 @@ public class FlinkIngestTaskSpec extends AbstractIngestTaskSpec {
       this.batchId =
           null != batchId
               ? batchId
-              : StringUtils.generateMD5(objectMapper.writeValueAsString(this));
+              : StringUtils.generateMD5(objectMapper.writeValueAsString(this))
+                  .concat(System.currentTimeMillis() + "");
     } catch (JsonProcessingException e) {
       this.setBatchId(StringUtils.EMPTY);
     }

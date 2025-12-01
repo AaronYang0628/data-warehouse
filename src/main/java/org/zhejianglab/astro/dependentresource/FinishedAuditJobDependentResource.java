@@ -44,6 +44,7 @@ public class FinishedAuditJobDependentResource
         .withSpec(
             new JobSpecBuilder()
                 .withBackoffLimit(3)
+                .withTtlSecondsAfterFinished(3600)
                 .withTemplate(
                     new io.fabric8.kubernetes.api.model.PodTemplateSpecBuilder()
                         .withNewMetadata()

@@ -1,14 +1,12 @@
 ---
+# ClusterRole - 集群级别权限
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" . }}
 kind: ClusterRole
 metadata:
   name: {{ include "metadata-environment.clusterRoleName" . }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" .Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list .Values.ingestTaskOperator.serviceAccount.annotations .Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
 rules:
+  # Flink resources
   - apiGroups:
     - "flink.apache.org"
     resources:
@@ -21,6 +19,10 @@ rules:
     - create
     - watch
     - patch
+    - delete
+    - update
+  
+  # ConfigMaps, Secrets, PV, PVC
   - apiGroups:
     - ""
     resources:
@@ -36,6 +38,8 @@ rules:
     - list
     - update
     - patch
+  
+  # CronJobs
   - apiGroups:
     - "batch"
     resources:
@@ -48,6 +52,8 @@ rules:
     - list
     - patch
     - update
+  
+  # CRDs
   - apiGroups:
     - apiextensions.k8s.io
     resources:
@@ -57,6 +63,8 @@ rules:
     - list
     - watch
     - create
+  
+  # Custom CRDs
   - apiGroups:
     - org.zhejianglab.astro.metadata
     resources:
@@ -74,6 +82,8 @@ rules:
     - update
     - patch
     - delete
+  
+  # Namespaces - 只读
   - apiGroups:
     - ""
     resources:
@@ -82,9 +92,16 @@ rules:
     - get
     - list
     - watch
+  
+  # Deployments - 用于检查状态（可选）
+  - apiGroups:
+    - "apps"
+    resources:
+    - deployments
+    verbs:
+    - get
+    - list
 
-
-{{/* First, create a list containing Release.Namespace and optional additional namespaces */}}
 {{- $namespaces := list .Release.Namespace }}
 {{- if .Values.flink.session.clusterNamespaces }}
 {{- $namespaces = concat $namespaces .Values.flink.session.clusterNamespaces | uniq }}
@@ -92,30 +109,25 @@ rules:
 
 {{- range $namespace := $namespaces }}
 ---
+# ServiceAccount - 每个命名空间
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: {{ include "metadata-environment.serviceAccountName" $ }}
   namespace: {{ $namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
 automountServiceAccountToken: {{ $.Values.ingestTaskOperator.automountServiceAccountToken }}
 
 ---
+# Role - 命名空间级别权限
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" $ }}
 kind: Role
 metadata:
   name: {{ include "metadata-environment.roleName" $ }}
   namespace: {{ $namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
 rules:
+  # Pods, ConfigMaps, Secrets
   - apiGroups:
     - ""
     resources:
@@ -129,30 +141,43 @@ rules:
     - delete
     - watch
     - list
+    - patch
+    - update
+  
+  # Pod exec
   - apiGroups:
     - ""
     resources:
     - pods/exec
     verbs:
     - create
+  
+  # Deployments
   - apiGroups:
-    - "apps/v1"  
+    - "apps"
     resources:
     - deployments
     verbs:
-    - create
     - get
+    - list
+    - create
     - delete
+  
+  # Jobs
   - apiGroups:
-    - "batch/v1"
+    - "batch"
     resources:
     - jobs
     verbs:
     - create
     - get
     - delete
+    - list
+    - watch
+  
+  # CronJobs
   - apiGroups:
-    - batch
+    - "batch"
     resources:
     - cronjobs
     verbs:
@@ -162,6 +187,9 @@ rules:
     - watch
     - list
     - patch
+    - update
+  
+  # Custom CRDs
   - apiGroups:
     - org.zhejianglab.astro.metadata
     resources:
@@ -179,18 +207,31 @@ rules:
     - update
     - patch
     - delete
+  
+  # Flink resources - namespace 级别
+  - apiGroups:
+    - "flink.apache.org"
+    resources:
+    - flinkdeployments
+    - flinksessionjobs
+    - flinkstatesnapshots
+    verbs:
+    - get
+    - list
+    - create
+    - watch
+    - patch
+    - delete
+    - update
 
 ---
+# RoleBinding
 apiVersion: {{ include "common.capabilities.rbac.apiVersion" $ }}
 kind: RoleBinding
 metadata:
   name: {{ printf "%s-%s" $.Values.ingestTaskOperator.serviceAccount.roleBinding.name $namespace | quote }}
   namespace: {{ $namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
 subjects:
   - kind: ServiceAccount
     namespace: {{ $namespace | quote }}
@@ -200,17 +241,13 @@ roleRef:
   kind: Role
   name: {{ include "metadata-environment.roleName" $ }}
 
-
 ---
+# ClusterRoleBinding
 apiVersion:  {{ include "common.capabilities.rbac.apiVersion" $ }}
 kind: ClusterRoleBinding
 metadata:
   name: {{ printf "%s-%s" $.Values.ingestTaskOperator.serviceAccount.clusterRoleBinding.name $namespace | quote }}
   labels: {{- include "common.labels.standard" ( dict "customLabels" $.Values.ingestTaskOperator.commonLabels "context" $ ) | nindent 4 }}
-  {{- if or $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations }}
-  {{- $annotations := include "common.tplvalues.merge" ( dict "values" ( list $.Values.ingestTaskOperator.serviceAccount.annotations $.Values.ingestTaskOperator.commonAnnotations ) "context" . ) }}
-  annotations: {{- include "common.tplvalues.render" ( dict "value" $annotations "context" $) | nindent 4 }}
-  {{- end }}
 subjects:
 - kind: ServiceAccount
   name: {{ include "metadata-environment.serviceAccountName" $ }}

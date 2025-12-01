@@ -143,6 +143,7 @@ flinkk8soperator:
     append: true
     flink-conf.yaml: |+
       kubernetes.operator.flink.client.timeout: 120 s
+
 flink:
   session:
     version: v1_19
@@ -152,8 +153,7 @@ flink:
       repository: astro-base-images/flink-oss-updated
       tag: 1.19-java17
       pullSecrets: []
-    clusterNamespaces:
-    - astro-workbench
+    clusterNamespaces: []
     state:
       checkpoint:
         path: file:///opt/flink/checkpoints
@@ -184,7 +184,7 @@ flink:
     persistence:
       enabled: false
       accessModes:
-        - ReadWriteMany
+        - ReadWriteOnce
       size: 10Gi
       storageClass: "local-path"
   residenceJobs:
@@ -255,10 +255,10 @@ minio:
     annotations: 
       nginx.ingress.kubernetes.io/rewrite-target: /$1
   persistence:
-    enabled: false
+    enabled: true
     storageClass: "local-path"
     accessModes:
-      - ReadWriteMany
+      - ReadWriteOnce
     size: 20Gi
   volumePermissions:
     enabled: false
@@ -343,7 +343,7 @@ elasticsearch:
       enabled: false
       storageClass: "local-path"
       accessModes:
-        - ReadWriteMany
+        - ReadWriteOnce
       size: 20Gi
   coordinating:
     replicaCount: 0
@@ -419,7 +419,7 @@ kafka:
       enabled: false
       storageClass: "local-path"
       accessModes:
-        - ReadWriteMany
+        - ReadWriteOnce
       size: 20Gi
     logPersistence:
       enabled: false

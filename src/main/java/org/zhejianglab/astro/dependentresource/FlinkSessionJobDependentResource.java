@@ -88,7 +88,12 @@ public class FlinkSessionJobDependentResource
 
     updatedJobConfig
         .getFlinkConfiguration()
-        .putAll(Map.of("kubernetes.operator.job.restart.failed", "false"));
+        .putAll(
+            Map.of(
+                "kubernetes.operator.job.restart.failed",
+                "false",
+                "execution.checkpointing.interval",
+                "-1"));
 
     JobSpec jobSpec = updatedJobConfig.getJob();
     if (isFinished && jobSpec.getState() != JobState.SUSPENDED) {

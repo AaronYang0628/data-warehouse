@@ -36,13 +36,13 @@ kubectl create -f https://github.com/jetstack/cert-manager/releases/download/v1.
 1. [[Optional]]() install flink-operator 
 ```shell
 helm repo add flink-operator-repo https://downloads.apache.org/flink/flink-kubernetes-operator-1.11.0/
-helm install --create-namespace -n flink flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
+helm install --create-namespace -n metadata flink-kubernetes-operator flink-operator-repo/flink-kubernetes-operator
 ```
 
 2. test metadata operator
 ```shell
 ## install from local
-helm upgrade  --create-namespace -n warehouse --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/dev.yaml warehouse /tmp/data-warehouse-0.0.21.tgz
+helm upgrade  --create-namespace -n warehouse --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/dev.yaml warehouse /tmp/data-warehouse-0.0.23.tgz
 
 # ## install to zverse
 # helm upgrade  --kubeconfig=/root/.kube/zverse_config --create-namespace -n metadata --install -f /root/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.10

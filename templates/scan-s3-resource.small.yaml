@@ -9,12 +9,12 @@ spec:
     - fits
   platform: s3
   extraEnvs:
-    esHost: "warehouse-elasticsearch.warehouse.svc.cluster.local"
+    esHost: "warehouse-elasticsearch.metadata.svc.cluster.local"
     esPort: 9200
     datasetIndex: "datasetindex"
   extraSecret: 
     name: munge-oss-ingestion-credential
-    namespace: warehouse
+    namespace: metadata
     accessKeyName: access-key
     secretKeyName: secret-key
     endpointKeyName: s3-endpoint

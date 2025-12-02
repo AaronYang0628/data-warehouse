@@ -19,6 +19,11 @@
         <junit.version>5.9.2</junit.version>
         <log4j.version>2.20.0</log4j.version>
         <fabric8-client.version>7.1.0</fabric8-client.version>
+        <helm.chart.name>metadata-environment</helm.chart.name>
+        <helm.chart.version>${project.version}</helm.chart.version>
+        <helm.chart.directory>${project.basedir}/environments/helm/metadata-environment</helm.chart.directory>
+        <helm.output.directory>${project.build.directory}/helm</helm.output.directory>
+        <helm.maven.plugin.version>6.17.0</helm.maven.plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -216,6 +221,41 @@
                             <password>Aaron0628.</password>
                         </auth>
                     </to>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>io.kokuwa.maven</groupId>
+                <artifactId>helm-maven-plugin</artifactId>
+                <version>${helm.maven.plugin.version}</version>
+                <executions>
+                    <!-- 在 package 阶段打包 Helm Chart -->
+                    <execution>
+                        <id>package-helm-chart</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>package</goal>
+                        </goals>
+                        <configuration>
+                            <chartDirectory>${helm.chart.directory}</chartDirectory>
+                            <appVersion>${project.version}</appVersion>
+                            <outputDirectory>${helm.output.directory}</outputDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+                <configuration>
+                    <!-- 全局配置用于 push -->
+                    <chartDirectory>${helm.chart.directory}</chartDirectory>
+                    <useLocalHelmBinary>true</useLocalHelmBinary>
+                    <helmExecutable>/opt/helm/linux-amd64/helm</helmExecutable>
+                    <outputDirectory>${helm.output.directory}</outputDirectory>
+                    <uploadRepoStable>
+                        <name>zj-harbor</name>
+                        <url>harbor.zhejianglab.com/ay-dev</url>
+                        <type>CHARTMUSEUM</type>
+                        <username>byang628@zhejianglab.com</username>
+                        <password>Aaron0628.</password>
+                    </uploadRepoStable>
+                    <skipLogin>false</skipLogin>
                 </configuration>
             </plugin>
         </plugins>

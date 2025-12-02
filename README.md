@@ -67,33 +67,21 @@ mvn spotless:apply
 mvn dependency:tree
 ```
 
-3. package jar (also generate new CRD)
+3. package jar (also generate new CRD, package helm chart)
 ```shell
 #/workspaces/data-warehouse/target/classes/META-INF/fabric8
 mvn clean package
 ```
 
-4. build docker image
+4. build and push docker image
 ```shell
 export DOCKER_CR_PAT=dckr_pat_bBN_Xkgz-TRdxirM2B6EDYCjjrg
 echo $DOCKER_CR_PAT | podman login docker.io -u aaron666 --password-stdin
 mvn compile jib:build
 ```
 
-### TODO
-- some resources cannot remove, even though there are
+5. build and push helm chart
 ```shell
-[root@ay-zj-ecs data-warehouse]# kubectl -n metadata logs -f ingest-operator-flink-post-cleanup-job-td9gs
-CRD 'flinkingesttasks.org.zhejianglab.astro.metadata' not found
-CRD 'virtualingesttasks.org.zhejianglab.astro.metadata' not found
-In Namespace ayyy Secret 'metadata-minio-secret' not found
-In Namespace ayyy ServiceAccount 'flink' not found
-In Namespace ayyy  Role 'flink' not found
-In Namespace ayyy  RoleBinding 'flink-role-binding' not found
-Cleanup completed successfully
-[root@ay-zj-ecs data-warehouse]# kubectl -n metadata logs -f ingest-operator-flink-pre-cleanup-job-b9tbg
-In Namespace ayyy Flinkdeployment 'metadata-flink-job-ingest-kafka-to-es' not found
-In Namespace ayyy, there is no SessionJob hosted by metadata-flink-session-cluster
-In Namespace ayyy Flinkdeployment 'metadata-flink-session-cluster' not found
-Cleanup completed successfully
+mvn helm:push
 ```
+

@@ -85,3 +85,4 @@ mvn compile jib:build
 mvn helm:push
 ```
 
+helm pull oci://harbor.zhejianglab.com/ay-dev/data-warehouse --version 0.0.25

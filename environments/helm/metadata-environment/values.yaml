@@ -15,7 +15,7 @@ ingestTaskOperator:
   image:
     registry: harbor.zhejianglab.com
     repository: ay-dev/metadata-crd-operator
-    tag: v20251126
+    tag: v20251201
     pullPolicy: Always
     pullSecrets: []
   serviceAccount:

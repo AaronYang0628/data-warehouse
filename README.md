@@ -77,7 +77,7 @@ mvn clean package
 ```shell
 export DOCKER_CR_PAT=dckr_pat_bBN_Xkgz-TRdxirM2B6EDYCjjrg
 echo $DOCKER_CR_PAT | podman login docker.io -u aaron666 --password-stdin
-mvn compile jib:build
+mvn clean compile jib:build -Dgit.commit.id.abbrev=$(git rev-parse --short=7 HEAD)
 ```
 
 5. build and push helm chart

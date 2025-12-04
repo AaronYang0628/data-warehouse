@@ -24,6 +24,7 @@
         <helm.chart.directory>${project.basedir}/environments/helm/metadata-environment</helm.chart.directory>
         <helm.output.directory>${project.build.directory}/helm</helm.output.directory>
         <helm.maven.plugin.version>6.17.0</helm.maven.plugin.version>
+        <git.commit.id.abbrev>unknown</git.commit.id.abbrev>
     </properties>
 
     <dependencyManagement>
@@ -207,6 +208,31 @@
                 </executions>
             </plugin>
             <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-antrun-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>git-commit-id</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>run</goal>
+                        </goals>
+                        <configuration>
+                            <exportAntProperties>true</exportAntProperties>
+                            <target>
+                                <exec executable="git" outputproperty="git.commit.id.abbrev" failonerror="false">
+                                    <arg value="rev-parse"/>
+                                    <arg value="--short=7"/>
+                                    <arg value="HEAD"/>
+                                </exec>
+                                <echo message="Git commit ID: ${git.commit.id.abbrev}"/>
+                            </target>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>com.google.cloud.tools</groupId>
                 <artifactId>jib-maven-plugin</artifactId>
                 <version>3.4.5</version>
@@ -215,11 +241,15 @@
                         <image>m.daocloud.io/docker.io/library/eclipse-temurin:17-jre</image>
                     </from>
                     <to>
-                        <image>harbor.zhejianglab.com/ay-dev/metadata-crd-operator:v20251201</image>
+                        <image>harbor.zhejianglab.com/ay-dev/metadata-crd-operator:${git.commit.id.abbrev}</image>
                         <auth>
                             <username>byang628@zhejianglab.com</username>
                             <password>Aaron0628.</password>
                         </auth>
+                        <tags>
+                            <tag>${git.commit.id.abbrev}</tag>
+                            <tag>latest</tag>
+                        </tags>
                     </to>
                 </configuration>
             </plugin>

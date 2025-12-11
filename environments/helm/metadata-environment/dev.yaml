@@ -15,7 +15,7 @@ ingestTaskOperator:
   image:
     registry: harbor.zhejianglab.com
     repository: ay-dev/metadata-crd-operator
-    tag: v20251201
+    tag: latest
     pullPolicy: Always
     pullSecrets: []
   serviceAccount:
@@ -150,16 +150,14 @@ flink:
     version: v1_19
     mode: native
     image:
-      registry: harbor.zhejianglab.com
+      registry: docker-registry.lab.zverse.space
       repository: astro-base-images/flink-oss-updated
       tag: 1.19-java17
       pullSecrets: []
     clusterNamespaces: []
     state:
-      checkpoint:
-        path: file:///opt/flink/checkpoints
-      savepoint:
-        path: file:///opt/flink/savepoints
+      shuffle:
+        path: /opt/flink/shuffle-data
     extraContainerPorts:
       - name: flink-metric
         containerPort: 9249
@@ -167,8 +165,8 @@ flink:
     jobManager:
       replicas: 1
       resource:
-        cpu: 1
-        memory: 1Gi
+        cpu: 2
+        memory: 4Gi
     taskManager:
       replicas: 1
       taskSlots: 2
@@ -183,7 +181,7 @@ flink:
       className: nginx
       template: flink.session.k8s.io/{{namespace}}/{{name}}/?(.*)
     persistence:
-      enabled: false
+      enabled: true
       accessModes:
         - ReadWriteOnce
       size: 10Gi

@@ -35,33 +35,28 @@ spec:
         {{- include "common.tplvalues.render" (dict "value" $.Values.flink.session.extraContainerPorts "context" $) | nindent 12 }}
         {{- end }}
         volumeMounts:
-          - name: checkpoint-volume
-            mountPath: {{ $.Values.flink.session.state.checkpoint.path | trimPrefix "file:///" }}
-          - name: savepoint-volume
-            mountPath: {{ $.Values.flink.session.state.savepoint.path | trimPrefix "file:///" }}
+          - name: shuffle-volume
+            mountPath: {{ $.Values.flink.session.state.shuffle.path }}
       volumes:
-        - name: checkpoint-volume
+        - name: shuffle-volume
           {{- if $.Values.flink.session.persistence.enabled }}
           persistentVolumeClaim:
-            claimName: meta-flink-session-checkpoint-pvc
-          {{- else }}
-          emptyDir: {}
-          {{- end }}
-        - name: savepoint-volume
-          {{- if $.Values.flink.session.persistence.enabled }}
-          persistentVolumeClaim:
-            claimName: meta-flink-session-savepoint-pvc
+            claimName: meta-flink-session-shuffle-pvc
           {{- else }}
           emptyDir: {}
           {{- end }}
   flinkConfiguration:
+    env.java.opts: --add-opens java.base/java.util=ALL-UNNAMED  --add-opens=java.base/java.lang=ALL-UNNAMED
     flink.client.timeout: 120s
+    heartbeat.timeout: "600000"
     pekko.ask.timeout: 600s
     pekko.remote.netty.tcp.connection-timeout: 600s
-    heartbeat.timeout: "600000"
-    env.java.opts: --add-opens java.base/java.util=ALL-UNNAMED  --add-opens=java.base/java.lang=ALL-UNNAMED
-    state.checkpoints.dir: {{ $.Values.flink.session.state.checkpoint.path }}
-    state.savepoints.dir: {{ $.Values.flink.session.state.savepoint.path }}
+    io.tmp.dirs: {{ $.Values.flink.session.state.shuffle.path }}
+    taskmanager.network.blocking-shuffle.compression.enabled: "true"
+    taskmanager.memory.framework.off-heap.size: 256m
+    taskmanager.network.sort-shuffle.min-buffers: "512"
+    taskmanager.network.sort-shuffle.min-parallelism: "1"
+    resourcemanager.taskmanager-timeout: "300000"
     taskmanager.numberOfTaskSlots: {{ $.Values.flink.session.taskManager.taskSlots | quote }}
   jobManager:
     replicas: {{ $.Values.flink.session.jobManager.replicas }}
@@ -77,6 +72,25 @@ spec:
         cpu: {{ $.Values.flink.session.taskManager.resource.cpu }}
         memory: {{ $.Values.flink.session.taskManager.resource.memory }}
       {{- end }}
+    podTemplate:
+      spec:
+        securityContext:
+          runAsUser: 9999
+          runAsGroup: 9999
+          fsGroup: 9999
+        containers:
+          - name: flink-main-container
+            volumeMounts:
+              - name: shuffle-volume
+                mountPath: {{ $.Values.flink.session.state.shuffle.path }}
+        volumes:
+          - name: shuffle-volume
+            {{- if $.Values.flink.session.persistence.enabled }}
+            persistentVolumeClaim:
+              claimName: meta-flink-session-shuffle-pvc
+            {{- else }}
+            emptyDir: {}
+            {{- end }}
   {{- if $.Values.flink.session.ingress.enabled }}
   ingress:
     template: {{ $.Values.flink.session.ingress.template }}

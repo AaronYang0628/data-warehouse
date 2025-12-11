@@ -30,8 +30,6 @@ spec:
       taskmanager.numberOfTaskSlots: "2"
       high-availability.type: kubernetes
       high-availability.storageDir: file:///opt/flink/volume/flink-ha
-      state.checkpoints.dir: file:///opt/flink/volume/flink-cp
-      state.savepoints.dir: file:///opt/flink/volume/flink-sp
       kubernetes.operator.snapshot.resource.enabled: "false"
     serviceAccount: metadata-ingest-flink-sa # should  be the same as the serviceAccountName in the flink-operator no matter the service running in any namespace
     podTemplate:

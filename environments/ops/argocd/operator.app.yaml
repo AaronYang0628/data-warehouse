@@ -178,10 +178,8 @@ spec:
             clusterNamespaces:
             - astro-workbench
             state:
-              checkpoint:
-                path: file:///opt/flink/checkpoints
-              savepoint:
-                path: file:///opt/flink/savepoints
+              shuffle:
+                path: /opt/flink/shuffle-data
             extraContainerPorts:
               - name: flink-metric
                 containerPort: 9249

@@ -44,6 +44,8 @@ helm install --create-namespace -n flink flink-kubernetes-operator flink-operato
 ## install from local
 helm upgrade  --create-namespace -n warehouse --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/dev.yaml warehouse /tmp/data-warehouse-0.0.26.tgz
 
+helm upgrade  --create-namespace -n metadata-test --install -f /workspaces/data-warehouse/environments/helm/metadata-environment/dev.yaml metadata-test  /tmp/data-warehouse-0.0.26.tgz
+
 # ## install to zverse
 # helm upgrade  --kubeconfig=/root/.kube/zverse_config --create-namespace -n metadata --install -f /root/data-warehouse/environments/helm/metadata-environment/values.yaml metadata ay-helm-mirror/data-warehouse  --version=0.0.10
 ```

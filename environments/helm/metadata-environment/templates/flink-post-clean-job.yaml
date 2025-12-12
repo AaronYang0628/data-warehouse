@@ -4,14 +4,15 @@ metadata:
   name: {{ .Values.ingestTaskOperator.name }}-flink-post-cleanup-job
   namespace: {{ .Release.Namespace }}
   annotations:
-    "helm.sh/hook": post-delete  
-    "helm.sh/hook-weight": "5"   
-    "helm.sh/hook-delete-policy": hook-succeeded 
+    "helm.sh/hook": post-delete
+    "helm.sh/hook-weight": "5"
+    "helm.sh/hook-delete-policy": hook-succeeded
 spec:
-  backoffLimit: 1  
+  backoffLimit: 1
   template:
     spec:
       restartPolicy: Never
+      serviceAccountName: {{ .Release.Name }}-rbac-cleanup-sa
       containers:
       - name: cleanup-container
         {{- if .Values.global.registryPrefix }}
@@ -19,65 +20,175 @@ spec:
         {{- else }}
         image: crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11
         {{- end }}
-        command: ["/bin/sh", "-c"]
+        command: ["/bin/bash", "-c"]
         args:
         - |
+          set -e
 
-          # check and delete CRD 'flinkingesttasks.org.zhejianglab.astro.metadata'
-          if kubectl get crd flinkingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
-            kubectl delete crd flinkingesttasks.org.zhejianglab.astro.metadata
-            echo "Deleting CRD: flinkingesttasks.org.zhejianglab.astro.metadata"
-          else
-            echo "CRD 'flinkingesttasks.org.zhejianglab.astro.metadata' not found"
-          fi
+          NAMESPACE="{{ .Release.Namespace }}"
+          RELEASE_NAME="{{ .Release.Name }}"
 
-          # check and delete CRD 'croningesttasks.org.zhejianglab.astro.metadata'
-          if kubectl get crd croningesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
-            kubectl delete crd croningesttasks.org.zhejianglab.astro.metadata
-            echo "Deleting CRD: croningesttasks.org.zhejianglab.astro.metadata"
-          else
-            echo "CRD 'croningesttasks.org.zhejianglab.astro.metadata' not found"
-          fi
+          echo "=============================================================="
+          echo "Cleanup RBAC and Secrets - Post Delete Hook"
+          echo "=============================================================="
+          echo ""
 
-          # check and delete CRD 'virtualingesttasks.org.zhejianglab.astro.metadata'
-          if kubectl get crd virtualingesttasks.org.zhejianglab.astro.metadata >/dev/null 2>&1; then
-            kubectl delete crd virtualingesttasks.org.zhejianglab.astro.metadata
-            echo "Deleting CRD: virtualingesttasks.org.zhejianglab.astro.metadata"
-          else
-            echo "CRD 'virtualingesttasks.org.zhejianglab.astro.metadata' not found"
-          fi
+          # ============================================
+          # Step 1: Delete CRDs
+          # ============================================
+          echo "Step 1: Cleanup CRDs"
+          echo "--------------------------------------------"
 
-          # check and delete secret 'metadata-minio-secret'
-          if kubectl get secret metadata-minio-secret -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete secret metadata-minio-secret -n {{ .Release.Namespace }}
-            echo "In Namespace {{ .Release.Namespace }} Deleting Secret: metadata-minio-secret"
-          else
-            echo "In Namespace {{ .Release.Namespace }} Secret 'metadata-minio-secret' not found"
-          fi
+          for crd in flinkingesttasks.org.zhejianglab.astro.metadata \
+                     croningesttasks.org.zhejianglab.astro.metadata \
+                     virtualingesttasks.org.zhejianglab.astro.metadata; do
+            if kubectl get crd "$crd" >/dev/null 2>&1; then
+              kubectl delete crd "$crd" 2>/dev/null || true
+              echo "✓ Deleted CRD: $crd"
+            else
+              echo "  $crd not found"
+            fi
+          done
 
-          # check and delete ServiceAccount 'flink'
-          if kubectl get sa flink -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete sa flink -n {{ .Release.Namespace }}
-            echo "In Namespace {{ .Release.Namespace }} Deleting ServiceAccount: flink"
+          echo ""
+
+          # ============================================
+          # Step 2: Delete Secrets
+          # ============================================
+          echo "Step 2: Cleanup Secrets"
+          echo "--------------------------------------------"
+
+          if kubectl get secret metadata-minio-secret -n $NAMESPACE >/dev/null 2>&1; then
+            kubectl delete secret metadata-minio-secret -n $NAMESPACE 2>/dev/null || true
+            echo "✓ Deleted Secret: metadata-minio-secret in namespace $NAMESPACE"
           else
-            echo "In Namespace {{ .Release.Namespace }} ServiceAccount 'flink' not found"
-          fi
-          
-          # check and delete Role 'flink'
-          if kubectl get role flink -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete role flink -n {{ .Release.Namespace }}
-            echo "In Namespace {{ .Release.Namespace }} Deleting Role: flink"
-          else
-            echo "In Namespace {{ .Release.Namespace }}  Role 'flink' not found"
-          fi
-          
-          # check and delete RoleBinding 'flink-role-binding'
-          if kubectl get rolebinding flink-role-binding -n {{ .Release.Namespace }} >/dev/null 2>&1; then
-            kubectl delete rolebinding flink-role-binding -n {{ .Release.Namespace }}
-            echo "In Namespace {{ .Release.Namespace }} Deleting RoleBinding: flink-role-binding"
-          else
-            echo "In Namespace {{ .Release.Namespace }}  RoleBinding 'flink-role-binding' not found"
+            echo "  metadata-minio-secret not found in namespace $NAMESPACE"
           fi
 
-          echo "Cleanup completed successfully"
+          echo ""
+
+          # ============================================
+          # Step 3: Delete Namespace-level RBAC resources
+          # ============================================
+          echo "Step 3: Cleanup Namespace-level RBAC resources"
+          echo "--------------------------------------------"
+
+          {{- $namespaces := list .Release.Namespace }}
+          {{- if .Values.flink.session.clusterNamespaces }}
+          {{- $namespaces = concat $namespaces .Values.flink.session.clusterNamespaces | uniq }}
+          {{- end }}
+
+          # Build namespace list from template
+          NAMESPACES="{{ range $namespaces }}{{ . }} {{ end }}"
+
+          for ns in $NAMESPACES; do
+            echo "Processing namespace: $ns"
+
+            # Delete metadata-ingest-operator ServiceAccount
+            if kubectl get sa {{ .Values.ingestTaskOperator.serviceAccount.name }} -n $ns >/dev/null 2>&1; then
+              kubectl delete sa {{ .Values.ingestTaskOperator.serviceAccount.name }} -n $ns 2>/dev/null || true
+              echo "  ✓ Deleted ServiceAccount: {{ .Values.ingestTaskOperator.serviceAccount.name }}"
+            fi
+
+            # Delete metadata-ingest-operator Role
+            if kubectl get role {{ .Values.ingestTaskOperator.serviceAccount.role.name }} -n $ns >/dev/null 2>&1; then
+              kubectl delete role {{ .Values.ingestTaskOperator.serviceAccount.role.name }} -n $ns 2>/dev/null || true
+              echo "  ✓ Deleted Role: {{ .Values.ingestTaskOperator.serviceAccount.role.name }}"
+            fi
+
+            # Delete metadata-ingest-operator RoleBinding
+            for rb in {{ .Values.ingestTaskOperator.serviceAccount.roleBinding.name }}-$ns {{ .Values.ingestTaskOperator.serviceAccount.roleBinding.name }}; do
+              if kubectl get rolebinding "$rb" -n $ns >/dev/null 2>&1; then
+                kubectl delete rolebinding "$rb" -n $ns 2>/dev/null || true
+                echo "  ✓ Deleted RoleBinding: $rb"
+              fi
+            done
+
+            # Delete metadata-ingest-flink ServiceAccount
+            if kubectl get sa {{ .Values.ingestTaskOperator.flink.serviceAccount.name }} -n $ns >/dev/null 2>&1; then
+              kubectl delete sa {{ .Values.ingestTaskOperator.flink.serviceAccount.name }} -n $ns 2>/dev/null || true
+              echo "  ✓ Deleted ServiceAccount: {{ .Values.ingestTaskOperator.flink.serviceAccount.name }}"
+            fi
+
+            # Delete metadata-api-server ServiceAccount
+            {{- if .Values.apiServer.enabled }}
+            if kubectl get sa {{ .Values.apiServer.serviceAccount.name }} -n $ns >/dev/null 2>&1; then
+              kubectl delete sa {{ .Values.apiServer.serviceAccount.name }} -n $ns 2>/dev/null || true
+              echo "  ✓ Deleted ServiceAccount: {{ .Values.apiServer.serviceAccount.name }}"
+            fi
+            {{- end }}
+          done
+
+          echo ""
+
+          # ============================================
+          # Step 4: Delete Cluster-level RBAC resources
+          # ============================================
+          echo "Step 4: Cleanup Cluster-level RBAC resources"
+          echo "--------------------------------------------"
+
+          # Delete ClusterRoles
+          for cr in {{ .Values.ingestTaskOperator.serviceAccount.clusterRole.name }} \
+                    {{ .Values.ingestTaskOperator.flink.clusterRole.name }} \
+                    {{ .Values.apiServer.clusterRole.name }}; do
+            if kubectl get clusterrole "$cr" >/dev/null 2>&1; then
+              kubectl delete clusterrole "$cr" 2>/dev/null || true
+              echo "✓ Deleted ClusterRole: $cr"
+            fi
+          done
+
+          echo ""
+
+          # Delete ClusterRoleBindings (with namespace suffix)
+          for crb_base in {{ .Values.ingestTaskOperator.serviceAccount.clusterRoleBinding.name }} \
+                          {{ .Values.ingestTaskOperator.flink.clusterRoleBinding.name }} \
+                          {{ .Values.apiServer.clusterRole.roleBinding.name }}; do
+            # Try with namespace suffix
+            for ns in $NAMESPACES; do
+              crb="${crb_base}-${ns}"
+              if kubectl get clusterrolebinding "$crb" >/dev/null 2>&1; then
+                kubectl delete clusterrolebinding "$crb" 2>/dev/null || true
+                echo "✓ Deleted ClusterRoleBinding: $crb"
+              fi
+            done
+
+            # Try without namespace suffix (for api-server and others)
+            if kubectl get clusterrolebinding "$crb_base" >/dev/null 2>&1; then
+              kubectl delete clusterrolebinding "$crb_base" 2>/dev/null || true
+              echo "✓ Deleted ClusterRoleBinding: $crb_base"
+            fi
+          done
+
+          echo ""
+
+          # ============================================
+          # Step 5: Cleanup hook-created RBAC resources
+          # ============================================
+          echo "Step 5: Cleanup hook-created RBAC resources"
+          echo "--------------------------------------------"
+
+          # Delete cleanup job's own ServiceAccount, ClusterRole, ClusterRoleBinding
+          CLEANUP_SA="${RELEASE_NAME}-rbac-cleanup-sa"
+          CLEANUP_CR="${RELEASE_NAME}-rbac-cleanup"
+          CLEANUP_CRB="${RELEASE_NAME}-rbac-cleanup"
+
+          if kubectl get sa "$CLEANUP_SA" -n $NAMESPACE >/dev/null 2>&1; then
+            kubectl delete sa "$CLEANUP_SA" -n $NAMESPACE 2>/dev/null || true
+            echo "✓ Deleted cleanup ServiceAccount: $CLEANUP_SA"
+          fi
+
+          if kubectl get clusterrole "$CLEANUP_CR" >/dev/null 2>&1; then
+            kubectl delete clusterrole "$CLEANUP_CR" 2>/dev/null || true
+            echo "✓ Deleted cleanup ClusterRole: $CLEANUP_CR"
+          fi
+
+          if kubectl get clusterrolebinding "$CLEANUP_CRB" >/dev/null 2>&1; then
+            kubectl delete clusterrolebinding "$CLEANUP_CRB" 2>/dev/null || true
+            echo "✓ Deleted cleanup ClusterRoleBinding: $CLEANUP_CRB"
+          fi
+
+          echo ""
+          echo "=============================================================="
+          echo "✓ RBAC cleanup completed successfully"
+          echo "=============================================================="
       

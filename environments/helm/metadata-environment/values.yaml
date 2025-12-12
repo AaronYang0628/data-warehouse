@@ -233,7 +233,14 @@ minio:
     registry: m.lab.zverse.space/docker.io
   auth:
     existingSecret: metadata-minio-secret
+    rootUser: admin
+    rootPassword: password
+    accessKey: admin
+    secretKey: password
   defaultBuckets: "es-snapshot"
+  initBuckets:
+    - name: flink
+      public: true
   ingress:
     enabled: true
     ingressClassName: "nginx"

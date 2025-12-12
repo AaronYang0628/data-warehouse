@@ -35,12 +35,36 @@ spec:
         image: {{ .Values.initJob.minio.registry }}/{{ .Values.initJob.minio.image }}
         {{- end }}
         imagePullPolicy: {{ .Values.initJob.minio.pullPolicy }}
+        env:
+        - name: MINIO_ACCESS_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metadata-minio-secret
+              key: s3-access-key
+        - name: MINIO_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              name: metadata-minio-secret
+              key: s3-access-secret
         command: ["/bin/sh", "-c"]
         args:
         - |
           set -e
           echo "starting..."
-          mc alias set myminio http://{{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local:9000 admin password
-          mc mb myminio/flink
-          mc anonymous set public myminio/flink
-          echo "make the bucket 'myminio/flink' public successfully"
+          mc alias set myminio http://{{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local:9000 ${MINIO_ACCESS_KEY} ${MINIO_SECRET_KEY}
+          {{- range .Values.minio.initBuckets }}
+
+          # Create bucket: {{ .name }}
+          if ! mc ls myminio/{{ .name }} >/dev/null 2>&1; then
+            mc mb myminio/{{ .name }}
+            echo "Bucket 'myminio/{{ .name }}' created successfully"
+          else
+            echo "Bucket 'myminio/{{ .name }}' already exists"
+          fi
+          {{- if .public }}
+
+          # Set bucket to public
+          mc anonymous set public myminio/{{ .name }}
+          echo "Bucket 'myminio/{{ .name }}' set to public"
+          {{- end }}
+          {{- end }}

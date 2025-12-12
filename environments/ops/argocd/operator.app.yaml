@@ -21,7 +21,7 @@ spec:
       values: |
         global:
           storageClass: "" 
-          registryPrefix: m.lab.zverse.space
+          registry: m.lab.zverse.space/docker.io
           pullPolicy: IfNotPresent
           security: 
             allowInsecureImages: true

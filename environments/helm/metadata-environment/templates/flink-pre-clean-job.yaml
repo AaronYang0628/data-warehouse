@@ -16,8 +16,8 @@ spec:
       serviceAccountName: {{ include "metadata-environment.serviceAccountName" . }}
       containers:
       - name: cleanup-container
-        {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/docker.io/bitnami/kubectl:1.28-debian-11
+        {{- if .Values.global.registry }}
+        image: {{ .Values.global.registry }}/bitnami/kubectl:1.28-debian-11
         {{- else }}
         image: crpi-wixjy6gci86ms14e.cn-hongkong.personal.cr.aliyuncs.com/ay-mirror/kubectl:1.28-debian-11
         {{- end }}

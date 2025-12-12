@@ -1,6 +1,6 @@
 global:
   storageClass: "" 
-  registryPrefix: m.lab.zverse.space
+  registry: m.lab.zverse.space/docker.io
   pullPolicy: IfNotPresent
   security: 
     allowInsecureImages: true
@@ -233,7 +233,14 @@ minio:
     registry: m.lab.zverse.space/docker.io
   auth:
     existingSecret: metadata-minio-secret
+    rootUser: admin
+    rootPassword: password
+    accessKey: admin
+    secretKey: password
   defaultBuckets: "es-snapshot"
+  initBuckets:
+    - name: flink
+      public: true
   ingress:
     enabled: true
     ingressClassName: "nginx"
@@ -251,7 +258,7 @@ minio:
     hostname: minio-api.metadata.dev
     path: /?(.*)
     pathType: ImplementationSpecific
-    annotations: 
+    annotations:
       nginx.ingress.kubernetes.io/rewrite-target: /$1
   persistence:
     enabled: true
@@ -458,6 +465,28 @@ kafka:
   kraft:
     enabled: true
     clusterId: "1"
+
+initJob:
+  busybox:
+    registry: m.lab.zverse.space/docker.io
+    pullPolicy: IfNotPresent
+    image: library/busybox:1.35.0
+    pullSecrets: []
+  minio:
+    registry: m.lab.zverse.space/docker.io
+    pullPolicy: IfNotPresent
+    image: library/mc:latest
+    pullSecrets: []
+  kafka:
+    registry: m.lab.zverse.space/docker.io
+    pullPolicy: IfNotPresent
+    image: bitnami/kafka:3.7.1-debian-12-r4
+    pullSecrets: []
+  elasticsearch:
+    registry: docker-registry.lab.zverse.space
+    pullPolicy: IfNotPresent
+    image: cnconti/meta-data-es-init:v250107-r1
+    pullSecrets: []
 
 apiServer:
   enabled: false

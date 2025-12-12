@@ -3,7 +3,10 @@ kind: Job
 metadata:
   name: metadata-elastic-search-index-init-job
   namespace: {{ .Release.Namespace }}
-  annotations: {}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
+  annotations:
+    checksum/elasticsearch-config: {{ .Values.elasticsearch | toJson | sha256sum }}
 spec:
   completions: 1
   parallelism: 1
@@ -14,8 +17,8 @@ spec:
       restartPolicy: Never
       initContainers:
       - name: wait-for-elastic
-        {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.busybox.image }}
+        {{- if .Values.global.registry }}
+        image: {{ .Values.global.registry }}/{{ .Values.initJob.busybox.image }}
         {{- else }}
         image: {{ .Values.initJob.busybox.registry }}/{{ .Values.initJob.busybox.image }}
         {{- end }}

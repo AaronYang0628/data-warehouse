@@ -3,6 +3,10 @@ kind: Job
 metadata:
   name: metadata-kafka-topic-init-job
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
+  annotations:
+    checksum/kafka-config: {{ .Values.kafka | toJson | sha256sum }}
 spec:
   completions: 1
   parallelism: 1
@@ -13,8 +17,8 @@ spec:
       restartPolicy: Never
       initContainers:
       - name: wait-for-kafka
-        {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.busybox.image }}
+        {{- if .Values.global.registry }}
+        image: {{ .Values.global.registry }}/{{ .Values.initJob.busybox.image }}
         {{- else }}
         image: {{ .Values.initJob.busybox.registry }}/{{ .Values.initJob.busybox.image }}
         {{- end }}
@@ -28,8 +32,8 @@ spec:
           ']
       containers:
       - name: kafka-client
-        {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.kafka.image }}
+        {{- if .Values.global.registry }}
+        image: {{ .Values.global.registry }}/{{ .Values.initJob.kafka.image }}
         {{- else }}
         image: {{ .Values.initJob.kafka.registry }}/{{ .Values.initJob.kafka.image }}
         {{- end }}

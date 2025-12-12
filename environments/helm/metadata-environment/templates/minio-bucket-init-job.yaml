@@ -3,7 +3,10 @@ kind: Job
 metadata:
   name: metadata-minio-bucket-init-job
   namespace: {{ .Release.Namespace }}
-  annotations: {}
+  labels:
+    {{- include "common.labels.standard" . | nindent 4 }}
+  annotations:
+    checksum/minio-secret: {{ include (print $.Template.BasePath "/minio-secret.yaml") . | sha256sum }}
 spec:
   completions: 1
   parallelism: 1
@@ -14,8 +17,8 @@ spec:
       restartPolicy: Never
       initContainers:
       - name: wait-for-minio
-        {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.busybox.image }}
+        {{- if .Values.global.registry }}
+        image: {{ .Values.global.registry }}/{{ .Values.initJob.busybox.image }}
         {{- else }}
         image: {{ .Values.initJob.busybox.registry }}/{{ .Values.initJob.busybox.image }}
         {{- end }}
@@ -29,8 +32,8 @@ spec:
           ']
       containers:
       - name: minio-client
-        {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.minio.image }}
+        {{- if .Values.global.registry }}
+        image: {{ .Values.global.registry }}/{{ .Values.initJob.minio.image }}
         {{- else }}
         image: {{ .Values.initJob.minio.registry }}/{{ .Values.initJob.minio.image }}
         {{- end }}

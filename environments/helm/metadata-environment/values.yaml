@@ -1,6 +1,6 @@
 global:
   storageClass: "" 
-  registryPrefix: m.lab.zverse.space
+  registry: m.lab.zverse.space
   pullPolicy: IfNotPresent
   security: 
     allowInsecureImages: true

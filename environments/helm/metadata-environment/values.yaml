@@ -451,6 +451,28 @@ kafka:
     enabled: true
     clusterId: "1"
 
+initJob:
+  busybox:
+    registry: m.lab.zverse.space/docker.io
+    pullPolicy: IfNotPresent
+    image: library/busybox:1.35.0
+    pullSecrets: []
+  minio:
+    registry: m.lab.zverse.space/docker.io
+    pullPolicy: IfNotPresent
+    image: library/mc:latest
+    pullSecrets: []
+  kafka:
+    registry: m.lab.zverse.space/docker.io
+    pullPolicy: IfNotPresent
+    image: bitnami/kafka:3.7.1-debian-12-r4
+    pullSecrets: []
+  elasticsearch:
+    registry: docker-registry.lab.zverse.space
+    pullPolicy: IfNotPresent
+    image: cnconti/meta-data-es-init:v250107-r1
+    pullSecrets: []
+
 apiServer:
   name: metadata-api-server
   commonLabels: {}

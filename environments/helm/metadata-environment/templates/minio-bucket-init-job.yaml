@@ -15,10 +15,11 @@ spec:
       initContainers:
       - name: wait-for-minio
         {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/docker.io/library/busybox:1.35.0
+        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.busybox.image }}
         {{- else }}
-        image: docker.io/library/busybox:1.35.0
+        image: {{ .Values.initJob.busybox.registry }}/{{ .Values.initJob.busybox.image }}
         {{- end }}
+        imagePullPolicy: {{ .Values.initJob.busybox.pullPolicy }}
         command: ['sh', '-c', '
           until nc -z -w 2 {{ .Release.Name }}-minio.{{ .Release.Namespace }}.svc.cluster.local 9000;
           do
@@ -29,10 +30,11 @@ spec:
       containers:
       - name: minio-client
         {{- if .Values.global.registryPrefix }}
-        image: {{ .Values.global.registryPrefix }}/docker.io/minio/mc:latest
+        image: {{ .Values.global.registryPrefix }}/{{ .Values.initJob.minio.image }}
         {{- else }}
-        image: docker.io/minio/mc:latest
+        image: {{ .Values.initJob.minio.registry }}/{{ .Values.initJob.minio.image }}
         {{- end }}
+        imagePullPolicy: {{ .Values.initJob.minio.pullPolicy }}
         command: ["/bin/sh", "-c"]
         args:
         - |

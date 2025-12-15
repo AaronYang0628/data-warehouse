@@ -11,7 +11,7 @@ spec:
   completions: 1
   parallelism: 1
   backoffLimit: 1
-  ttlSecondsAfterFinished: 1800
+  ttlSecondsAfterFinished: 300
   template:
     spec:
       restartPolicy: Never

@@ -241,6 +241,8 @@ minio:
   initBuckets:
     - name: flink
       public: true
+    - name: test
+      public: true
   ingress:
     enabled: true
     ingressClassName: "nginx"
@@ -475,7 +477,7 @@ initJob:
   minio:
     registry: m.lab.zverse.space/docker.io
     pullPolicy: IfNotPresent
-    image: library/mc:latest
+    image: minio/mc:latest
     pullSecrets: []
   kafka:
     registry: m.lab.zverse.space/docker.io

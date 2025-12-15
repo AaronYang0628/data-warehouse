@@ -20,6 +20,10 @@ spec:
   image: "{{ $.Values.flink.residenceJobs.consumeKafkaToES.image.registry }}/{{ $.Values.flink.residenceJobs.consumeKafkaToES.image.repository }}:{{ $.Values.flink.residenceJobs.consumeKafkaToES.image.tag }}"
   podTemplate:
     spec:
+      securityContext:
+        runAsUser: 9999
+        runAsGroup: 9999
+        fsGroup: 9999
       imagePullSecrets:
       {{- if $.Values.flink.residenceJobs.consumeKafkaToES.image.pullSecrets }}
       {{- include "common.tplvalues.render" (dict "value" $.Values.flink.residenceJobs.consumeKafkaToES.image.pullSecrets "context" $) | nindent 12 }}

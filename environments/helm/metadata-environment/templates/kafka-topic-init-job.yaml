@@ -54,21 +54,52 @@ spec:
         command: ["/bin/bash", "-c"]
         args:
           - |
-            apt-get update && apt-get install -y jq
-            
-            case $OPERATION in
-              create)
-                echo "Creating topic $TOPIC_NAME"
-                kafka-topics.sh --create \
-                  --bootstrap-server $KAFKA_BOOTSTRAP_SERVERS \
-                  --topic $TOPIC_NAME \
-                  --partitions $PARTITIONS \
-                  --replication-factor $REPLICATION_FACTOR \
-                  --config retention.ms=$RETENTION_MS
-                ;;
+            set -e
 
-              *)
-                echo "Invalid operation: $OPERATION"
-                exit 1
-                ;;
-            esac
+            echo "=========================================="
+            echo "Kafka Topic Initialization"
+            echo "=========================================="
+            echo "Bootstrap Servers: $KAFKA_BOOTSTRAP_SERVERS"
+            echo "Topic: $TOPIC_NAME"
+            echo ""
+
+            # Check if topic already exists
+            echo "Checking if topic '$TOPIC_NAME' exists..."
+            if kafka-topics.sh --list --bootstrap-server $KAFKA_BOOTSTRAP_SERVERS | grep -q "^${TOPIC_NAME}$"; then
+              echo "✓ Topic '$TOPIC_NAME' already exists"
+              echo "  Skipping creation"
+              exit 0
+            fi
+
+            echo "Topic does not exist, creating..."
+            echo ""
+
+            # Create topic with retry logic
+            MAX_RETRIES=3
+            RETRY_COUNT=0
+
+            while [ $RETRY_COUNT -lt $MAX_RETRIES ]; do
+              if kafka-topics.sh --create \
+                --bootstrap-server $KAFKA_BOOTSTRAP_SERVERS \
+                --topic $TOPIC_NAME \
+                --partitions $PARTITIONS \
+                --replication-factor $REPLICATION_FACTOR \
+                --config retention.ms=$RETENTION_MS \
+                --if-not-exists; then
+                echo ""
+                echo "✓ Topic '$TOPIC_NAME' created successfully"
+                echo "  Partitions: $PARTITIONS"
+                echo "  Replication Factor: $REPLICATION_FACTOR"
+                echo "  Retention: $RETENTION_MS ms"
+                exit 0
+              else
+                RETRY_COUNT=$((RETRY_COUNT + 1))
+                if [ $RETRY_COUNT -lt $MAX_RETRIES ]; then
+                  echo "⚠️  Creation attempt $RETRY_COUNT failed, retrying in 5s..."
+                  sleep 5
+                fi
+              fi
+            done
+
+            echo "✗ Failed to create topic after $MAX_RETRIES attempts"
+            exit 1

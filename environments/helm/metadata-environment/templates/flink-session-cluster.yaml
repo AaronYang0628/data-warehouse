@@ -18,6 +18,10 @@ spec:
   image: "{{ $.Values.flink.session.image.registry }}/{{ $.Values.flink.session.image.repository }}:{{ $.Values.flink.session.image.tag }}"
   podTemplate:
     spec:
+      securityContext:
+        runAsUser: 9999
+        runAsGroup: 9999
+        fsGroup: 9999
       imagePullSecrets:
       {{- if $.Values.flink.session.image.pullSecrets }}
       {{- include "common.tplvalues.render" (dict "value" $.Values.flink.session.image.pullSecrets "context" $) | nindent 12 }}
